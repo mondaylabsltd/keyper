@@ -156,7 +156,7 @@
                 style="@style/Label"
                 android:text="@string/email_label" />
 
-            <EditText
+            <app.getkeyper.KeyperField
                 android:id="@+id/email"
                 style="@style/Field"
                 android:fontFamily="monospace"
@@ -193,7 +193,7 @@
             <!-- Typed only on Keyper's own keyboard (the system keyboard gets no connection to it);
                  no saved state, no undo history (clearing must be final), and only real
                  accessibility tools may read it (Android 14+). -->
-            <EditText
+            <app.getkeyper.KeyperField
                 android:id="@+id/secret"
                 style="@style/Field"
                 android:accessibilityDataSensitive="yes"

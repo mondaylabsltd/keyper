@@ -62,6 +62,11 @@ import java.security.MessageDigest
 import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
+/**
+ * Keyper's single screen: the offline gate, both inputs on [KeyperKeyboard], the strength
+ * estimate, the minute-long derivation on a worker thread, the phrase with copy and QR code,
+ * and the recovery drill. Nothing is stored: leaving the screen or going online forgets it all.
+ */
 class MainActivity : Activity() {
     private val domain = DOMAIN_HEX.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
     private val handler = Handler(Looper.getMainLooper())
@@ -90,6 +95,10 @@ class MainActivity : Activity() {
     private lateinit var stepBluetoothHint: View
     private lateinit var strengthBlock: View
     private lateinit var strengthTip: View
+    private lateinit var drillBanner: View
+    // Built once per language: building an ICU formatter on every keystroke made typing feel sluggish.
+    private lateinit var compact: CompactDecimalFormat
+    private var uiLocales: LocaleList? = null
 
     /** The key K derived from the current inputs; both phrase lengths are read from it. */
     private var key: ByteArray? = null
@@ -97,7 +106,6 @@ class MainActivity : Activity() {
     private var inputs: ByteArray? = null
     /** True while the user re-enters the inputs from memory; [key] is kept, but hidden. */
     private var drilling = false
-    private lateinit var drillBanner: View
     /** Bumped to discard the result of a derivation that is still running. */
     private var generation = 0
     private var busy = false
@@ -116,6 +124,7 @@ class MainActivity : Activity() {
     }
     /** The QR code or the weak-secret warning; both belong to the current input. */
     private var dialog: Dialog? = null
+    private var clearClipboard = Runnable {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -228,10 +237,10 @@ class MainActivity : Activity() {
     }
 
     /**
-     * Both fields are typed only on [KeyperKeyboard]. With no input type a field gives the system
-     * keyboard no connection at all, so no keyboard app can read, learn or upload what is typed;
-     * the filter admits only the protocol's characters, whatever the source; and selection,
-     * paste, drag-and-drop and hardware keys are off.
+     * Both fields are [KeyperField]s typed only on [KeyperKeyboard]. A [KeyperField] gives the
+     * system keyboard no input connection, so no keyboard app can read, learn or upload what is
+     * typed; the filter admits only the protocol's characters, whatever the source; and the text
+     * menu, paste, drag-and-drop and hardware keys are off. Moving the cursor stays native.
      */
     private fun setUpFields() {
         keyboard = KeyperKeyboard(this, onKey = ::type, onDelete = ::delete, onDone = ::done)
@@ -578,8 +587,6 @@ class MainActivity : Activity() {
         Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()
     }
 
-    private var clearClipboard = Runnable {}
-
     private fun showQr() {
         val words = phrase() ?: return
         val content = LinearLayout(this).apply {
@@ -640,25 +647,15 @@ class MainActivity : Activity() {
             seconds < 86400 -> plural(R.plurals.hours, seconds / 3600)
             years < 1 -> plural(R.plurals.days, seconds / 86400)
             years < 1000 -> plural(R.plurals.years, years)
-            years < 1.38e10 -> getString(
-                R.string.years_many,
-                compact.format(years),
-            )
+            years < 1.38e10 -> getString(R.string.years_many, compact.format(years))
             else -> getString(R.string.beyond_universe)
         }
     }
 
-    // Built once per language: building an ICU formatter on every keystroke made typing feel sluggish.
-    private lateinit var compact: CompactDecimalFormat
-    private var uiLocales: LocaleList? = null
-
     private fun money(dollars: Double): String = when {
         dollars < 1 -> getString(R.string.under_a_dollar)
         dollars >= 1e14 -> getString(R.string.beyond_gdp)
-        else -> getString(
-            R.string.money,
-            compact.format(dollars),
-        )
+        else -> getString(R.string.money, compact.format(dollars))
     }
 
     private fun toggleReveal() {
