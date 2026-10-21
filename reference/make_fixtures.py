@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerates app-android/core/src/test/resources/*.tsv from independent implementations:
+"""Regenerates test-vectors/*.tsv, shared by the Android and iOS cores, from independent implementations:
 
   argon2id.tsv  argon2-cffi (RFC 9106 reference C code), random parameters
   bip39.tsv     Trezor's python-mnemonic test vectors (vectors.json, English)
@@ -17,7 +17,7 @@ import sys
 import segno
 from argon2.low_level import Type, hash_secret_raw
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "app-android", "core", "src", "test", "resources")
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "test-vectors")
 
 
 def write(name, header, rows):
