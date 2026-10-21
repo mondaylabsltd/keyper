@@ -1,59 +1,47 @@
-# Keyper 安全审计（协议 v1 冻结前，2026-10-21）
+# Security policy
 
-审计方式：一名未参与开发的审查者通读 SPEC、Kotlin 实现、Android 界面和 Python 参考实现；
-开发方逐条复核，并在模拟器和真机上复现、修复、加测试。密码学部分（Argon2id、HMAC、BIP39、盐、成本计算）
-没有发现问题；问题集中在“用户能否多年后准确恢复”和“输入环节的泄漏”两处。
+Keyper derives wallet recovery phrases, so security reports are the most valuable contribution
+this project can receive.
 
-## 一、结论
+## Reporting a vulnerability
 
-1. **只要记忆文本足够难猜，算出助记词在经济上不划算。** 每猜一次要 1 GiB 内存 × 128 遍，
-   约 48 位熵以上的句子，光破解电费就超过 1 亿美元（按偏向攻击者的假设，见 SPEC §4）。
-2. **记忆文本好不好猜，App 管不了。** 名句、歌词、俗语、公开的个人信息模板，攻击者最先试，参数再大也没用。
-3. **域常量随 APK 公开，不提供保密性。** 它只保证不同部署之间结果不同。
-4. **最大的现实风险是用户自己恢复不了。** 所以协议把输入限定在 80 个不易混淆的 ASCII 字符、多余空格不算，
-   并提供恢复演练。
+Please email **hi@shelchin.com** with "Keyper security" in the subject. Do not open a public
+issue or pull request for a vulnerability.
 
-## 二、发现的问题与处理
+Include what you found, how to reproduce it, the app version (system settings → Apps → Keyper),
+the domain ID from the app's footer, and the device and Android version if relevant. You should get an
+acknowledgement within a week. Fixes are released as soon as they are ready, and you will be
+credited unless you prefer otherwise.
 
-| # | 问题 | 级别 | 处理 |
-|---|---|---|---|
-| 1 | 规范化只统一了部分写法：`。`/`.`、引号、不可见字符、大写等会算出不同钱包，导致永久无法恢复 | 高 · 协议 | 改为记忆文本只允许 80 个 ASCII 字符（字母、数字、18 个不易混淆的符号），只用自带键盘输入，连续空格算一个、首尾空格忽略；邮箱只留 ASCII 字母和数字并转小写 |
-| 2 | Unicode 版本依赖（Android 8.1 实为 Unicode 9），跨设备规范化可能不同 | 低 · 协议 | 记忆文本不再涉及 Unicode；邮箱只用 NFKC 折算全角，实际无版本问题 |
-| 3 | 最短长度：邮箱可为 `a` 这类占位符，很多人共享同一个盐 | 中 · 协议 | 邮箱至少 6 个字母或数字；记忆文本至少 12 个字符（词之间的空格算在内） |
-| 4 | 12 词是 24 词熵的前半段，两者不独立 | 中 · 协议 | 改为由 K 经两次 HMAC 分别派生 |
-| 5 | 不成对代理字符在 Kotlin 和 Python 中处理不同 | 低 · 协议 | ASCII 字母表后不复存在 |
-| 6 | 强度估算过于乐观（名句被评为“较强”） | 高 · App | 按自然语言重新校准（小写字母 1.5 位/字），名句不再被评为“强”；仍认不出名句本身 |
-| 7 | 输错一个字就生成了别人无法再现的钱包 | 高 · App | 新增恢复演练：凭记忆重输，即时比对 |
-| 8 | 读屏类无障碍服务能读到助记词 | 中 · App | 记忆文本框、助记词区域、自带键盘标记为敏感数据（Android 14+） |
-| 9 | 第三方输入法学习、云同步、剪贴板历史 | 中 · App | 自带键盘（邮箱和记忆文本都用）：输入框不给系统输入法任何连接；粘贴、拖放、实体键盘、注入按键全部拦截（实测 adb 注入被挡） |
-| 10 | 仿冒包、正式签名 | 中 · 分发 | 写入 README：只从官方渠道安装，正式分发前配置自己的签名并公布证书指纹 |
-| 11 | 剪贴板 | 中 · App | 标记敏感、60 秒清除；README 建议优先用二维码 |
-| 12 | 蓝牙状态在 Android 8.1–11 上需要权限 | 低 | 复核：API 30 实测读取正常，无需权限 |
+## Scope
 
-此外，开发过程中实测发现并修复了：取消计算时工作线程写入已释放内存导致的原生崩溃（已加回归测试）；
-大字体下长单词被隐藏，助记词显示不全；MIUI 蓝牙“半开”状态与系统设置值不一致导致断网门禁误判；
-离开 App 后可用 Ctrl+Z 恢复已清空的记忆文本。
+In scope:
 
-## 三、什么情况下助记词会被算出来（按现实风险排序）
+- Any deviation of the app or of `reference/keyper.py` from [SPEC.md](SPEC.md), or any input on
+  which the two disagree.
+- Weaknesses in the derivation as specified: Argon2id usage, salt, HMAC construction, BIP39
+  encoding.
+- Leaks of the email, the sentence or the phrase: the keyboard, the clipboard, accessibility,
+  screenshots, autofill, logs, memory left behind after use.
+- Ways around the offline gate, or around input isolation (paste, injection, the system
+  keyboard).
+- Build and supply-chain problems in this repository.
 
-| 场景 | 前提 | 代价 | Keyper 能做的 |
-|---|---|---|---|
-| 1. 用了名句、歌词、俗语、常见句式 | 攻击者知道你的邮箱、拿到 APK | 几千到几百万次猜测，几美元电费 | 提醒；12 字符下限。根本办法是用只有你知道的细节 |
-| 2. 用了公开的个人信息模板（宠物名、生日、地名） | 攻击者认识你或查过你 | 2²⁵–2³⁵ 次，几十到几万美元 | 同上 |
-| 3. 拿到同一台手机上的恶意软件、读屏服务 | 你在离线手机上装了它 | 低 | 自带键盘、敏感数据标记、截屏防护、断网门禁；离线手机要干净 |
-| 4. 仿冒包或被篡改的更新 | 你装了非官方包，或开发者账号被盗 | 低 | 只装官方包、关自动更新、公布签名证书指纹 |
-| 5. 同一句话在别处当密码用过 | 那边泄露了，且邮箱相同 | 低 | 提醒：这句话只用于 Keyper |
-| 6. 广撒网：泄露的邮箱库 × 热门句子 | 你的句子在热门列表里 | 规模越大越便宜 | 邮箱作盐让攻击只能逐人进行；邮箱下限防止共享盐 |
-| 7. 被看到：旁人、摄像头对着二维码或屏幕 | 物理接近 | 低 | 不弹按键预览；建议在无人处操作，扫完立刻关闭二维码 |
-| 8. 两人共用一个邮箱，又恰好用了同一句话 | 极少见 | — | 每人用自己的邮箱 |
+By design, and not vulnerabilities:
 
-**不会算出来的情况**：攻击者有 APK、有算法、有域常量、有你的邮箱，但你的记忆文本是只有你知道的长句子
-（约 48 位熵以上）。此时每一次猜测都要 1 GiB × 128 遍的 Argon2id，期望成本超过 1 亿美元。
+- The domain constant can be read from the APK. It is public (SPEC.md §3).
+- Phrases from guessable sentences can be recovered by guessing. The strength meter is a hint.
+- A compromised offline phone (rooted, malicious accessibility service on Android 13 or older,
+  a camera watching the screen) is outside the threat model.
 
-## 四、残余风险
+## Supported versions
 
-- 记忆文本强度无法由程序保证；强度估算只是提示，认不出名句。
-- 域常量和源码的备份是所有用户恢复能力的单点：丢失即全部无法恢复。
-- 多年后记忆偏差（大小写、符号、拼音拼写）只能靠用户自己；恢复演练只能证明“现在记得住”。
-- Android 13 以下没有敏感数据标记，读屏类恶意软件理论上能看到助记词；离线手机本身必须干净。
-- 剪贴板历史可能被第三方输入法或厂商系统另存。
+Only the latest release receives fixes. Protocol v1 is frozen, so a fix never changes a v1
+phrase. If a flaw is ever found in v1 itself, it will be addressed by a new protocol version,
+and the app will keep deriving v1 phrases for as long as anyone may need to recover them.
+
+## Further reading
+
+- [SPEC.md §4](SPEC.md#4-security-model): threat model and the cost of guessing
+- [docs/security-audit.md](docs/security-audit.md): the pre-freeze audit, attack scenarios and
+  residual risks

@@ -13,8 +13,8 @@ import javax.crypto.spec.SecretKeySpec
  * phrase ever generated, so they may only change together with the version.
  */
 object Keyper {
-    // About a minute on a Snapdragon 870, so that guessing a 49-bit secret already costs
-    // over US$100 million in electricity alone (SPEC.md section 4).
+    // About a minute on a Snapdragon 870, so that guessing a secret of about 48 bits already
+    // costs over US$100 million in electricity alone (SPEC.md section 4).
     const val ITERATIONS = 128
     const val MEMORY_KIB = 1024 * 1024
     const val PARALLELISM = 4
@@ -77,9 +77,9 @@ object Keyper {
     fun isSecretChar(c: Char) = c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c in SECRET_SYMBOLS
 
     /**
-     * The email is only a salt, typed on the system keyboard: NFKC (which folds full-width
-     * forms), then only ASCII letters and digits kept and lowercased, so dots, dashes, spaces
-     * and capitals never matter.
+     * The email is only a salt: NFKC (which folds full-width forms, should one arrive from
+     * outside the app), then only ASCII letters and digits kept and lowercased, so dots, dashes,
+     * spaces and capitals never matter.
      */
     fun normalizeEmail(email: String): String =
         Normalizer.normalize(email, Normalizer.Form.NFKC)

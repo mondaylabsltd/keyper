@@ -5,8 +5,8 @@
   bip39.tsv     Trezor's python-mnemonic test vectors (vectors.json, English)
   qr.tsv        segno, byte mode, level M, every version 1..40 and every mask
 
-    pip install argon2-cffi segno
-    python3 make_fixtures.py path/to/trezor/vectors.json
+    pip install -r requirements.txt
+    python3 make_fixtures.py path/to/trezor/vectors.json   # github.com/trezor/python-mnemonic
 """
 import json
 import os
@@ -42,7 +42,8 @@ def argon2(rng):
 
 
 def bip39(vectors_json):
-    english = json.load(open(vectors_json))["english"]
+    with open(vectors_json) as f:
+        english = json.load(f)["english"]
     write("bip39.tsv", ["entropy", "mnemonic"], [[e, m] for e, m, *_ in english])
 
 

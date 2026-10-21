@@ -24,6 +24,12 @@ class KeyperTest {
             "anchor amount there travel play salmon require soon crawl jelly index toddler",
             "hair pattern foam equip ethics gather margin trouble cheese lobster void employ mammal city apple lawn duck upgrade permit almost hurry list tortoise already",
         )
+        check( // the email's case, dots and spaces drop out; extra spaces in the secret count as one
+            "  Alice@Example.COM ", "correct horse  battery staple ",
+            "127ed582829bb66d20e2a075c691722dbd582ec8cd4dc7c783cdff609f636a2d",
+            "anchor amount there travel play salmon require soon crawl jelly index toddler",
+            "hair pattern foam equip ethics gather margin trouble cheese lobster void employ mammal city apple lawn duck upgrade permit almost hurry list tortoise already",
+        )
         check(
             "alice@example.com", "Correct horse battery staple",
             "fb5495320579be258b82bde05db61f3717695e6643a6f130b954b61f58413b5e",

@@ -14,7 +14,7 @@
 
     <string name="email_label">Email</string>
     <string name="email_hint">you@example.com</string>
-    <string name="secret_label">Memory text</string>
+    <string name="secret_label">Secret sentence</string>
     <string name="secret_hint">A sentence only you know</string>
     <string name="secret_hint_offline">Available once offline</string>
     <string name="show">Show</string>
@@ -43,7 +43,7 @@
     <string name="clear">Clear</string>
     <string name="copied">Copied; cleared in 60 seconds</string>
     <string name="drill_start">First time? Do a recovery drill  ›</string>
-    <string name="drill_banner">Recovery drill: type the email and memory text again, from memory</string>
+    <string name="drill_banner">Recovery drill: type the email and the sentence again, from memory</string>
     <string name="drill_check">Check</string>
     <string name="drill_exit">Exit</string>
     <string name="drill_ok">They match: this phrase can be recovered</string>

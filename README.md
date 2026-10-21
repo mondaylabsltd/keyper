@@ -1,182 +1,245 @@
 # Keyper
 
-在一台离线的 Android 手机上，用**邮箱 + 一句只有你记得的话**生成标准 BIP39 助记词。
-同样的输入永远得到同样的助记词：助记词不必写下来，记住那句话就够了。
+**A recovery phrase you keep in your head.** On an offline Android phone, Keyper turns your
+email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs give
+the same phrase, forever, so there is nothing to write down and nothing is stored.
 
-- **自带专用键盘**：记忆文本只能用 Keyper 自己的键盘输入，系统输入法完全接触不到
-- **断网门禁**：飞行模式打开、WiFi 和蓝牙都关闭时才能输入和生成；一旦联网立即清除
-- **零权限**：不联网、不读写存储，App 不保存任何东西；零第三方运行时依赖
-- **恢复演练**：生成后凭记忆再输一遍，当场确认将来能恢复
-- 中英双语；发布版 APK 约 90 KB；Android 8.1（API 27）及以上，需要 4 GB 以上内存
+English · [简体中文](README-zh.md)
 
-协议的精确定义、设计理由和测试向量见 [SPEC.md](SPEC.md)（**v1 已冻结**），
-安全审计和“什么情况下助记词会被算出来”见 [SECURITY.md](SECURITY.md)。
+<p align="center">
+  <img src="docs/images/en-input.png" width="260" alt="Typing the sentence on Keyper's own keyboard">
+  <img src="docs/images/en-result.png" width="260" alt="A 12-word recovery phrase">
+  <img src="docs/images/en-offline.png" width="260" alt="The offline gate">
+</p>
 
-## 原理
+- **Standard output.** BIP39 phrases of 12 or 24 words, usable with any wallet.
+- **Expensive to guess.** Every guess costs an Argon2id run over 1 GiB of memory, 128 passes:
+  about a minute on a Snapdragon 870. For a sentence of about 48 bits of entropy, the
+  attacker's electricity bill alone passes US$100 million.
+- **Its own keyboard.** Both fields are typed only on Keyper's keyboard. The system keyboard
+  never connects, so it cannot learn, sync or upload what you type.
+- **Offline gate.** You can only type and generate with airplane mode on and Wi-Fi and
+  Bluetooth off. Going back online wipes everything at once.
+- **Nothing stored, nothing requested.** No permissions, no storage, no network, no
+  third-party runtime dependencies. The release APK is about 90 KB.
+- **Recovery drill.** Re-type both inputs from memory and confirm on the spot that you can
+  recover the phrase later.
+- **Open protocol.** [SPEC.md](SPEC.md) defines the derivation exactly (v1 is frozen), and an
+  independent [Python implementation](reference/keyper.py) reproduces it.
 
-```
-邮箱 ──── 只留英文字母和数字、转小写 ───────────────────────────┐ (盐)
-记忆文本 ─ 合并多余空格 ─ HMAC-SHA256(域常量) ─ Argon2id(1 GiB × 128 遍) ─ K ─┬─ HMAC ─ 12 个词
-                                                                         └─ HMAC ─ 24 个词
-```
+Requires Android 8.1 (API 27) or later and 4 GB of RAM or more. English and Chinese.
 
-- **记忆文本只认 80 个字符**：26 个英文字母（大小写）、10 个数字、18 个符号 `! @ # $ % ^ & * ( ) . , ? - _ + = /`。
-  大小写、符号和词之间的空格都算数，多打的空格（连续空格、首尾空格）不算。没有引号、`|`、`\`、`:`、`;` 这类容易看错的符号。
-  中文用拼音写，比如 `Wo de di yi zhi mao jiao MiMi!`。
-- **邮箱只是盐**：大小写、点、横线、空格都不影响，`138-0000-0000` 和 `13800000000` 是同一个。
-- **Argon2id**：每猜一次要占 1 GiB 内存、算 128 遍，Redmi K40 上约 1 分钟（有进度、可取消）。
-  对攻击者来说，顶级显卡每张每秒约 20 次：一句约 48 位熵的话，光破解电费就超过 1 亿美元。
-- **12 词和 24 词互相独立**，知道一个推不出另一个。
-- **域常量**：写在 `Domain.kt` 里的 32 字节随机数，让同一句话在不同部署里得到不同结果。
-  它随 APK 公开，不是秘密。
-
-## 关于“邮箱 + 秘密”
-
-这是这类工具的标准做法（WarpWallet 也用邮箱作盐）。邮箱不是秘密：它让同一句话在不同人那里得到无关的助记词，
-攻击者只能一个人一个人地猜，没法一张表打所有人。同一个邮箱可以配多句不同的话，各得一组助记词。
-App 什么都不存，没有账户、没有索引。
-
-## 自带键盘
+## How it works
 
 ```
-字母层                          数字符号层
+email ──── keep ASCII letters and digits, lowercase ──────────────┐ salt
+sentence ─ collapse extra spaces ─ HMAC-SHA256(domain) ─ Argon2id(1 GiB × 128) ─── K ─┬─ HMAC ─ 12 words
+                                                                                      └─ HMAC ─ 24 words
+```
+
+- **The sentence uses 80 characters**: `A`–`Z`, `a`–`z`, `0`–`9` and 18 symbols
+  `! @ # $ % ^ & * ( ) . , ? - _ + = /`. Case, symbols and the spaces between words count;
+  extra spaces (runs of spaces, spaces at either end) do not. There are no quotes, `|`, `\`,
+  `:` or `;`, which are easy to mistype or misread. Other languages are written in Latin
+  letters, for example pinyin: `Wo de di yi zhi mao jiao MiMi!`
+- **The email is only a salt.** Case, dots, dashes and spaces drop out, so `138-0000-0000`
+  and `13800000000` are the same. A phone number works as well.
+- **12 and 24 words are independent.** Knowing one tells nothing about the other.
+- **The domain constant** is 32 random bytes in
+  [`Domain.kt`](app-android/app/src/main/kotlin/app/getkeyper/Domain.kt). It makes the same
+  sentence give different phrases in different deployments. It ships inside the APK, so it
+  is public, not a secret.
+
+The email-as-salt construction is the standard one (WarpWallet uses it too): the same sentence
+gives unrelated phrases for different people, and an attacker has to attack one person at a
+time. One email can go with several sentences, each giving its own phrase. There is no account
+and no index.
+
+### The keyboard
+
+```
+letters                         digits and symbols
 q w e r t y u i o p            1 2 3 4 5 6 7 8 9 0
  a s d f g h j k l             ! @ # $ % ^ & * ( )
 ⇧ z x c v b n m ⌫              . , ? - _ + = /  ⌫
-123 [   空格   ] 完成           ABC [   空格   ] 完成
+123 [   space   ] Done          ABC [   space   ] Done
 ```
 
-邮箱也用这套键盘：输入邮箱时底行多出 `@` 和 `.`，“完成”变成“下一项”。整个 App 里系统输入法不会出现。
+- Identical on every phone: fixed QWERTY, fixed sizes that ignore the system font scale, and a
+  monospace face that tells `0`/`O` and `1`/`l`/`I` apart. The email gets `@` and `.` on the
+  bottom row and a Next key.
+- Touch works as on the iPhone. Every point belongs to its nearest key, so taps between keys
+  still type. The key under your finger pops up magnified and types when you lift, so you can
+  slide to the right key first. A second finger landing types the first one's key at once, so
+  fast two-thumb typing keeps its order. ⇧, ⌫ and 123 act on touch-down.
+- ⇧ once for one capital, twice for caps lock; hold ⌫ to keep deleting; Back closes the
+  keyboard. Edge swipes over the keyboard are not taken as Back.
+- The cursor is Android's own: tap to place it, drag it or its handle to move it, with the
+  magnifier.
+- The fields give the system keyboard no connection at all. Paste, the long-press menu,
+  drag-and-drop, hardware keys and injected key events are all blocked.
 
-- 每台手机上一模一样：固定 QWERTY、固定尺寸（不随系统字体缩放）、等宽字体（`0`/`O`、`1`/`l`/`I` 一眼可辨）。
-- ⇧ 点一次只管下一个字，连点两次锁定大写；按住 ⌫ 连删；Back 收起键盘。
-- 不弹按键放大预览；整个键盘对读屏类恶意软件不可见（Android 14+）。
-- 两个输入框都不给系统输入法任何连接，粘贴、长按菜单、拖放、实体键盘和注入的按键都进不来。
-- 按下即输入（像 PIN 码键盘），按键立刻变色、轻微震动；⇧ 和 ⌫ 是粗线条图标。
+## Security model: read this first
 
-## 安全模型：务必读完
-
-| 别人拿到了… | 还剩什么在保护你 |
+| An attacker has… | What still protects the phrase |
 |---|---|
-| 只有你的记忆文本 | 你的邮箱；APK 从未外传时还有域常量 |
-| APK 和你的邮箱 | 记忆文本有多难猜：每猜一次都要 1 GiB × 128 遍 |
-| APK、邮箱和记忆文本 | 没有了，这三样加起来就是助记词 |
+| only your sentence | your email, and the domain constant if the APK was never distributed |
+| the APK and your email | how hard your sentence is to guess: every guess costs 1 GiB × 128 passes |
+| the APK, your email and your sentence | nothing: together they are the phrase |
 
-1. **APK 一旦外传，域常量就等于公开。** 真正扛住暴力破解的，只有记忆文本难不难猜。
-2. **难猜不等于字多。** 名句、歌词、俗语、“我的猫叫某某”这类模板，攻击者最先试，几块钱电费就能命中。
-   要用只有你知道的具体细节：人名、年份、地点、数字，再加一两个符号。
+1. **Once the APK is out, the domain constant is public.** From then on only the sentence
+   stands between an attacker and the phrase.
+2. **Hard to guess is not the same as long.** Famous lines, lyrics, proverbs and templates like
+   "my cat is called X" are an attacker's first guesses and fall for a few dollars of
+   electricity. Use details only you know: names, years, places, numbers, a symbol or two.
 
-   | 难猜程度 | 一千张顶级显卡 | 光电费 |
+   | Entropy of the sentence | 1000 top GPUs | Electricity alone |
    |---:|---:|---:|
-   | 30 位 | 7.5 小时 | 300 美元 |
-   | 40 位 | 320 天 | 30 万美元 |
-   | 50 位 | 890 年 | 3.1 亿美元 |
-   | 60 位 | 91 万年 | 3200 亿美元 |
+   | 30 bits | 7.5 hours | US$300 |
+   | 40 bits | 320 days | US$305,000 |
+   | 50 bits | 890 years | US$313 million |
+   | 60 bits | 910,000 years | US$320 billion |
 
-   App 输入时会按这个模型估算（偏向攻击者），低于 1 亿美元会弹窗提醒，但认不出名句，所以别用名句。
-3. **先做恢复演练，再往钱包里转钱。** 生成后点“首次使用？做一次恢复演练”，凭记忆再输一遍，一致才算数。
-4. **域常量丢了或被改了，所有人的助记词都无法再生成。** 见“维护者须知”。
+   The app estimates this while you type, using assumptions that favour the attacker
+   ([SPEC.md §4](SPEC.md#4-security-model)). Below US$100 million it warns you before
+   generating, but it cannot recognise famous lines, so don't use one.
+3. **Do the recovery drill before you move funds.** After generating, tap "First time? Do a
+   recovery drill" and re-type both inputs from memory.
+4. **If the domain constant is lost or changed, no phrase can ever be regenerated.** See
+   [Building and maintaining](#building-and-maintaining).
 
-App 内的其他保护：禁止截屏和录屏（最近任务里也是空白）；离开 App 立即清空记忆文本和助记词；
-助记词区域对读屏类恶意软件不可见（Android 14+）；复制的助记词 60 秒后清空剪贴板并标记为敏感；
-二维码页面单独禁止截屏；不允许自动填充服务读取。
+Other protections: screenshots and screen recording are blocked, and the app is blank in
+Recents. Leaving the app wipes the sentence and the phrase. On Android 14+ the sentence, the
+phrase and the keyboard are hidden from accessibility services. A copied phrase is marked
+sensitive and cleared from the clipboard after 60 seconds. The QR code screen blocks screenshots
+on its own, and autofill services are excluded.
 
-**断网门禁**读取飞行模式、WiFi 设置和蓝牙适配器的实时状态（都不需要权限），前台每 0.5 秒检查一次；
-未满足的每一项都能点，直接跳到对应的系统设置页。
-**小米 / 红米（HyperOS）**：控制中心的蓝牙按钮只断开新连接，蓝牙其实还开着，要在“设置 → 蓝牙”里关掉最上面的开关。
+The **offline gate** reads airplane mode, the Wi-Fi setting and the live Bluetooth adapter
+state, none of which needs a permission, every half second while the app is in front. Each
+unmet condition is a link to the matching system settings screen. On **Xiaomi phones
+(HyperOS)** the Control Center Bluetooth button only stops new connections and leaves the radio
+on: turn Bluetooth off in Settings → Bluetooth.
 
-## 使用
+The full audit and the attack scenarios are in [docs/security-audit.md](docs/security-audit.md).
+To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
-1. 打开飞行模式，关闭 WiFi 和蓝牙。
-2. 用 Keyper 的键盘输入邮箱，按“下一项”，再输入那句话（点“显示”可核对）。
-3. 选 12 或 24 个词，点“生成助记词”，等约一分钟。
-4. 第一次用这句话时，做一次恢复演练。
-5. **复制**到同一台手机的钱包 App（60 秒后清空），或用**二维码**给另一台设备扫描。
-6. 页脚“构建指纹”（当前 `A248-7EAB`）标识域常量。指纹一样，助记词就一样；指纹变了就**不要用**，先找维护者。
+## Using Keyper
 
-## 上架应用市场
+1. Turn on airplane mode, and turn off Wi-Fi and Bluetooth.
+2. Type your email on Keyper's keyboard, tap Next, then type your sentence. Tap Show to check it.
+3. Choose 12 or 24 words and tap Generate. It takes about a minute.
+4. The first time you use a sentence, do the recovery drill.
+5. **Copy** the phrase into a wallet app on the same phone (the clipboard clears after 60
+   seconds), or show the **QR code** to another device.
+6. The footer shows the build's domain ID (`A248-7EAB` for this repository). The same ID means
+   the same phrases. If it ever changes, **stop** and find out why before using the phrase.
 
-- APK 公开分发后，域常量就是公开的，安全只靠记忆文本和每次猜测的代价。
-- 上架后更新自动推送，新版本加普通权限不会询问用户：信任落在开发者的 Google 账号上，务必开两步验证；
-  离线手机上的 Keyper 建议关闭自动更新。只从官方渠道安装：仿冒包可以显示同样的指纹和结果，同时记录你的输入。
-- Google Play 的加密货币许可政策只针对托管类服务，非托管钱包不在范围内（Keyper 不碰资产）；提交前在 Play Console 再确认。
-- 2023 年 11 月后注册的个人开发者账号，要先做至少 12 名测试者、连续 14 天的封闭测试。
+## Building and maintaining
 
-## 维护者须知
-
-需要 JDK 17+ 和 Android SDK（compileSdk 36）。
+You need JDK 17 or later and the Android SDK (compileSdk 36).
 
 ```sh
 cd app-android
-./gradlew :core:test :app:testDebugUnitTest :app:assembleRelease
-# 输出 app/build/outputs/apk/release/app-release.apk
+./gradlew :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleRelease
+# app/build/outputs/apk/release/app-release.apk
 ```
 
-- **协议已冻结。** `KeyperTest.protocolV1IsFrozen` 钉死了所有协议常量，SPEC 的测试向量钉死了结果；改动会让测试失败。
-- **域常量在 `app/src/main/kotlin/app/getkeyper/Domain.kt`（指纹 `A248-7EAB`），永远不能改。** `DomainTest` 钉死了指纹。
-  源码仓库和发出去的 APK 都要离线备份多份，两者都含有域常量。
-- 源码是否公开由你决定；域常量随 APK 外传后本就公开，连同源码公开反而让任何人都能独立恢复。
-  别人想自己部署一套，就在第一次使用前用 `openssl rand -hex 32` 换掉域常量。
-- 发布签名：`keystore.properties`（storeFile / storePassword / keyAlias / keyPassword，已被 git 忽略）；
-  没有时 release 用 debug key 签名。正式分发前应配置自己的签名，并公布签名证书的 SHA-256。
-- 用 SPEC 的测试域常量构建时，界面顶部显示红色“测试构建”警告。
+The core tests run the SPEC vectors with the full 1 GiB Argon2id and take a few minutes.
 
-**脱离 App 恢复**：有域常量就能用独立的 Python 参考实现算出助记词（电脑上约 25 秒）：
+- **The protocol is frozen.** `KeyperTest.protocolV1IsFrozen` pins every protocol constant and
+  the SPEC vectors pin the outputs. A change that alters any v1 phrase fails the build.
+- **Never change the domain constant** in
+  [`Domain.kt`](app-android/app/src/main/kotlin/app/getkeyper/Domain.kt) (domain ID
+  `A248-7EAB`); `DomainTest` pins it. Keep offline copies of this repository and of every
+  released APK: both contain the constant.
+- **Deploying your own Keyper?** Replace the constant with `openssl rand -hex 32` before anyone
+  uses your build, and update `DomainTest`. Phrases from different deployments are unrelated.
+- **Release signing** reads `app-android/keystore.properties` (`storeFile`, `storePassword`,
+  `keyAlias`, `keyPassword`; git-ignored). Without it, release builds are signed with the debug
+  key. Before distributing, configure your own key and publish the SHA-256 of its certificate.
+- A build that carries SPEC's test domain constant shows a red "Test build" banner.
+- **App stores.** Updates arrive automatically, and a new version can add permissions without
+  asking, so the store account is part of the trust chain: protect it with two-factor
+  authentication, and turn off auto-update for Keyper on the offline phone. Google Play's crypto
+  policy targets custodial services; Keyper holds no assets, but check the current policy before
+  submitting. Personal developer accounts created after November 2023 must first run a closed
+  test with at least 12 testers for 14 days.
+
+### Recovering without the app
+
+With the domain constant, the independent Python implementation derives the same phrase (about
+25 seconds on a laptop):
 
 ```sh
-pip install argon2-cffi mnemonic
+pip install -r reference/requirements.txt
 python3 reference/keyper.py --domain-file app-android/app/src/main/kotlin/app/getkeyper/Domain.kt --words 12
-python3 reference/keyper.py --self-test    # 核对 SPEC.md 的测试向量
+python3 reference/keyper.py --self-test    # checks the vectors in SPEC.md
 ```
 
-## 验证情况
+## Verification
 
-| 项目 | 方法 | 结果 |
+| What | How | Result |
 |---|---|---|
-| Argon2id / BLAKE2b | RFC 9106、RFC 7693 向量；48 组随机参数对照 argon2-cffi（RFC 参考 C 实现） | 全部一致 |
-| BIP39 | 词表 SHA-256；Trezor 官方 24 组向量 | 全部一致 |
-| 二维码 | 对照 segno 逐模块比较 40 个版本 × 8 种掩码；zxing-cpp 解码 42 个真实助记词和 App 截图 | 全部一致 / 全部解出 |
-| 协议 | Kotlin 与 Python 参考实现（argon2-cffi + Trezor mnemonic）对 SPEC 的 6 组向量 | 一致 |
-| 冻结守卫 | 协议常量、域常量指纹各有测试钉死 | 通过 |
-| 测试有效性 | 人为植入错误（Argon2、二维码掩码、中断时的线程等待） | 对应测试均失败 |
-| 自带键盘 | 模拟器上用自带键盘逐键输入邮箱 `carol@example.org` 和 `Pi is 3.14, right? x+y=z / a-b_c`（含 ⇧、符号层、空格），生成结果与 Python 参考实现（真实域常量）逐词一致 | 一致 |
-| 键盘流畅度 | 同样输入 30 个字符时的渲染帧（模拟器） | 帧数 255 → 33，帧耗时中位数 34 ms → 18 ms（去掉水波纹动画、按下即输入、格式化器只建一次） |
-| 切换语言 | 输入了邮箱、记忆文本并生成助记词后切换中英文 | 进程不重建，全部内容保留 |
-| 输入隔离 | 邮箱框、记忆文本框获得焦点时系统输入法状态；adb 注入文字和按键 | 系统输入法从不弹出；注入全部被拦下 |
-| 恢复演练 | 先输错一个字，再输对 | 提示不一致；一致时重新显示助记词 |
-| 大字体 | 系统字体 1.6 倍下显示 24 个词 | 每个词完整显示（曾发现长词被隐藏，已修复） |
-| 取消与中止 | 计算中点“取消”、按 Home、打开 WiFi | CPU 2 秒内从 300%+ 降到 0，无崩溃（曾发现中断后写入已释放内存导致崩溃，已修复并加回归测试） |
-| 断网门禁 | 模拟器（API 36、30）和 Redmi K40（HyperOS）上逐项切换 | 未断网时不能输入和生成；联网立即清除；蓝牙“半开”能正确识别 |
-| 内存 | Java 堆上限 192 MB 的模拟器连续生成 8 次 | 每次都释放 |
-| 截屏 / 权限 | 设备内 `screencap`；合并后的 manifest | 黑屏；0 个权限 |
+| Argon2id, BLAKE2b | RFC 9106 and RFC 7693 vectors; 48 random parameter sets against argon2-cffi (the RFC reference C code) | all equal |
+| BIP39 | SHA-256 of the wordlist; Trezor's 24 official vectors | all equal |
+| QR codes | module-by-module against segno for 40 versions × 8 masks; zxing-cpp decodes 42 real phrases and app screenshots | all equal, all decoded |
+| Protocol | Kotlin against the Python reference (argon2-cffi + Trezor's mnemonic) on SPEC's 7 vectors; the app (emulator) against the Python reference with the real domain constant | equal |
+| Freeze guards | protocol constants and the domain ID are pinned by tests | pass |
+| The tests themselves | deliberately broken Argon2, QR masking and thread shutdown on cancel | each caught |
+| Keyboard | every character class typed on the app's keyboard in the emulator; taps in the gaps and along the edges; sliding; two-finger rollover with real multi-pointer events | as designed |
+| Input isolation | system keyboard state while the fields have focus; text and key events injected over adb | the system keyboard never appears; injection blocked |
+| Cancel and abort | Cancel, Home and turning Wi-Fi on during a derivation | CPU from 300%+ to 0 within 2 s, no crash |
+| Offline gate | every switch, on emulators (API 36, 30) and a Redmi K40 (HyperOS) | input and generation only offline; Bluetooth "half-on" detected |
+| Memory | 8 derivations in a row on an emulator with a 192 MB Java heap limit | memory released each time |
+| Screenshots, permissions | `screencap` on the device; the merged manifest | black; 0 permissions |
 
-Argon2id 耗时（1 GiB × 128 遍，4 路）：Redmi K40（骁龙 870）App 正式版 64.6 秒，满载一分钟未见降频；
-桌面 JVM（M2 Pro）约 22 秒；argon2-cffi（参考 C 实现，M2 Pro）约 25 秒。
-复现：`./gradlew :core:test`、`./gradlew :core:bench`；手机上用 debug 包跑
-`adb shell 'CLASSPATH=$(pm path app.getkeyper.private | cut -d: -f2) app_process / app.getkeyper.DeviceBenchKt'`。
-测试夹具由 `reference/make_fixtures.py` 从上述独立实现生成。
+Argon2id, 1 GiB × 128 passes, 4 lanes: Redmi K40 (Snapdragon 870) release build 64.6 s, with no
+throttling over a minute of full load; desktop JVM (M2 Pro) about 22 s; argon2-cffi (reference C
+code, M2 Pro) about 25 s. Reproduce with `./gradlew :core:test` and `./gradlew :core:bench`; on a
+phone, with a debug build:
+`adb shell 'CLASSPATH=$(pm path app.getkeyper.private | cut -d: -f2) app_process / app.getkeyper.DeviceBenchKt'`.
+`reference/make_fixtures.py` generates the test fixtures from the independent implementations
+above.
 
-## 已知限制
+## Known limitations
 
-- 域常量能从 APK 中提取，不是秘密。
-- 强度估算是启发式的，认不出名句和公开的个人信息。
-- 拼音拼写要前后一致（比如 `zh`/`z`、`ü` 写成 `v` 还是 `u`），恢复演练能当场发现，几年后的记忆偏差只能靠用户自己。
-- 剪贴板 60 秒清除依赖 App 进程还活着；划掉 App 后，Android 13+ 系统约 1 小时后自己清，更早的版本会一直留着。
-  第三方输入法或厂商的剪贴板历史可能另存一份：优先用二维码，或手动抄写。
-- 断网门禁只看飞行模式、WiFi、蓝牙，覆盖不到 USB 网络共享、有线网卡、NFC；它防误操作，不是隔离保证。
-- 读屏类恶意软件的防护依赖 Android 14+ 的敏感数据标记；更老的系统上，离线手机本身要干净。
-- Kotlin/Java 字符串无法可靠擦除；1 GiB 的计算内存用完即交还内核。威胁模型不包括内存取证。
-- 需要 4 GB 以上内存；没在 32 位或真实低端机上实测，比 K40 慢的手机预计要几分钟。
-- 包名 `app.getkeyper.private` 中的 `private` 是 Java 关键字，所以代码命名空间用 `app.getkeyper`。
-- targetSdk 36；Android 17（API 37）的行为变化还没评估。
+- The domain constant can be extracted from the APK; it is not a secret.
+- The strength estimate is a heuristic. It does not recognise famous lines or public facts.
+- Spelling must stay consistent over the years (capitals, symbols, pinyin such as `zh`/`z` or
+  `ü` as `v`/`u`). The drill catches mistakes today; it cannot catch memory drifting later.
+- The 60-second clipboard clear needs the app process alive. If the app is swiped away, Android
+  13+ clears the clipboard after about an hour; older versions keep it. Keyboard apps and vendor
+  clipboard histories may keep a copy: prefer the QR code, or copy the words by hand.
+- The offline gate checks airplane mode, Wi-Fi and Bluetooth only, not USB tethering, Ethernet
+  adapters or NFC. It prevents mistakes; it is not isolation.
+- Hiding content from accessibility services needs Android 14+. On older systems the offline
+  phone itself must be clean.
+- Kotlin strings cannot be reliably wiped; the 1 GiB working memory goes back to the kernel
+  after each run. Memory forensics is outside the threat model.
+- 4 GB of RAM or more is needed. Not tested on 32-bit or low-end phones; phones slower than a
+  K40 may take several minutes.
+- The application ID `app.getkeyper.private` contains a Java keyword, so the code namespace is
+  `app.getkeyper`.
+- targetSdk 36; behaviour changes in Android 17 (API 37) have not been evaluated yet.
 
-## 目录
+## Repository layout
 
 ```
-SPEC.md                    协议规范（v1 已冻结）、设计理由、测试向量
-SECURITY.md                安全审计、攻击场景、残余风险
-reference/keyper.py        独立的 Python 参考实现（交叉验证、脱离 App 恢复）
-reference/make_fixtures.py 从独立实现生成测试夹具
-app-android/core/          纯 Kotlin/JVM：协议、Argon2id、BLAKE2b、BIP39、二维码、强度估算
-app-android/app/           Android 界面：自带键盘、断网门禁、恢复演练（只用平台控件，域常量在 Domain.kt）
+SPEC.md                     the protocol: v1, frozen; design decisions; test vectors
+SECURITY.md                 how to report a vulnerability
+docs/security-audit.md      pre-freeze security audit, attack scenarios, residual risks
+reference/keyper.py         independent Python implementation (cross-checks, recovery without the app)
+reference/make_fixtures.py  regenerates the test fixtures from independent implementations
+app-android/core/           pure Kotlin/JVM: protocol, Argon2id, BLAKE2b, BIP39, QR codes, strength estimate
+app-android/app/            Android UI: keyboard, offline gate, recovery drill; platform views only
 ```
+
+## Contributing
+
+Bug reports, translations and UI improvements are welcome. The protocol is frozen: no change
+may alter a v1 phrase. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+Copyright © 2026 Shelchin. Keyper is free software, licensed under the
+[GNU General Public License v3.0](LICENSE).

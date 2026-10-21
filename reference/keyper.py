@@ -6,9 +6,9 @@ reference C implementation) and BIP39 from Trezor's python-mnemonic. Use it to
 cross-check the app, or to recover mnemonics without the app if you still have
 the domain constant.
 
-    pip install argon2-cffi mnemonic
+    pip install -r requirements.txt
     python3 keyper.py --domain-file ../app-android/app/src/main/kotlin/app/getkeyper/Domain.kt
-    python3 keyper.py --self-test                                     # checks SPEC.md's vectors
+    python3 keyper.py --self-test    # checks SPEC.md's vectors
 """
 import argparse
 import getpass
@@ -55,7 +55,8 @@ def derive_key(email: str, secret: str, domain: bytes) -> bytes:
 
 
 def mnemonic(key: bytes, words: int) -> str:
-    assert words in (12, 24)
+    if words not in (12, 24):
+        raise ValueError("words must be 12 or 24")
     entropy = hmac.new(key, f"keyper/v1 {words} words".encode(), hashlib.sha256).digest()
     return Mnemonic("english").to_mnemonic(entropy[: words // 3 * 4])
 
@@ -79,7 +80,7 @@ VECTORS = [
 ]
 
 
-def self_test(expected):
+def self_test(expected) -> bool:
     ok = True
     for (email, secret), (m12, m24) in zip(VECTORS, expected):
         key = derive_key(email, secret, TEST_DOMAIN)
@@ -110,7 +111,7 @@ EXPECTED = [  # (12 words, 24 words) for each of VECTORS
 ]
 
 
-def main():
+def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--domain-file", help="Domain.kt, or any file holding the domain constant as 64 hex digits")
     ap.add_argument("--words", type=int, choices=(12, 24), default=12)
@@ -128,7 +129,11 @@ def main():
         sys.exit(0 if self_test(EXPECTED) else 1)
     if not args.domain_file:
         ap.error("--domain-file is required")
-    domain = bytes.fromhex(re.search(r"\b[0-9a-fA-F]{64}\b", open(args.domain_file).read()).group())
+    with open(args.domain_file) as f:
+        found = re.search(r"\b[0-9a-fA-F]{64}\b", f.read())
+    if not found:
+        ap.error(f"no 64-digit hex domain constant in {args.domain_file}")
+    domain = bytes.fromhex(found.group())
     print("domain id", domain_id(domain), file=sys.stderr)
     email = input("email: ")
     secret = getpass.getpass("secret: ")

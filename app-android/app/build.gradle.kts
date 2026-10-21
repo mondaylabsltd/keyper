@@ -19,7 +19,7 @@ android {
         minSdk = 27 // android.os.SharedMemory
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
     }
 
     signingConfigs {

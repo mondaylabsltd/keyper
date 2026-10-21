@@ -72,13 +72,12 @@ curly against straight quotes, zero-width spaces pasted from a note, normalisati
 between Unicode versions, and the system keyboard itself, which may learn, upload or alter what
 it sees. Keyper removes all of them at the source: the secret is typed only on Keyper's own
 keyboard, which offers the 80 characters above in a fixed layout on every phone, and every
-computer keyboard can type the same characters for recovery. An extra space never matters: a run of
-spaces counts as one and spaces at either end are dropped. Whether words are separated does
-matter (`my cat` and `mycat` differ), as do case and the symbols, because they are part of what
-the user chose. The 18 symbols are the ten above the digit keys and eight more that cannot be
-mistaken for one another or for a letter: no quotes (curly and straight ones look alike), no
-`|` or `\`, no `:` or `;`. Chinese is typed as pinyin. What the words are still matters: `my cat` and
-`my first cat` are different secrets.
+computer keyboard can type the same characters for recovery. An extra space never matters: a
+run of spaces counts as one and spaces at either end are dropped. Whether words are separated
+does matter (`my cat` and `mycat` differ), as do case and the symbols, because they are part
+of what the user chose. The 18 symbols are the ten above the digit keys and eight more that
+cannot be mistaken for one another or for a letter: no quotes (curly and straight ones look
+alike), no `|` or `\`, no `:` or `;`. Chinese is typed as pinyin.
 
 **The email only salts, so it forgives.** Dots, dashes, spaces, `+` tags and capitals drop out:
 `138-0000-0000` equals `13800000000`, and a Gmail address equals itself without its dots.
@@ -90,21 +89,21 @@ is keyed from K separately, so one phrase reveals nothing about the other.
 source tree) has its own 32 random bytes, so the same sentence gives unrelated phrases in
 different deployments, and no table built for another tool or deployment applies. It is not a
 secret: anyone with the APK can read it, which is why it is not called a pepper. It keys an
-HMAC of the secret rather than using Argon2's own
-`secret` input, because many Argon2 libraries (Python's argon2-cffi, Go's x/crypto,
-libsodium) do not expose that input; recovery with standard tools must stay possible.
+HMAC of the secret rather than using Argon2's own `secret` input, because many Argon2
+libraries (Python's argon2-cffi, Go's x/crypto, libsodium) do not expose that input; recovery
+with standard tools must stay possible.
 
 **Argon2id parameters.** Argon2id is the RFC 9106 recommendation for password hashing. The
-goal is that guessing any reasonable secret is not worth it: a 49-bit secret should already
-cost an attacker more than US$100 million in electricity alone (§4). Phrases are generated
-rarely, so the derivation may take about a minute: 1 GiB × 128 passes, which the app computes
-in about a minute on a Snapdragon 870 (Redmi K40); a minute of full load showed no thermal
-throttling. For the same wait, more memory hurts GPUs
-more than more passes, because fewer guesses fit in a GPU's memory at once, so memory is
-1 GiB, which phones with 4 GB of RAM or more can spare. Android caps the Java heap far below
-RAM (often 256–512 MB), so the app keeps this memory in an anonymous off-heap mapping. Four
-lanes use the four fast cores most phones have. A secret must have at least 12 characters;
-the rule is frozen with the rest of v1, so it can never lock anyone out.
+goal is that guessing any reasonable secret is not worth it: a secret of about 48 bits should
+already cost an attacker more than US$100 million in electricity alone (§4). Phrases are
+generated rarely, so the derivation may take about a minute: 1 GiB × 128 passes, which the app
+computes in about a minute on a Snapdragon 870 (Redmi K40); a minute of full load showed no
+thermal throttling. For the same wait, more memory hurts GPUs more than more passes, because
+fewer guesses fit in a GPU's memory at once, so memory is 1 GiB, which phones with 4 GB of RAM
+or more can spare. Android caps the Java heap far below RAM (often 256–512 MB), so the app
+keeps this memory in an anonymous off-heap mapping. Four lanes use the four fast cores most
+phones have. A secret must have at least 12 characters; the rule is frozen with the rest of
+v1, so it can never lock anyone out.
 
 **An input-dependent computation path is already there.** Argon2id fills most of its memory
 with *data-dependent addressing*: which blocks are read depends on the password, so different
@@ -150,14 +149,15 @@ guesses, whatever its length: at the costs above that is a few dollars. Only a s
 from details nobody else knows reaches the bottom rows of the table.
 
 The app's strength meter is a hint, not part of the protocol, and can be improved at any time.
-It charges what natural language carries against a language model, about 1.5 bits per English
-letter and 3.5 per Chinese character (a random one would carry 4.7 and 11), and almost nothing
+It charges what natural language carries against a language model: about 1.5 bits per
+lowercase letter of an English or pinyin sentence (a random one would carry 4.7), a little
+more for capitals, digits and symbols, nothing for the spaces between words, and almost nothing
 for repetition and runs. It cannot recognise famous lines, so it still overrates them. It warns
 (never refuses) when the attack would cost less than US$100 million; only the frozen minimum
 lengths are enforced.
 
-**The domain constant is a single point of failure for recovery.** Every phrase depends on it. Back it
-up as carefully as a seed phrase (the signed APK contains it too). If a new build uses a
+**The domain constant is a single point of failure for recovery.** Every phrase depends on it.
+Back it up as carefully as a seed phrase (the signed APK contains it too). If a new build uses a
 different domain constant, the domain ID in the footer changes and so does every phrase.
 
 ## 5. Test vectors
@@ -211,6 +211,6 @@ carol / Pi is 3.14, right? x+y=z / a-b_c
 
 ## 6. Versioning
 
-Every constant above — normalisation, salt prefix, Argon2 parameters, prefix rule, wordlist —
-is part of v1. Changing any of them is a new version with a new salt prefix (`keyper/v2:`),
+Every constant above — the alphabet, normalisation, minimum lengths, salt prefix, Argon2
+parameters, the two HMAC labels, wordlist — is part of v1. Changing any of them is a new version with a new salt prefix (`keyper/v2:`),
 and an implementation must keep producing v1 phrases for as long as anyone may need them.

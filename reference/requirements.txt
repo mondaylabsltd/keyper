@@ -1,0 +1,4 @@
+# The independent implementations Keyper v1 was verified against.
+argon2-cffi==25.1.0  # RFC 9106 reference C implementation
+mnemonic==0.21       # Trezor's BIP39
+segno==1.6.6         # QR codes, for make_fixtures.py only
