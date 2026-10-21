@@ -1,0 +1,77 @@
+/* Keyper，简体中文。与 Android 版 values-zh/strings.xml 的措辞一致。 */
+"test_build" = "测试版：生成的助记词不能用于真实资产";
+"language_switch" = "English";
+
+"offline_needed" = "请先断网";
+"offline_airplane" = "打开飞行模式";
+"offline_wifi" = "关闭 Wi-Fi";
+"offline_network" = "断开所有网络连接";
+"offline_bluetooth" = "也请关闭蓝牙：Keyper 无法检测它";
+
+"email_label" = "邮箱";
+"email_hint" = "you@example.com";
+"secret_label" = "记忆文本";
+"secret_hint" = "只有你知道的一句话，可用英文或拼音";
+"secret_hint_offline" = "断网后可输入";
+"show" = "显示";
+"secret_hidden_value" = "%d 个字符，已隐藏";
+"hide" = "隐藏";
+
+"level_very_weak" = "很弱";
+"level_weak" = "弱";
+"level_good" = "较强";
+"level_strong" = "强";
+"strength_summary" = "%1$@ · %2$d 个字符";
+"secret_too_short" = "%1$d 个字符，至少需要 %2$d 个";
+"crack_time" = "一千张显卡破解约 %1$@，电费约 %2$@";
+"strength_tip" = "写长一些，多用只有你知道的细节。别用名句、歌词、生日。";
+
+"words_12" = "12 个词";
+"words_24" = "24 个词";
+"generate" = "生成助记词";
+"working" = "正在计算 %1$d%%";
+"working_detail_start" = "离开本页会中止";
+"working_detail" = "约剩 %1$@ · 离开本页会中止";
+"cancel" = "取消";
+
+"result_title" = "助记词";
+"copy" = "复制";
+"qr" = "二维码";
+"clear" = "清除";
+"copied" = "已复制，60 秒后清空";
+"drill_start" = "首次使用？做一次恢复演练  ›";
+"drill_banner" = "恢复演练：请凭记忆重新输入邮箱和记忆文本";
+"drill_check" = "核对";
+"drill_exit" = "退出";
+"drill_ok" = "一致：这组助记词可以恢复";
+"drill_mismatch" = "和刚才的输入不一致";
+"qr_caption" = "轻触关闭";
+
+"weak_title" = "这句话容易被破解";
+"weak_message" = "一千张显卡约 %1$@、电费约 %2$@ 即可破解。建议写长一些。";
+"weak_edit" = "修改";
+"weak_continue" = "仍然生成";
+
+"error_email_short" = "至少需要 %1$d 个英文字母或数字";
+"key_space" = "空格";
+"key_done" = "完成";
+"key_next" = "下一项";
+"key_shift" = "大写";
+"key_delete" = "删除";
+"error_memory" = "内存不足（需要 1 GiB），请关闭其他应用后重试";
+"error_failed" = "计算失败：%1$@";
+"ok" = "好";
+
+"footer" = "Keyper v1 · %1$@";
+
+"under_a_second" = "不到 1 秒";
+"seconds.other" = "%d 秒";
+"minutes.other" = "%d 分钟";
+"hours.other" = "%d 小时";
+"days.other" = "%d 天";
+"years.other" = "%d 年";
+"years_many" = "%1$@年";
+"beyond_universe" = "比宇宙的年龄还长";
+"money" = "%1$@美元";
+"under_a_dollar" = "不到 1 美元";
+"beyond_gdp" = "超过全世界一年的 GDP";

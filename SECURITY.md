@@ -17,8 +17,8 @@ credited unless you prefer otherwise.
 
 In scope:
 
-- Any deviation of the app or of `reference/keyper.py` from [SPEC.md](SPEC.md), or any input on
-  which the two disagree.
+- Any deviation of either app or of `reference/keyper.py` from [SPEC.md](SPEC.md), or any input
+  on which they disagree.
 - Weaknesses in the derivation as specified: Argon2id usage, salt, HMAC construction, BIP39
   encoding.
 - Leaks of the email, the sentence or the phrase: the keyboard, the clipboard, accessibility,
@@ -31,8 +31,10 @@ By design, and not vulnerabilities:
 
 - The domain constant can be read from the APK. It is public (SPEC.md §3).
 - Phrases from guessable sentences can be recovered by guessing. The strength meter is a hint.
-- A compromised offline phone (rooted, malicious accessibility service on Android 13 or older,
-  a camera watching the screen) is outside the threat model.
+- A compromised offline phone (rooted or jailbroken, a malicious accessibility service on
+  Android 13 or older, a camera watching the screen) is outside the threat model.
+- On iOS, the screen shield and the offline gate do what iOS allows without private APIs or
+  permissions (see the README's known limitations).
 
 ## Supported versions
 

@@ -30,3 +30,15 @@ First release, with protocol v1.
 - Progress and cancel for the minute-long derivation, off-heap working memory.
 - Copy with a 60-second clipboard clear, QR code, recovery drill.
 - No screenshots, nothing stored, no permissions; English and Chinese.
+
+### iOS app
+
+- The same app for iPhone (iOS 17+), deriving the same phrases: a Swift core on the system's
+  CryptoKit, tested against the same fixtures and SPEC vectors as the Android core.
+- SwiftUI screen laid out like the Android app's, with UIKit for the keyboard (the same touch
+  rules), for fields with the native cursor and no system keyboard, and for the screen shield.
+- Offline gate from what iOS shows without asking anything: no network interface beyond the
+  link, cellular radio off; Bluetooth as a reminder. No Network framework, which would make
+  iPhones sold in mainland China ask to allow wireless data.
+- Screenshots, recordings and the app switcher see nothing; the copied phrase stays on the device
+  and expires after 60 seconds.

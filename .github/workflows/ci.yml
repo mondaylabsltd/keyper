@@ -31,6 +31,25 @@ jobs:
           name: reports
           path: app-android/*/build/reports/
 
+  ios:
+    name: iOS core and app tests
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Core tests, including SPEC's 1 GiB vectors
+        working-directory: app-ios/KeyperCore
+        run: swift test -c release
+      - name: App unit tests on a simulator
+        working-directory: app-ios
+        run: |
+          simulator=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          print(next(d["udid"] for runtime, ds in sorted(devices.items(), reverse=True) if "iOS" in runtime for d in ds if d["name"].startswith("iPhone")))')
+          xcodebuild -project Keyper.xcodeproj -scheme Keyper -destination "platform=iOS Simulator,id=$simulator" \
+            -only-testing:KeyperTests CODE_SIGNING_ALLOWED=NO test
+
   reference:
     name: Python reference self-test
     runs-on: ubuntu-latest

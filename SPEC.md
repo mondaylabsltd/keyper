@@ -6,7 +6,8 @@ implementation either reproduces the §5 vectors exactly or is not Keyper v1.
 Keyper turns an **email** and a **secret** (a sentence the user remembers) into a standard
 BIP39 recovery phrase. This document is normative: any implementation that follows it
 produces the same phrase for the same inputs, forever. `reference/keyper.py` is an
-independent implementation; `app-android/core` is the one the app ships.
+independent implementation; `app-android/core` and `app-ios/KeyperCore` are the ones the Android
+and iOS apps ship.
 
 ## 1. Inputs
 

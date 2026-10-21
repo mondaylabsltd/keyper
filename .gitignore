@@ -1,15 +1,20 @@
 # Build outputs and caches
 build/
+.build/
 .gradle/
 .kotlin/
 *.apk
 *.aab
+*.ipa
+*.xcresult
 
 # Machine-local settings
 local.properties
 .idea/
 *.iml
 .DS_Store
+xcuserdata/
+.swiftpm/
 captures/
 .externalNativeBuild/
 .cxx/

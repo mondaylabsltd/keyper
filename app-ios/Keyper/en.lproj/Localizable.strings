@@ -1,0 +1,83 @@
+/* Keyper, English. The same wording as the Android app's values/strings.xml. */
+"test_build" = "Test build: do not use these phrases for real funds";
+/* The language pill names the other language. */
+"language_switch" = "中文";
+
+"offline_needed" = "Go offline first";
+"offline_airplane" = "Turn on airplane mode";
+"offline_wifi" = "Turn off Wi-Fi";
+"offline_network" = "Disconnect from every network";
+"offline_bluetooth" = "Turn off Bluetooth too: Keyper cannot check it";
+
+"email_label" = "Email";
+"email_hint" = "you@example.com";
+"secret_label" = "Secret sentence";
+"secret_hint" = "A sentence only you know";
+"secret_hint_offline" = "Available once offline";
+"show" = "Show";
+"secret_hidden_value" = "%d characters, hidden";
+"hide" = "Hide";
+
+"level_very_weak" = "Very weak";
+"level_weak" = "Weak";
+"level_good" = "Good";
+"level_strong" = "Strong";
+"strength_summary" = "%1$@ · %2$d characters";
+"secret_too_short" = "%1$d characters; at least %2$d needed";
+"crack_time" = "A thousand GPUs: about %1$@ and %2$@ of electricity";
+"strength_tip" = "Make it longer, with details only you know. No quotes, lyrics or birthdays.";
+
+"words_12" = "12 words";
+"words_24" = "24 words";
+"generate" = "Generate";
+"working" = "Computing %1$d%%";
+"working_detail_start" = "Leaving this screen stops it";
+"working_detail" = "About %1$@ left · leaving this screen stops it";
+"cancel" = "Cancel";
+
+"result_title" = "Recovery phrase";
+"copy" = "Copy";
+"qr" = "QR code";
+"clear" = "Clear";
+"copied" = "Copied; cleared in 60 seconds";
+"drill_start" = "First time? Do a recovery drill  ›";
+"drill_banner" = "Recovery drill: type the email and the sentence again, from memory";
+"drill_check" = "Check";
+"drill_exit" = "Exit";
+"drill_ok" = "They match: this phrase can be recovered";
+"drill_mismatch" = "Not the same as before";
+"qr_caption" = "Tap to close";
+
+"weak_title" = "Easy to crack";
+"weak_message" = "A thousand GPUs could crack it in about %1$@ for %2$@ of electricity. Make it longer.";
+"weak_edit" = "Edit";
+"weak_continue" = "Generate anyway";
+
+"error_email_short" = "At least %1$d English letters or digits";
+"key_space" = "space";
+"key_done" = "Done";
+"key_next" = "Next";
+"key_shift" = "Shift";
+"key_delete" = "Delete";
+"error_memory" = "Not enough memory (1 GiB needed). Close other apps and try again.";
+"error_failed" = "Could not compute: %1$@";
+"ok" = "OK";
+
+"footer" = "Keyper v1 · %1$@";
+
+"under_a_second" = "under a second";
+"seconds.one" = "%d second";
+"seconds.other" = "%d seconds";
+"minutes.one" = "%d minute";
+"minutes.other" = "%d minutes";
+"hours.one" = "%d hour";
+"hours.other" = "%d hours";
+"days.one" = "%d day";
+"days.other" = "%d days";
+"years.one" = "%d year";
+"years.other" = "%d years";
+"years_many" = "%1$@ years";
+"beyond_universe" = "longer than the age of the universe";
+"money" = "US$%1$@";
+"under_a_dollar" = "under US$1";
+"beyond_gdp" = "more than the world's yearly GDP";

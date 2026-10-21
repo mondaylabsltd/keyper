@@ -1,6 +1,6 @@
 # Keyper
 
-**A recovery phrase you keep in your head.** On an offline Android phone, Keyper turns your
+**A recovery phrase you keep in your head.** On an offline Android phone or iPhone, Keyper turns your
 email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs give
 the same phrase, forever, so there is nothing to write down and nothing is stored.
 
@@ -11,6 +11,12 @@ English · [简体中文](README-zh.md)
   <img src="docs/images/en-result.png" width="260" alt="A 12-word recovery phrase">
   <img src="docs/images/en-offline.png" width="260" alt="The offline gate">
 </p>
+<p align="center">
+  <img src="docs/images/ios-input.png" width="260" alt="The same screen on an iPhone, typing">
+  <img src="docs/images/ios-result.png" width="260" alt="The same phrase on an iPhone">
+  <img src="docs/images/ios-offline.png" width="260" alt="The offline gate on an iPhone">
+</p>
+<p align="center"><sub>Android above, iPhone below: the same inputs give the same phrase.</sub></p>
 
 - **Standard output.** BIP39 phrases of 12 or 24 words, usable with any wallet.
 - **Expensive to guess.** Every guess costs an Argon2id run over 1 GiB of memory, 128 passes:
@@ -21,13 +27,15 @@ English · [简体中文](README-zh.md)
 - **Offline gate.** You can only type and generate with airplane mode on and Wi-Fi and
   Bluetooth off. Going back online wipes everything at once.
 - **Nothing stored, nothing requested.** No permissions, no storage, no network, no
-  third-party runtime dependencies. The release APK is about 90 KB.
+  third-party runtime dependencies, on either platform. The Android APK is about 95 KB, the iOS
+  app well under 1 MB.
 - **Recovery drill.** Re-type both inputs from memory and confirm on the spot that you can
   recover the phrase later.
 - **Open protocol.** [SPEC.md](SPEC.md) defines the derivation exactly (v1 is frozen), and an
   independent [Python implementation](reference/keyper.py) reproduces it.
 
-Requires Android 8.1 (API 27) or later and 4 GB of RAM or more. English and Chinese.
+Android 8.1 (API 27) or later, or iOS 17 or later, with 4 GB of RAM or more. English and
+Chinese. Both apps derive the same phrases from the same inputs.
 
 ## How it works
 
@@ -47,7 +55,7 @@ sentence ─ collapse extra spaces ─ HMAC-SHA256(domain) ─ Argon2id(1 GiB ×
 - **12 and 24 words are independent.** Knowing one tells nothing about the other.
 - **The domain constant** is 32 random bytes in
   [`Domain.kt`](app-android/app/src/main/kotlin/app/getkeyper/Domain.kt). It makes the same
-  sentence give different phrases in different deployments. It ships inside the APK, so it
+  sentence give different phrases in different deployments. It ships inside the app, so it
   is public, not a secret.
 
 The email-as-salt construction is the standard one (WarpWallet uses it too): the same sentence
@@ -74,7 +82,7 @@ q w e r t y u i o p            1 2 3 4 5 6 7 8 9 0
   fast two-thumb typing keeps its order. ⇧, ⌫ and 123 act on touch-down.
 - ⇧ once for one capital, twice for caps lock; hold ⌫ to keep deleting; Back closes the
   keyboard. Edge swipes over the keyboard are not taken as Back.
-- The cursor is Android's own: tap to place it, drag it or its handle to move it, with the
+- The cursor is the system's own: tap to place it, drag it (or its handle) to move it, with the
   magnifier.
 - The fields give the system keyboard no connection at all. Paste, the long-press menu,
   drag-and-drop, hardware keys and injected key events are all blocked.
@@ -83,11 +91,11 @@ q w e r t y u i o p            1 2 3 4 5 6 7 8 9 0
 
 | An attacker has… | What still protects the phrase |
 |---|---|
-| only your sentence | your email, and the domain constant if the APK was never distributed |
-| the APK and your email | how hard your sentence is to guess: every guess costs 1 GiB × 128 passes |
-| the APK, your email and your sentence | nothing: together they are the phrase |
+| only your sentence | your email, and the domain constant if the app was never distributed |
+| the app and your email | how hard your sentence is to guess: every guess costs 1 GiB × 128 passes |
+| the app, your email and your sentence | nothing: together they are the phrase |
 
-1. **Once the APK is out, the domain constant is public.** From then on only the sentence
+1. **Once the app is out, the domain constant is public.** From then on only the sentence
    stands between an attacker and the phrase.
 2. **Hard to guess is not the same as long.** Famous lines, lyrics, proverbs and templates like
    "my cat is called X" are an attacker's first guesses and fall for a few dollars of
@@ -108,17 +116,31 @@ q w e r t y u i o p            1 2 3 4 5 6 7 8 9 0
 4. **If the domain constant is lost or changed, no phrase can ever be regenerated.** See
    [Building and maintaining](#building-and-maintaining).
 
-Other protections: screenshots and screen recording are blocked, and the app is blank in
-Recents. Leaving the app wipes the sentence and the phrase. On Android 14+ the sentence, the
-phrase and the keyboard are hidden from accessibility services. A copied phrase is marked
-sensitive and cleared from the clipboard after 60 seconds. The QR code screen blocks screenshots
-on its own, and autofill services are excluded.
+Other protections: leaving the app wipes the sentence and the phrase, a copied phrase leaves the
+clipboard after 60 seconds, and autofill is excluded.
 
-The **offline gate** reads airplane mode, the Wi-Fi setting and the live Bluetooth adapter
-state, none of which needs a permission, every half second while the app is in front. Each
-unmet condition is a link to the matching system settings screen. On **Xiaomi phones
-(HyperOS)** the Control Center Bluetooth button only stops new connections and leaves the radio
-on: turn Bluetooth off in Settings → Bluetooth.
+- **Android:** screenshots and screen recording are blocked (the QR code screen too), the app is
+  blank in Recents, and on Android 14+ the sentence, the phrase and the keyboard are hidden from
+  accessibility services. The copied phrase is marked sensitive.
+- **iOS:** there is no FLAG_SECURE, so the screen is drawn inside the layer iOS leaves out of
+  screenshots, recordings and mirroring (the container of a secure text field; there is no
+  public API for this). A cover hides the screen from the app switcher. The copied phrase stays
+  on the device (never Universal Clipboard) and expires even when the app is closed.
+
+The **offline gate** checks every half second while the app is in front, without any
+permission:
+
+- **Android** reads airplane mode, the Wi-Fi setting and the live Bluetooth adapter state. Each
+  unmet condition is a link to the matching settings screen. On **Xiaomi phones (HyperOS)** the
+  Control Center Bluetooth button only stops new connections and leaves the radio on: turn
+  Bluetooth off in Settings → Bluetooth.
+- **iOS** lets apps read neither airplane mode nor the Wi-Fi switch. The gate requires that no
+  network interface has an address beyond the link (read with `getifaddrs`) and that the cellular
+  radio is off. It deliberately avoids the Network framework: on iPhones sold in mainland China
+  that makes iOS ask whether the app may use wireless data, and a "no" would read as offline. It
+  cannot see Wi-Fi that is on but joined to no network, and reading Bluetooth would take a
+  permission, so it only reminds you to turn Bluetooth off. iOS lets no app open those settings,
+  so the steps are instructions.
 
 The full audit and the attack scenarios are in [docs/security-audit.md](docs/security-audit.md).
 To report a vulnerability, see [SECURITY.md](SECURITY.md).
@@ -136,6 +158,8 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## Building and maintaining
 
+### Android
+
 You need JDK 17 or later and the Android SDK (compileSdk 36).
 
 ```sh
@@ -144,19 +168,41 @@ cd app-android
 # app/build/outputs/apk/release/app-release.apk
 ```
 
+Release signing reads `app-android/keystore.properties` (`storeFile`, `storePassword`,
+`keyAlias`, `keyPassword`; git-ignored). Without it, release builds are signed with the debug key.
+
+### iOS
+
+You need Xcode 26 on a Mac.
+
+```sh
+cd app-ios/KeyperCore && swift test -c release   # the protocol core, with SPEC's 1 GiB vectors
+cd app-ios && xcodebuild -scheme Keyper -destination 'platform=iOS Simulator,name=iPhone 17' test
+```
+
+Open `app-ios/Keyper.xcodeproj` to run it on a phone, with your own team for signing. The core
+is a Swift package that uses nothing but the system's CryptoKit; the app is SwiftUI, with UIKit
+for the keyboard, the fields and the screen shield. The project uses synchronised folders, so a
+new file needs no project edit. Debug builds also accept `-KeyperSimulateOffline` and
+`-KeyperAllowScreenshots` for UI tests and `-KeyperBench` for timing on a phone; release builds
+contain none of them.
+
+### Both
+
 The core tests run the SPEC vectors with the full 1 GiB Argon2id and take a few minutes.
 
-- **The protocol is frozen.** `KeyperTest.protocolV1IsFrozen` pins every protocol constant and
-  the SPEC vectors pin the outputs. A change that alters any v1 phrase fails the build.
-- **Never change the domain constant** in
-  [`Domain.kt`](app-android/app/src/main/kotlin/app/getkeyper/Domain.kt) (domain ID
-  `A248-7EAB`); `DomainTest` pins it. Keep offline copies of this repository and of every
-  released APK: both contain the constant.
-- **Deploying your own Keyper?** Replace the constant with `openssl rand -hex 32` before anyone
-  uses your build, and update `DomainTest`. Phrases from different deployments are unrelated.
-- **Release signing** reads `app-android/keystore.properties` (`storeFile`, `storePassword`,
-  `keyAlias`, `keyPassword`; git-ignored). Without it, release builds are signed with the debug
-  key. Before distributing, configure your own key and publish the SHA-256 of its certificate.
+- **The protocol is frozen.** `KeyperTest.protocolV1IsFrozen` (and its Swift twin) pin every
+  protocol constant, and the SPEC vectors pin the outputs. A change that alters any v1 phrase
+  fails the build. Both cores read the same fixtures in [`test-vectors/`](test-vectors).
+- **Never change the domain constant**, in
+  [`Domain.kt`](app-android/app/src/main/kotlin/app/getkeyper/Domain.kt) and
+  [`Domain.swift`](app-ios/Keyper/Domain.swift) alike (domain ID `A248-7EAB`). Tests pin the ID
+  and keep the two files equal. Keep offline copies of this repository and of every released
+  app: they all contain the constant.
+- **Deploying your own Keyper?** Replace the constant in both files with `openssl rand -hex 32`
+  before anyone uses your build, and update the domain-ID tests. Phrases from different
+  deployments are unrelated.
+- Before distributing, sign with your own key and publish the SHA-256 of its certificate.
 - A build that carries SPEC's test domain constant shows a red "Test build" banner.
 - **App stores.** Updates arrive automatically, and a new version can add permissions without
   asking, so the store account is part of the trust chain: protect it with two-factor
@@ -192,10 +238,17 @@ python3 reference/keyper.py --self-test    # checks the vectors in SPEC.md
 | Offline gate | every switch, on emulators (API 36, 30) and a Redmi K40 (HyperOS) | input and generation only offline; Bluetooth "half-on" detected |
 | Memory | 8 derivations in a row on an emulator with a 192 MB Java heap limit | memory released each time |
 | Screenshots, permissions | `screencap` on the device; the merged manifest | black; 0 permissions |
+| iOS core | the same fixtures and SPEC's 7 vectors in Swift (`swift test -c release`) | all equal |
+| iOS app | typed key by key on the app's keyboard in the simulator, generated, compared word for word with the Python reference (real domain constant); QR code, drill, language switch, leaving the app, weak and short inputs, offline gate in UI tests | equal; as designed |
+| iOS keyboard | two-finger rollover, sliding, gaps and edges, delete held while typing, in unit tests with several fingers | as designed |
+| iOS texts | compact numbers against ICU itself (test-vectors/compact.tsv); strength texts against the Android app | equal |
+| iOS on a phone | iPhone 11 (iOS 26.5): typed on the app's keyboard, generated, compared with the Python reference; a screenshot of the running app; background and back three times with the shield on; a clean install | equal; the screenshot shows only the page colour; no crash; no system prompt of any kind |
+| iOS offline gate | iPhone 11 in airplane mode with Wi-Fi joined, then with Wi-Fi off, connected to the Mac by USB | blocks (screen checked), then opens; the USB link and Apple's device tunnel do not count |
+| iOS permissions | the built Info.plist and the linked libraries | no usage descriptions, no background modes; system frameworks only |
 
 Argon2id, 1 GiB × 128 passes, 4 lanes: Redmi K40 (Snapdragon 870) release build 64.6 s, with no
-throttling over a minute of full load; desktop JVM (M2 Pro) about 22 s; argon2-cffi (reference C
-code, M2 Pro) about 25 s. Reproduce with `./gradlew :core:test` and `./gradlew :core:bench`; on a
+throttling over a minute of full load; iPhone 11 (A13) about 72 s; desktop JVM (M2 Pro) about 22 s;
+Swift (M2 Pro) about 25 s; argon2-cffi (reference C code, M2 Pro) about 25 s. Reproduce with `./gradlew :core:test` and `./gradlew :core:bench`; on a
 phone, with a debug build:
 `adb shell 'CLASSPATH=$(pm path app.getkeyper.private | cut -d: -f2) app_process / app.getkeyper.DeviceBenchKt'`.
 `reference/make_fixtures.py` generates the test fixtures from the independent implementations
@@ -203,19 +256,24 @@ above.
 
 ## Known limitations
 
-- The domain constant can be extracted from the APK; it is not a secret.
+- The domain constant can be extracted from the app; it is not a secret.
 - The strength estimate is a heuristic. It does not recognise famous lines or public facts.
 - Spelling must stay consistent over the years (capitals, symbols, pinyin such as `zh`/`z` or
   `ü` as `v`/`u`). The drill catches mistakes today; it cannot catch memory drifting later.
-- The 60-second clipboard clear needs the app process alive. If the app is swiped away, Android
-  13+ clears the clipboard after about an hour; older versions keep it. Keyboard apps and vendor
-  clipboard histories may keep a copy: prefer the QR code, or copy the words by hand.
-- The offline gate checks airplane mode, Wi-Fi and Bluetooth only, not USB tethering, Ethernet
-  adapters or NFC. It prevents mistakes; it is not isolation.
+- On Android the 60-second clipboard clear needs the app process alive; if the app is swiped
+  away, Android 13+ clears the clipboard after about an hour and older versions keep it. (iOS
+  expires the phrase itself.) Keyboard apps and vendor clipboard histories may keep a copy:
+  prefer the QR code, or copy the words by hand.
+- The offline gate prevents mistakes; it is not isolation. On Android it checks airplane mode,
+  Wi-Fi and Bluetooth, not USB tethering, Ethernet adapters or NFC. On iOS it sees network
+  interfaces and the cellular radio, not Wi-Fi that is on but joined to no network, and not
+  Bluetooth.
+- On iOS the screen shield relies on how iOS draws secure text fields, which is not public API.
+  Should a later iOS change it, the app keeps working, only without the shield.
 - Hiding content from accessibility services needs Android 14+. On older systems the offline
   phone itself must be clean.
-- Kotlin strings cannot be reliably wiped; the 1 GiB working memory goes back to the kernel
-  after each run. Memory forensics is outside the threat model.
+- Kotlin and Swift strings cannot be reliably wiped; the 1 GiB working memory goes back to the
+  kernel after each run. Memory forensics is outside the threat model.
 - 4 GB of RAM or more is needed. Not tested on 32-bit or low-end phones; phones slower than a
   K40 may take several minutes.
 - The application ID `app.getkeyper.private` contains a Java keyword, so the code namespace is
@@ -230,8 +288,11 @@ SECURITY.md                 how to report a vulnerability
 docs/security-audit.md      pre-freeze security audit, attack scenarios, residual risks
 reference/keyper.py         independent Python implementation (cross-checks, recovery without the app)
 reference/make_fixtures.py  regenerates the test fixtures from independent implementations
+test-vectors/               fixtures both cores are tested against
 app-android/core/           pure Kotlin/JVM: protocol, Argon2id, BLAKE2b, BIP39, QR codes, strength estimate
 app-android/app/            Android UI: keyboard, offline gate, recovery drill; platform views only
+app-ios/KeyperCore/         Swift package: the same core in Swift, on the system's CryptoKit
+app-ios/Keyper/             iOS UI: SwiftUI, with UIKit for the keyboard, the fields and the screen shield
 ```
 
 ## Contributing

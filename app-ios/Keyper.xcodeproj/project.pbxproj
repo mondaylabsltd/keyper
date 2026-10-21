@@ -1,0 +1,472 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8C35ADA79AE5056FEDBEF35A /* KeyperCore in Frameworks */ = {isa = PBXBuildFile; productRef = 6BBFB1D9787ECE93F95AB386 /* KeyperCore */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D569FA2871ABF817C73A021B = {isa = PBXContainerItemProxy; containerPortal = 4E31BA38A4B06261AC05FFA9; proxyType = 1; remoteGlobalIDString = 80ECF13DCC0469DF74B6471E; remoteInfo = Keyper; };
+		50F0642BCD80C3482403FC14 = {isa = PBXContainerItemProxy; containerPortal = 4E31BA38A4B06261AC05FFA9; proxyType = 1; remoteGlobalIDString = 80ECF13DCC0469DF74B6471E; remoteInfo = Keyper; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		3073DC5BB55FC30D9BF4AFD6 /* Keyper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Keyper.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1B6B9324193FB0FD5DAEB4C7 /* KeyperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KeyperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7DD959851182E9A3A70CD353 /* KeyperUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KeyperUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		7F40700E75496C7D6DE96AE0 /* Keyper */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Keyper; sourceTree = "<group>"; };
+		E53C2936688092C3609FD567 /* KeyperTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = KeyperTests; sourceTree = "<group>"; };
+		7C53C8B72522C63B3709B0C6 /* KeyperUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = KeyperUITests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0BD21962D459A0398F7F6A72 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8C35ADA79AE5056FEDBEF35A /* KeyperCore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D46D55DB5DB101FE4A55010C = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E50FD9F0FB7691E890C4B2EB = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		80E88D8512CFAB12C85D30C6 = {
+			isa = PBXGroup;
+			children = (
+				7F40700E75496C7D6DE96AE0 /* Keyper */,
+				E53C2936688092C3609FD567 /* KeyperTests */,
+				7C53C8B72522C63B3709B0C6 /* KeyperUITests */,
+				A59EB1EEC21F2DE095CF1531 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A59EB1EEC21F2DE095CF1531 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3073DC5BB55FC30D9BF4AFD6 /* Keyper.app */,
+				1B6B9324193FB0FD5DAEB4C7 /* KeyperTests.xctest */,
+				7DD959851182E9A3A70CD353 /* KeyperUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		80ECF13DCC0469DF74B6471E /* Keyper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2592592DF99105736382821E;
+			buildPhases = (
+				1ED7919CEF9BD9808604BA69,
+				0BD21962D459A0398F7F6A72,
+				1391E983B936C40B170D879D,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7F40700E75496C7D6DE96AE0,
+			);
+			name = Keyper;
+			packageProductDependencies = (
+				6BBFB1D9787ECE93F95AB386 /* KeyperCore */,
+			);
+			productName = Keyper;
+			productReference = 3073DC5BB55FC30D9BF4AFD6;
+			productType = "com.apple.product-type.application";
+		};
+		F0075079FC01AFFD9011FF82 /* KeyperTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4B82FF971430DB507A51E604;
+			buildPhases = (
+				36E0A8DAC97331F21858AA94,
+				D46D55DB5DB101FE4A55010C,
+				AAAD5627DD887045B3FFF3C2,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				55E325CEA7EBDE21F12BA37A,
+			);
+			fileSystemSynchronizedGroups = (
+				E53C2936688092C3609FD567,
+			);
+			name = KeyperTests;
+			packageProductDependencies = (
+			);
+			productName = KeyperTests;
+			productReference = 1B6B9324193FB0FD5DAEB4C7;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		ED00B8D4C23143B1F0CD8A2E /* KeyperUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 19A9EB3ED1B191143D8B1373;
+			buildPhases = (
+				79896ED0F40162BEC54A5D24,
+				E50FD9F0FB7691E890C4B2EB,
+				90527AE43932CE0E553310DF,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				15F9778BC1B0B4DF9A7159FE,
+			);
+			fileSystemSynchronizedGroups = (
+				7C53C8B72522C63B3709B0C6,
+			);
+			name = KeyperUITests;
+			packageProductDependencies = (
+			);
+			productName = KeyperUITests;
+			productReference = 7DD959851182E9A3A70CD353;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4E31BA38A4B06261AC05FFA9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2630;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					80ECF13DCC0469DF74B6471E = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					F0075079FC01AFFD9011FF82 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 80ECF13DCC0469DF74B6471E;
+					};
+					ED00B8D4C23143B1F0CD8A2E = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 80ECF13DCC0469DF74B6471E;
+					};
+				};
+			};
+			buildConfigurationList = FBF0B39C2CAF7D9B712B053E;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				"zh-Hans",
+				Base,
+			);
+			mainGroup = 80E88D8512CFAB12C85D30C6;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				9342DCF1AF0A0432558947D2 /* XCLocalSwiftPackageReference "KeyperCore" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A59EB1EEC21F2DE095CF1531 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				80ECF13DCC0469DF74B6471E /* Keyper */,
+				F0075079FC01AFFD9011FF82 /* KeyperTests */,
+				ED00B8D4C23143B1F0CD8A2E /* KeyperUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1391E983B936C40B170D879D = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AAAD5627DD887045B3FFF3C2 = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		90527AE43932CE0E553310DF = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1ED7919CEF9BD9808604BA69 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		36E0A8DAC97331F21858AA94 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		79896ED0F40162BEC54A5D24 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		55E325CEA7EBDE21F12BA37A = {isa = PBXTargetDependency; target = 80ECF13DCC0469DF74B6471E /* Keyper */; targetProxy = D569FA2871ABF817C73A021B; };
+		15F9778BC1B0B4DF9A7159FE = {isa = PBXTargetDependency; target = 80ECF13DCC0469DF74B6471E /* Keyper */; targetProxy = 50F0642BCD80C3482403FC14; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		D69401CA7A13FEED2CC79152 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		CF8C7BA95816F87ACCBED9B4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = NO;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		BCA7897895E24F7CA412FE9C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = F9W689P9NE;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Keyper;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_UIColorName = LaunchBackground;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.getkeyper.private;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+				ENABLE_PREVIEWS = YES;
+			};
+			name = Debug;
+		};
+		C9D5E4BD60251AAE5C643321 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = F9W689P9NE;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Keyper;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_UIColorName = LaunchBackground;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.getkeyper.private;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		58384B6C7A897D678FFCC74B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = F9W689P9NE;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.getkeyper.private.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Keyper.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Keyper";
+			};
+			name = Debug;
+		};
+		1E4BEE9E5562222AFB9E2A1C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = F9W689P9NE;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.getkeyper.private.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Keyper.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Keyper";
+			};
+			name = Release;
+		};
+		BAD6DFF780F81253BEFD5F15 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = F9W689P9NE;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.getkeyper.private.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Keyper;
+			};
+			name = Debug;
+		};
+		989E2AB19361A97AB2C0650C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = F9W689P9NE;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = app.getkeyper.private.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = Keyper;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FBF0B39C2CAF7D9B712B053E = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D69401CA7A13FEED2CC79152 /* Debug */,
+				CF8C7BA95816F87ACCBED9B4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		2592592DF99105736382821E = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BCA7897895E24F7CA412FE9C /* Debug */,
+				C9D5E4BD60251AAE5C643321 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4B82FF971430DB507A51E604 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				58384B6C7A897D678FFCC74B /* Debug */,
+				1E4BEE9E5562222AFB9E2A1C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		19A9EB3ED1B191143D8B1373 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BAD6DFF780F81253BEFD5F15 /* Debug */,
+				989E2AB19361A97AB2C0650C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		9342DCF1AF0A0432558947D2 /* XCLocalSwiftPackageReference "KeyperCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = KeyperCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6BBFB1D9787ECE93F95AB386 /* KeyperCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = KeyperCore;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 4E31BA38A4B06261AC05FFA9 /* Project object */;
+}
