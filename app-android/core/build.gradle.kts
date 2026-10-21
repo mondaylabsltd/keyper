@@ -1,0 +1,35 @@
+// Pure Kotlin/JVM: the derivation has no Android dependency and is tested on the desktop JVM.
+plugins {
+    alias(libs.plugins.kotlin.jvm)
+}
+
+kotlin {
+    jvmToolchain(17)
+    compilerOptions {
+        // Compile against the Java 8 API, which Android implements, so no newer JDK
+        // signature (e.g. ByteBuffer.position returning ByteBuffer) can slip in.
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+        freeCompilerArgs.add("-Xjdk-release=1.8")
+    }
+}
+
+java {
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+dependencies {
+    testImplementation(libs.junit)
+}
+
+tasks.test {
+    maxHeapSize = "2g"
+    jvmArgs("-XX:MaxDirectMemorySize=3g") // Keyper vectors run Argon2id with its full 1 GiB
+    testLogging { events("failed"); exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL }
+}
+
+// ./gradlew :core:bench — Argon2id throughput on this machine's JVM.
+tasks.register<JavaExec>("bench") {
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass = "app.getkeyper.core.BenchKt"
+    maxHeapSize = "2g"
+}

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name" translatable="false">Keyper</string>
+    <string name="test_build">Test build: do not use these phrases for real funds</string>
+    <!-- The language pill names the other language; tapping switches to its tag. -->
+    <string name="language_switch">中文</string>
+    <string name="language_switch_tag">zh</string>
+
+    <string name="offline_needed">Go offline first</string>
+    <string name="offline_airplane">Turn on airplane mode  ›</string>
+    <string name="offline_wifi">Turn off Wi-Fi  ›</string>
+    <string name="offline_bluetooth">Turn off Bluetooth  ›</string>
+    <string name="offline_bluetooth_hint">On Xiaomi phones use Settings → Bluetooth; the Control Center switch doesn\'t count</string>
+
+    <string name="email_label">Email</string>
+    <string name="email_hint">you@example.com</string>
+    <string name="secret_label">Memory text</string>
+    <string name="secret_hint">A sentence only you know</string>
+    <string name="secret_hint_offline">Available once offline</string>
+    <string name="show">Show</string>
+    <string name="hide">Hide</string>
+
+    <string name="level_very_weak">Very weak</string>
+    <string name="level_weak">Weak</string>
+    <string name="level_good">Good</string>
+    <string name="level_strong">Strong</string>
+    <string name="strength_summary" tools:ignore="PluralsCandidate">%1$s · %2$d characters</string>
+    <string name="secret_too_short" tools:ignore="PluralsCandidate">%1$d characters; at least %2$d needed</string>
+    <string name="crack_time">A thousand GPUs: about %1$s and %2$s of electricity</string>
+    <string name="strength_tip">Make it longer, with details only you know. No quotes, lyrics or birthdays.</string>
+
+    <string name="words_12">12 words</string>
+    <string name="words_24">24 words</string>
+    <string name="generate">Generate</string>
+    <string name="working">Computing %1$d%%</string>
+    <string name="working_detail_start">Leaving this screen stops it</string>
+    <string name="working_detail">About %1$s left · leaving this screen stops it</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="result_title">Recovery phrase</string>
+    <string name="copy">Copy</string>
+    <string name="qr">QR code</string>
+    <string name="clear">Clear</string>
+    <string name="copied">Copied; cleared in 60 seconds</string>
+    <string name="drill_start">First time? Do a recovery drill  ›</string>
+    <string name="drill_banner">Recovery drill: type the email and memory text again, from memory</string>
+    <string name="drill_check">Check</string>
+    <string name="drill_exit">Exit</string>
+    <string name="drill_ok">They match: this phrase can be recovered</string>
+    <string name="drill_mismatch">Not the same as before</string>
+    <string name="qr_caption">Tap to close</string>
+
+    <string name="weak_title">Easy to crack</string>
+    <string name="weak_message">A thousand GPUs could crack it in about %1$s for %2$s of electricity. Make it longer.</string>
+    <string name="weak_edit">Edit</string>
+    <string name="weak_continue">Generate anyway</string>
+
+    <string name="error_email_short" tools:ignore="PluralsCandidate">At least %1$d English letters or digits</string>
+    <string name="key_space">space</string>
+    <string name="key_done">Done</string>
+    <string name="key_next">Next</string>
+    <string name="key_shift">Shift</string>
+    <string name="key_delete">Delete</string>
+    <string name="error_memory">Not enough memory (1 GiB needed). Close other apps and try again.</string>
+    <string name="error_failed">Could not compute: %1$s</string>
+
+    <string name="footer">Keyper v1 · %1$s</string>
+
+    <string name="under_a_second">under a second</string>
+    <plurals name="seconds">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
+    <plurals name="minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <plurals name="years">
+        <item quantity="one">%d year</item>
+        <item quantity="other">%d years</item>
+    </plurals>
+    <string name="years_many">%1$s years</string>
+    <string name="beyond_universe">longer than the age of the universe</string>
+    <string name="money">US$%1$s</string>
+    <string name="under_a_dollar">under US$1</string>
+    <string name="beyond_gdp">more than the world\'s yearly GDP</string>
+</resources>

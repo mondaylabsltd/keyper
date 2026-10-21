@@ -1,0 +1,26 @@
+# Build outputs and caches
+build/
+.gradle/
+.kotlin/
+*.apk
+*.aab
+
+# Machine-local settings
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Release signing secrets: never commit
+keystore.properties
+*.jks
+*.keystore
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/

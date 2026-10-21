@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="test_build">测试版：生成的助记词不能用于真实资产</string>
+    <string name="language_switch">English</string>
+    <string name="language_switch_tag">en</string>
+
+    <string name="offline_needed">请先断网</string>
+    <string name="offline_airplane">打开飞行模式  ›</string>
+    <string name="offline_wifi">关闭 WiFi  ›</string>
+    <string name="offline_bluetooth">关闭蓝牙  ›</string>
+    <string name="offline_bluetooth_hint">小米手机请在“设置 → 蓝牙”里关闭，控制中心的开关不算</string>
+
+    <string name="email_label">邮箱</string>
+    <string name="email_hint">you@example.com</string>
+    <string name="secret_label">记忆文本</string>
+    <string name="secret_hint">只有你知道的一句话，可用英文或拼音</string>
+    <string name="secret_hint_offline">断网后可输入</string>
+    <string name="show">显示</string>
+    <string name="hide">隐藏</string>
+
+    <string name="level_very_weak">很弱</string>
+    <string name="level_weak">弱</string>
+    <string name="level_good">较强</string>
+    <string name="level_strong">强</string>
+    <string name="strength_summary" tools:ignore="PluralsCandidate">%1$s · %2$d 个字符</string>
+    <string name="secret_too_short" tools:ignore="PluralsCandidate">%1$d 个字符，至少需要 %2$d 个</string>
+    <string name="crack_time">一千张显卡破解约 %1$s，电费约 %2$s</string>
+    <string name="strength_tip">写长一些，多用只有你知道的细节。别用名句、歌词、生日。</string>
+
+    <string name="words_12">12 个词</string>
+    <string name="words_24">24 个词</string>
+    <string name="generate">生成助记词</string>
+    <string name="working">正在计算 %1$d%%</string>
+    <string name="working_detail_start">离开本页会中止</string>
+    <string name="working_detail">约剩 %1$s · 离开本页会中止</string>
+    <string name="cancel">取消</string>
+
+    <string name="result_title">助记词</string>
+    <string name="copy">复制</string>
+    <string name="qr">二维码</string>
+    <string name="clear">清除</string>
+    <string name="copied">已复制，60 秒后清空</string>
+    <string name="drill_start">首次使用？做一次恢复演练  ›</string>
+    <string name="drill_banner">恢复演练：请凭记忆重新输入邮箱和记忆文本</string>
+    <string name="drill_check">核对</string>
+    <string name="drill_exit">退出</string>
+    <string name="drill_ok">一致：这组助记词可以恢复</string>
+    <string name="drill_mismatch">和刚才的输入不一致</string>
+    <string name="qr_caption">轻触关闭</string>
+
+    <string name="weak_title">这句话容易被破解</string>
+    <string name="weak_message">一千张显卡约 %1$s、电费约 %2$s 即可破解。建议写长一些。</string>
+    <string name="weak_edit">修改</string>
+    <string name="weak_continue">仍然生成</string>
+
+    <string name="error_email_short" tools:ignore="PluralsCandidate">至少需要 %1$d 个英文字母或数字</string>
+    <string name="key_space">空格</string>
+    <string name="key_done">完成</string>
+    <string name="key_next">下一项</string>
+    <string name="key_shift">大写</string>
+    <string name="key_delete">删除</string>
+    <string name="error_memory">内存不足（需要 1 GiB），请关闭其他应用后重试</string>
+    <string name="error_failed">计算失败：%1$s</string>
+
+    <string name="footer">Keyper v1 · %1$s</string>
+
+    <string name="under_a_second">不到 1 秒</string>
+    <plurals name="seconds">
+        <item quantity="other">%d 秒</item>
+    </plurals>
+    <plurals name="minutes">
+        <item quantity="other">%d 分钟</item>
+    </plurals>
+    <plurals name="hours">
+        <item quantity="other">%d 小时</item>
+    </plurals>
+    <plurals name="days">
+        <item quantity="other">%d 天</item>
+    </plurals>
+    <plurals name="years">
+        <item quantity="other">%d 年</item>
+    </plurals>
+    <string name="years_many">%1$s年</string>
+    <string name="beyond_universe">比宇宙的年龄还长</string>
+    <string name="money">%1$s美元</string>
+    <string name="under_a_dollar">不到 1 美元</string>
+    <string name="beyond_gdp">超过全世界一年的 GDP</string>
+</resources>
