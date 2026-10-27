@@ -2,9 +2,12 @@
 
 **A recovery phrase you keep in your head.** On an offline Android phone or iPhone, Keyper turns your
 email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs always
-give the same phrase, so you do not need to write it down. Keyper stores nothing.
+give the same phrase, so you do not need to write it down. Keyper stores nothing you type.
 
-English · [简体中文](README-zh.md)
+Coming to Google Play and the App Store for US$29.99, paid once. Building it yourself from this
+repository is free and gives the same app.
+
+[getkeyper.app](https://getkeyper.app) · English · [简体中文](README-zh.md)
 
 <p align="center">
   <img src="docs/images/en-input.png" width="260" alt="Typing the sentence on Keyper's own keyboard">
@@ -25,11 +28,12 @@ English · [简体中文](README-zh.md)
 - **Its own keyboard.** Both fields are typed only on Keyper's keyboard. The system keyboard
   never connects, so it cannot learn, sync or upload what you type.
 - **Offline gate.** You can only type and generate with airplane mode on and Wi-Fi and
-  Bluetooth off. Going back online wipes everything at once.
-- **No permissions.** Neither app asks for a permission, uses the network or has a third-party
-  runtime dependency. The Android APK is about 95 KB, the iOS app well under 1 MB.
-- **Recovery drill.** Re-type both inputs from memory and confirm on the spot that you can
-  recover the phrase later.
+  Bluetooth off (iOS lets apps check only the network, so there Bluetooth is a reminder). Going
+  back online wipes everything at once, the clipboard included.
+- **No permissions.** Neither app asks for a permission or uses the network, and neither bundles
+  a library beyond the system's own (and, on Android, the Kotlin standard library). The Android APK is about 95 KB, the iOS app well under 1 MB.
+- **Recovery drill.** Re-type both inputs from memory and check on the spot that they give the
+  same phrase.
 - **Open protocol.** [SPEC.md](SPEC.md) defines the derivation exactly (v1 is frozen), and an
   independent [Python implementation](reference/keyper.py) reproduces it.
 
@@ -47,8 +51,8 @@ sentence ─ collapse extra spaces ─ HMAC-SHA256(domain) ─ Argon2id(1 GiB ×
 - **The sentence uses 80 characters**: `A`–`Z`, `a`–`z`, `0`–`9` and 18 symbols
   `! @ # $ % ^ & * ( ) . , ? - _ + = /`. **Case, symbols and the spaces between words count**;
   extra spaces (runs of spaces, spaces at either end) do not. There are no quotes, `|`, `\`,
-  `:` or `;`, which are easy to mistype or misread. Other languages are written in Latin
-  letters, for example pinyin: `Wo de di yi zhi mao jiao MiMi!`
+  `:` or `;`, which are easy to mistype or misread. Write other languages in Latin
+  letters, for example Chinese in pinyin: `Wo de di yi zhi mao jiao MiMi!`
 - **The email is only a salt, and unlike the sentence it forgives.** Only its ASCII letters and
   digits count, regardless of case, so `Alice@Example.com` and `alice@example.com`, or
   `138-0000-0000` and `13800000000`, are the same. A phone number works as well.
@@ -57,7 +61,7 @@ sentence ─ collapse extra spaces ─ HMAC-SHA256(domain) ─ Argon2id(1 GiB ×
   [`Domain.kt`](app-android/app/src/main/kotlin/app/getkeyper/Domain.kt) and
   [`Domain.swift`](app-ios/Keyper/Domain.swift). It makes the same
   sentence give different phrases in different deployments. It ships inside the app, so it
-  is public, not a secret.
+  is public.
 
 The email-as-salt construction is the standard one (WarpWallet uses it too): the same sentence
 gives unrelated phrases for different people, and an attacker has to attack one person at a
@@ -142,7 +146,8 @@ permission:
   permission, so it only reminds you to turn Bluetooth off. iOS lets no app open those settings,
   so the steps are instructions.
 
-The full audit and the attack scenarios are in [docs/security-audit.md](docs/security-audit.md).
+The pre-freeze audit of the protocol and the Android app, with the attack scenarios, is in
+[docs/security-audit.md](docs/security-audit.md).
 To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## Using Keyper
@@ -155,14 +160,15 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
    seconds), or show the **QR code** to another device.
 6. The footer shows the build's domain ID (`A248-7EAB` for this repository). The same ID means
    the same phrases. If it ever changes, **stop** and find out why before using the phrase. The
-   ID does not prove a build is genuine, since a tampered build can show it too: that comes from
-   installing only from the official store listings, or building from source.
+   ID does not prove a build is genuine, since a tampered build can show it too. For that,
+   install only from the official store listings or build from source, and check your phrase
+   once with the [recovery script](#recovering-without-the-app) before you use it.
 
 ## Building and maintaining
 
 ### Android
 
-You need JDK 17 or later and the Android SDK (compileSdk 36).
+You need JDK 21 and the Android SDK (compileSdk 36).
 
 ```sh
 cd app-android
@@ -171,7 +177,8 @@ cd app-android
 ```
 
 Release signing reads `app-android/keystore.properties` (`storeFile`, `storePassword`,
-`keyAlias`, `keyPassword`; git-ignored). Without it, release builds are signed with the debug key.
+`keyAlias`, `keyPassword`; git-ignored). Without it, release builds are left unsigned.
+`./gradlew :app:bundleRelease` makes the bundle for Google Play.
 
 ### iOS
 
@@ -182,7 +189,9 @@ cd app-ios/KeyperCore && swift test -c release   # the protocol core, with SPEC'
 cd app-ios && xcodebuild -scheme Keyper -destination 'platform=iOS Simulator,name=iPhone 17' test
 ```
 
-Open `app-ios/Keyper.xcodeproj` to run it on a phone, with your own team for signing. The core
+Open `app-ios/Keyper.xcodeproj` to run it on a phone, with your own team for signing, and set
+the scheme's Run configuration to Release: Debug builds accept the testing flags below and can be
+debugged. The core
 is a Swift package that uses nothing but the system's CryptoKit; the app is SwiftUI, with UIKit
 for the keyboard, the fields and the screen shield. The project uses synchronised folders, so a
 new file needs no project edit. Debug builds also accept `-KeyperSimulateOffline` and
@@ -215,14 +224,19 @@ The core tests run the SPEC vectors with the full 1 GiB Argon2id and take a few 
 
 ### Recovering without the app
 
-With the domain constant, the independent Python implementation derives the same phrase (about
-25 seconds on a laptop):
+You need a computer with Python 3.9 or later and a copy of this repository: the script reads the
+domain constant from it, so keep a copy offline. It takes about 25 seconds on a laptop.
 
 ```sh
-pip install -r reference/requirements.txt
-python3 reference/keyper.py --domain-file app-android/app/src/main/kotlin/app/getkeyper/Domain.kt --words 12
-python3 reference/keyper.py --self-test    # checks the vectors in SPEC.md
+python3 -m venv keyper-env
+keyper-env/bin/pip install --require-hashes -r reference/requirements-recovery.txt
+# Disconnect the computer from the network, then:
+keyper-env/bin/python reference/keyper.py --domain-file app-android/app/src/main/kotlin/app/getkeyper/Domain.kt --words 12
 ```
+
+On Windows, use `keyper-env\Scripts\` instead of `keyper-env/bin/`. Before asking for anything, the
+script prints `domain id A248-7EAB (official Keyper)`; if it shows anything else, stop. It asks for
+the sentence twice and never shows it. `--self-test` checks the script against SPEC's vectors.
 
 ## Verification
 
@@ -234,6 +248,9 @@ python3 reference/keyper.py --self-test    # checks the vectors in SPEC.md
 | Protocol | Kotlin against the Python reference (argon2-cffi + Trezor's mnemonic) on SPEC's 7 vectors; the app (emulator) against the Python reference with the real domain constant | equal |
 | Freeze guards | protocol constants and the domain ID are pinned by tests | pass |
 | The tests themselves | deliberately broken Argon2, QR masking and thread shutdown on cancel | each caught |
+| Language switch | English and Chinese, after typing both inputs and generating | no restart; everything kept |
+| Recovery drill | one wrong character, then the right input | mismatch reported; on a match the phrase is shown again |
+| Large text | 24 words at 1.6× the system font size | every word shown in full |
 | Keyboard | every character class typed on the app's keyboard in the emulator; taps in the gaps and along the edges; sliding; two-finger rollover with real multi-pointer events | as designed |
 | Input isolation | system keyboard state while the fields have focus; text and key events injected over adb | the system keyboard never appears; injection blocked |
 | Cancel and abort | Cancel, Home and turning Wi-Fi on during a derivation | CPU from 300%+ to 0 within 2 s, no crash |
@@ -287,6 +304,7 @@ SPEC.md                     the protocol: v1, frozen; design decisions; test vec
 SECURITY.md                 how to report a vulnerability
 docs/security-audit.md      pre-freeze security audit, attack scenarios, residual risks
 reference/keyper.py         independent Python implementation (cross-checks, recovery without the app)
+reference/requirements-recovery.txt  what recovery installs, pinned with hashes
 reference/make_fixtures.py  regenerates the test fixtures from independent implementations
 test-vectors/               fixtures both cores are tested against
 app-android/core/           pure Kotlin/JVM: protocol, Argon2id, BLAKE2b, BIP39, QR codes, strength estimate
@@ -294,6 +312,7 @@ app-android/app/            Android UI: keyboard, offline gate, recovery drill; 
 app-ios/KeyperCore/         Swift package: the same core in Swift, on the system's CryptoKit
 app-ios/Keyper/             iOS UI: SwiftUI, with UIKit for the keyboard, the fields and the screen shield
 website/                    getkeyper.app: SvelteKit, prerendered, on Cloudflare
+store/                      store listings, review notes, privacy answers, store graphics
 ```
 
 ## Contributing

@@ -24,10 +24,12 @@ In scope:
 - Ways around the offline gate, or around input isolation (paste, injection, the system
   keyboard).
 - Build and supply-chain problems in this repository.
+- The website, getkeyper.app: anything that could mislead visitors about where to get Keyper or
+  how to recover a phrase.
 
 By design, and not vulnerabilities:
 
-- The domain constant can be read from the APK. It is public (SPEC.md §3).
+- The domain constant can be read from either app. It is public (SPEC.md §3).
 - Phrases from guessable sentences can be recovered by guessing. The strength meter is a hint.
 - A compromised offline phone (rooted or jailbroken, a malicious accessibility service on
   Android 13 or older, a camera watching the screen) is outside the threat model.

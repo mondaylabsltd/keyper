@@ -2,6 +2,9 @@
 
 English · [简体中文](security-audit-zh.md). To report a vulnerability, see [SECURITY.md](../SECURITY.md).
 
+Scope: the protocol, the Android app and the Python reference. The iOS app came later and is not
+covered here.
+
 Method: a reviewer who had not worked on the code read SPEC.md, the Kotlin implementation, the
 Android UI and the Python reference implementation; the developers then checked every finding,
 reproduced it on emulators and a real phone, fixed it and added tests. The cryptography
@@ -10,7 +13,7 @@ things: whether users can still recover exactly years later, and leaks while typ
 
 ## 1. Conclusions
 
-1. **With a sentence that is hard enough to guess, recovering the phrase does not pay.** Every
+1. **With a sentence that is hard enough to guess, guessing the phrase does not pay.** Every
    guess costs 1 GiB of memory × 128 passes; for a sentence of about 48.4 bits or more, the
    electricity alone exceeds US$100 million (under assumptions that favour the attacker, see
    [SPEC §4](../SPEC.md#4-security-model)).
@@ -49,7 +52,7 @@ cleared when leaving the app.
 
 | Scenario | Precondition | Cost | What Keyper can do |
 |---|---|---|---|
-| 1. A famous line, lyric, proverb or common pattern | The attacker knows your email and has the APK | Thousands to millions of guesses, a few dollars | Warnings; a 12-character minimum. The real fix is details only you know |
+| 1. A famous line, lyric, proverb or common pattern | The attacker knows your email and has the APK | Thousands to millions of guesses, a few dollars | Warnings; a 12-character minimum. Beyond that, only details nobody else knows protect you |
 | 2. A template of public personal facts (pet's name, birthday, place) | The attacker knows you or has researched you | 2²⁵–2³⁵ guesses, tens to tens of thousands of dollars | As above |
 | 3. Malware or a screen-reading service on the same phone | You installed it on the offline phone | Low | Own keyboard, sensitive-data flags, screenshot blocking, offline gate; the offline phone must be clean |
 | 4. A counterfeit package or a tampered update | You installed an unofficial package, or the developer account was compromised | Low | Install only official builds, turn off auto-update, publish the signing certificate fingerprint |
@@ -58,7 +61,7 @@ cleared when leaving the app.
 | 7. Being watched: bystanders, cameras on the QR code or the screen | Physical proximity | Low | The sentence is masked by default, but the magnified key preview (kept for accuracy, as on the iPhone) is visible to onlookers too: use the app alone and close the QR code as soon as it is scanned |
 | 8. Two people sharing an email who happen to choose the same sentence | Very rare | — | Everyone uses their own email |
 
-**When the phrase cannot be recovered**: the attacker has the APK, the algorithm, the domain
+**When guessing fails**: the attacker has the APK, the algorithm, the domain
 constant and your email, but your sentence is a long one only you know (about 48.4 bits of entropy
 or more). Every guess then costs an Argon2id run of 1 GiB × 128 passes, and the expected cost
 exceeds US$100 million.

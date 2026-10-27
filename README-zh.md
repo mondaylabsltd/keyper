@@ -1,9 +1,11 @@
 # Keyper
 
 **记在脑子里的助记词。** 在一台离线的 Android 手机或 iPhone 上，用**邮箱 + 一句只有你记得的话**生成标准 BIP39 助记词。
-同样的输入总是得到同样的助记词，所以不用抄写；App 也不保存任何东西。
+同样的输入总是得到同样的助记词，所以不用抄写；App 也不保存你输入的任何内容。
 
-[English](README.md) · 简体中文
+即将上架 Google Play 和 App Store，售价 29.99 美元，一次买断。用本仓库自己编译免费，得到的是同一个 App。
+
+[getkeyper.app](https://getkeyper.app/zh) · [English](README.md) · 简体中文
 
 <p align="center">
   <img src="docs/images/zh-input.png" width="260" alt="用 Keyper 自带键盘输入记忆文本">
@@ -14,11 +16,11 @@
 
 - **标准输出**：12 或 24 个词的 BIP39 助记词，任何钱包都能用。
 - **难以暴力破解**：每猜一次都要跑一遍 Argon2id（1 GiB 内存 × 128 遍），骁龙 870 上约 1 分钟。
-  一句话的熵超过约 48.4 位，攻击者光电费就超过 1 亿美元。
+  记忆文本的熵超过约 48.4 位，攻击者光电费就超过 1 亿美元。
 - **自带专用键盘**：邮箱和记忆文本都只能用 Keyper 自己的键盘输入，系统输入法完全接触不到，无从学习、同步或上传。
-- **断网门禁**：飞行模式打开、Wi-Fi 和蓝牙都关闭时才能输入和生成；一旦联网立即清除。
-- **零权限**：两个平台都不申请任何权限、不联网，也没有第三方运行时依赖；Android 版 APK 约 95 KB，iOS 版不到 1 MB。
-- **恢复演练**：生成后凭记忆再输一遍，当场确认将来能恢复。
+- **断网门禁**：飞行模式打开、Wi-Fi 和蓝牙都关闭时才能输入和生成（iOS 只允许 App 检查网络，蓝牙只能提醒）；一旦联网，所有内容立即清除，剪贴板也一样。
+- **零权限**：两个平台都不申请任何权限、不联网，除了系统自带的库（Android 上另有 Kotlin 标准库）不打包任何库；Android 版 APK 约 95 KB，iOS 版不到 1 MB。
+- **恢复演练**：生成后凭记忆再输一遍，当场核对两次结果是否一致。
 - **协议公开**：[SPEC.md](SPEC.md) 精确定义了算法（v1 已冻结），独立的 [Python 实现](reference/keyper.py)可以复现。
 
 需要 Android 8.1（API 27）或 iOS 17 及以上，4 GB 以上内存。中英双语。
@@ -34,13 +36,13 @@
 - **记忆文本只认 80 个字符**：26 个英文字母（大小写）、10 个数字、18 个符号 `! @ # $ % ^ & * ( ) . , ? - _ + = /`。
   **大小写、符号和词之间的空格都算数**，多打的空格（连续空格、首尾空格）不算。没有引号、`|`、`\`、`:`、`;` 这类容易看错的符号。
   中文用拼音写，比如 `Wo de di yi zhi mao jiao MiMi!`。
-- **邮箱只是盐，和记忆文本相反，它很宽容**：只取其中的英文字母和数字，不分大小写，所以 `Alice@Example.com` 和 `alice@example.com`、`138-0000-0000` 和 `13800000000` 都算同一个。也可以用手机号。
+- **邮箱只用作盐，写法不必一字不差**：只取其中的英文字母和数字，不分大小写，所以 `Alice@Example.com` 和 `alice@example.com`、`138-0000-0000` 和 `13800000000` 都算同一个。也可以用手机号。
 - **12 词和 24 词互相独立**，知道一个推不出另一个。
 - **域常量**：写在 [`Domain.kt`](app-android/app/src/main/kotlin/app/getkeyper/Domain.kt) 和 [`Domain.swift`](app-ios/Keyper/Domain.swift) 里的 32 字节随机数，
-  让同一句话在不同部署里得到不同结果。它随 App 公开，不是秘密。
+  让同一句话在不同部署里得到不同结果。它随 App 公开。
 
-“邮箱 + 秘密”是这类工具的标准做法（WarpWallet 也用邮箱作盐）。邮箱不是秘密：它让同一句话在不同人那里得到无关的助记词，
-攻击者只能一个人一个人地猜，没法一张表打所有人。同一个邮箱可以配多句不同的话，各得一组助记词。
+用邮箱作盐是这类工具的标准做法（WarpWallet 也这样做）：同一句话在不同人那里得到无关的助记词，攻击者只能一个人一个人地猜，
+没法用一张预先算好的表对付所有人。同一个邮箱可以配多句不同的话，各得一组助记词。
 
 ### 自带键盘
 
@@ -56,7 +58,7 @@ q w e r t y u i o p            1 2 3 4 5 6 7 8 9 0
   输入邮箱时底行多出 `@` 和 `.`，“完成”变成“下一项”。
 - 手感像 iPhone 键盘：键盘上每一点都归最近的键，点在缝隙里也不会落空；按下时手指上方弹出放大的字符，
   抬起才输入，按偏了可以滑到正确的键再松手；另一根手指按下时前一个键立即输入，双拇指快打不乱序。⇧、⌫ 和 123 按下即生效。
-- ⇧ 点一次只管下一个字，连点两次锁定大写；按住 ⌫ 连删；Back 收起键盘；在键盘上从屏幕边缘滑动不会触发返回。
+- ⇧ 点一次只管下一个字母，连点两次锁定大写；按住 ⌫ 连删；按返回键收起键盘；在键盘上从屏幕边缘滑动不会触发返回。
 - 光标是系统原生的：点按定位，拖动光标（或手柄）移动，带放大镜。
 - 两个输入框都不给系统输入法任何连接，粘贴、长按菜单、拖放、实体键盘和注入的按键都进不来。
 
@@ -73,24 +75,24 @@ q w e r t y u i o p            1 2 3 4 5 6 7 8 9 0
 1. **难猜不等于字多。** 名句、歌词、俗语、“我的猫叫某某”这类模板，攻击者最先试，几块钱电费就能命中。
    要用只有你知道的具体细节：人名、年份、地点、数字，再加一两个符号。
 
-   | 难猜程度 | 一千张顶级显卡 | 光电费 |
+   | 记忆文本的熵 | 一千张顶级显卡 | 光电费 |
    |---:|---:|---:|
    | 30 位 | 7.5 小时 | 300 美元 |
    | 40 位 | 320 天 | 30 万美元 |
    | 50 位 | 890 年 | 3.1 亿美元 |
    | 60 位 | 91 万年 | 3200 亿美元 |
 
-   App 输入时会按这个模型估算（偏向攻击者，见 [SPEC.md §4](SPEC.md#4-security-model)），低于 1 亿美元会弹窗提醒，但认不出名句，所以别用名句。
+   你输入时，App 会按这个模型估算（偏向攻击者，见 [SPEC.md §4](SPEC.md#4-security-model)），低于 1 亿美元会弹窗提醒，但认不出名句，所以别用名句。
 2. **使用助记词之前，先做恢复演练。** 生成后点“首次使用？做一次恢复演练”，凭记忆再输一遍，一致才算数。
-3. **域常量丢了或被改了，所有人的助记词都无法再生成。** 见“构建与维护”。
+3. **域常量丢了或被改了，所有人的助记词都无法再生成。** 见[构建与维护](#构建与维护)。
 
-App 内的其他保护：离开 App 立即清空记忆文本和助记词；复制的助记词 60 秒后离开剪贴板；不允许自动填充服务读取。
+App 内的其他保护：离开 App 立即清空记忆文本和助记词；复制的助记词 60 秒后从剪贴板清除；不允许自动填充服务读取。
 
-- **Android**：禁止截屏和录屏（二维码页面也是），最近任务里是空白；记忆文本、助记词区域和键盘对读屏类恶意软件不可见（Android 14+）；复制的助记词标记为敏感。
-- **iOS**：系统没有 FLAG_SECURE，所以整个界面画在 iOS 不会截进截屏、录屏和投屏的那一层里（安全输入框的容器，没有公开 API）；
+- **Android**：禁止截屏和录屏（二维码页面也是），最近任务里是空白；记忆文本、助记词区域和键盘对无障碍服务隐藏（Android 14+）；复制的助记词标记为敏感。
+- **iOS**：系统没有 FLAG_SECURE，所以把整个界面画进安全输入框的容器层（没有公开 API），截屏、录屏和投屏都不会包含这一层；
   离开 App 时有遮罩，多任务界面里看不到内容；复制的助记词只留在本机（不进通用剪贴板），App 被关掉也会按时过期。
 
-**断网门禁**在前台每 0.5 秒检查一次，都不需要权限：
+App 在前台时，**断网门禁**每 0.5 秒检查一次，不需要任何权限：
 
 - **Android** 读取飞行模式、Wi-Fi 设置和蓝牙适配器的实时状态；未满足的每一项都能点，直接跳到对应的系统设置页。
   **小米 / 红米（HyperOS）**：控制中心的蓝牙按钮只断开新连接，蓝牙其实还开着，要在“设置 → 蓝牙”里关掉最上面的开关。
@@ -98,24 +100,25 @@ App 内的其他保护：离开 App 立即清空记忆文本和助记词；复�
   它刻意不用 Network 框架：在国行 iPhone 上，那会让系统弹出“是否允许使用无线数据”，而用户点“不允许”又会被误判为已断网。
   它看不到“Wi-Fi 开着但没连任何网络”的情况；读取蓝牙需要申请权限，所以只提醒你关掉。iOS 不允许 App 打开这些设置页，所以各项是文字说明。
 
-完整的安全审计和“什么情况下助记词会被算出来”见 [docs/security-audit-zh.md](docs/security-audit-zh.md)；
+冻结前对协议和 Android 版的安全审计，以及“什么情况下助记词会被算出来”，见 [docs/security-audit-zh.md](docs/security-audit-zh.md)；
 报告安全漏洞见 [SECURITY.md](SECURITY.md)。
 
 ## 使用
 
 1. 打开飞行模式，关闭 Wi-Fi 和蓝牙。
-2. 用 Keyper 的键盘输入邮箱，按“下一项”，再输入那句话（点“显示”可核对）。
+2. 用 Keyper 的键盘输入邮箱，按“下一项”，再输入记忆文本（点“显示”可核对）。
 3. 选 12 或 24 个词，点“生成助记词”，等约一分钟。
 4. 第一次用这句话时，做一次恢复演练。
 5. **复制**到同一台手机的钱包 App（60 秒后清空），或用**二维码**给另一台设备扫描。
 6. 页脚显示构建的域指纹（本仓库为 `A248-7EAB`）。指纹一样，助记词就一样；指纹变了就**不要用**，先弄清原因。
-   指纹证明不了 App 是正版，篡改版也能显示同样的指纹；正版只能靠来源保证：只从官方商店页面安装，或者自己从源码编译。
+   指纹证明不了 App 是正版，篡改版也能显示同样的指纹。正版只能靠来源保证：只从官方商店页面安装，或者自己从源码编译；
+   使用助记词之前，再用[恢复脚本](#脱离-app-恢复)核对一次。
 
 ## 构建与维护
 
 ### Android
 
-需要 JDK 17+ 和 Android SDK（compileSdk 36）。
+需要 JDK 21 和 Android SDK（compileSdk 36）。
 
 ```sh
 cd app-android
@@ -123,7 +126,8 @@ cd app-android
 # 输出 app/build/outputs/apk/release/app-release.apk
 ```
 
-发布签名读取 `app-android/keystore.properties`（storeFile / storePassword / keyAlias / keyPassword，已被 git 忽略）；没有时 release 用 debug key 签名。
+发布签名读取 `app-android/keystore.properties`（storeFile / storePassword / keyAlias / keyPassword，已被 git 忽略）；没有时 release 不签名。
+`./gradlew :app:bundleRelease` 生成上传 Google Play 用的 AAB。
 
 ### iOS
 
@@ -134,7 +138,8 @@ cd app-ios/KeyperCore && swift test -c release   # 协议核心，含 SPEC 的 1
 cd app-ios && xcodebuild -scheme Keyper -destination 'platform=iOS Simulator,name=iPhone 17' test
 ```
 
-在真机上运行请用 Xcode 打开 `app-ios/Keyper.xcodeproj`，签名换成你自己的团队。核心是只依赖系统 CryptoKit 的 Swift 包；
+在真机上运行请用 Xcode 打开 `app-ios/Keyper.xcodeproj`，签名换成你自己的团队，并把 scheme 的 Run 配置改成 Release：
+Debug 构建接受下面的测试开关，也能被调试器附加。核心是只依赖系统 CryptoKit 的 Swift 包；
 界面用 SwiftUI，键盘、输入框和防截屏层用 UIKit。工程使用同步文件夹，新增文件不用改工程文件。
 Debug 构建另外接受 `-KeyperSimulateOffline`、`-KeyperAllowScreenshots`（UI 测试用）和 `-KeyperBench`（真机测速）；正式版里没有这些开关。
 
@@ -157,13 +162,17 @@ Debug 构建另外接受 `-KeyperSimulateOffline`、`-KeyperAllowScreenshots`（
 
 ### 脱离 App 恢复
 
-有域常量就能用独立的 Python 参考实现算出助记词（电脑上约 25 秒）：
+需要一台装有 Python 3.9 及以上的电脑，和一份本仓库的副本：脚本从仓库里读取域常量，所以请离线保存一份。笔记本上约 25 秒。
 
 ```sh
-pip install -r reference/requirements.txt
-python3 reference/keyper.py --domain-file app-android/app/src/main/kotlin/app/getkeyper/Domain.kt --words 12
-python3 reference/keyper.py --self-test    # 核对 SPEC.md 的测试向量
+python3 -m venv keyper-env
+keyper-env/bin/pip install --require-hashes -r reference/requirements-recovery.txt
+# 断开电脑的网络，然后：
+keyper-env/bin/python reference/keyper.py --domain-file app-android/app/src/main/kotlin/app/getkeyper/Domain.kt --words 12
 ```
+
+Windows 上把 `keyper-env/bin/` 换成 `keyper-env\Scripts\`。脚本在要求输入之前先显示 `domain id A248-7EAB (official Keyper)`，
+显示的不是这个就停下。记忆文本要输两遍，屏幕上不显示。`--self-test` 用 SPEC 的测试向量核对脚本本身。
 
 ## 验证情况
 
@@ -176,7 +185,6 @@ python3 reference/keyper.py --self-test    # 核对 SPEC.md 的测试向量
 | 冻结守卫 | 协议常量、域常量指纹各有测试钉死 | 通过 |
 | 测试有效性 | 人为植入错误（Argon2、二维码掩码、中断时的线程等待） | 对应测试均失败 |
 | 自带键盘 | 模拟器上用自带键盘输入各类字符；点在键缝和边缘；滑动纠正；用真实多点触控事件测双指交替 | 符合设计 |
-| 键盘流畅度 | 同样输入 30 个字符时的渲染帧（模拟器） | 帧数 255 → 33，帧耗时中位数 34 ms → 18 ms |
 | 切换语言 | 输入了邮箱、记忆文本并生成助记词后切换中英文 | 进程不重建，全部内容保留 |
 | 输入隔离 | 输入框获得焦点时系统输入法状态；adb 注入文字和按键 | 系统输入法从不弹出；注入全部被拦下 |
 | 恢复演练 | 先输错一个字，再输对 | 提示不一致；一致时重新显示助记词 |
@@ -221,6 +229,7 @@ SPEC.md                     协议规范（v1 已冻结）、设计理由、测�
 SECURITY.md                 如何报告安全漏洞
 docs/security-audit-zh.md   冻结前的安全审计、攻击场景、残余风险（英文版 security-audit.md）
 reference/keyper.py         独立的 Python 参考实现（交叉验证、脱离 App 恢复）
+reference/requirements-recovery.txt  恢复所需的依赖，带哈希锁定
 reference/make_fixtures.py  从独立实现生成测试夹具
 test-vectors/               两个核心共同使用的测试夹具
 app-android/core/           纯 Kotlin/JVM：协议、Argon2id、BLAKE2b、BIP39、二维码、强度估算
@@ -228,6 +237,7 @@ app-android/app/            Android 界面：自带键盘、断网门禁、恢�
 app-ios/KeyperCore/         Swift 包：同一套核心的 Swift 实现，基于系统 CryptoKit
 app-ios/Keyper/             iOS 界面：SwiftUI，键盘、输入框和防截屏层用 UIKit
 website/                    官网 getkeyper.app：SvelteKit 预渲染，部署在 Cloudflare
+store/                      商店文案、审核说明、隐私问卷答案、商店图片
 ```
 
 ## 参与贡献

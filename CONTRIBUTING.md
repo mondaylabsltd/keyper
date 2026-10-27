@@ -17,14 +17,14 @@ rules follow from that:
    domain ID and keep `Domain.kt` and `Domain.swift` equal.
 3. **No permissions, no network, and nothing the user types is kept.** The app must keep working
    on an offline phone.
-4. **No new runtime dependencies.** The apps use only their platforms' frameworks; the cores use
-   only the JDK and the system's CryptoKit. Test-only dependencies need a good reason.
+4. **No new runtime dependencies.** The apps use only their platforms' frameworks and, on
+   Android, the Kotlin standard library; the cores add only the JDK and the system's CryptoKit. Test-only dependencies need a good reason.
 5. **The strength meter may change; the rules it enforces may not.** It can warn differently,
    but it must never refuse a sentence that v1 accepts, or someone could be locked out.
 
 ## Building and testing
 
-Android needs JDK 17 or later and the Android SDK (compileSdk 36); iOS needs Xcode 26.
+Android needs JDK 21 and the Android SDK (compileSdk 36); iOS needs Xcode 26.
 
 ```sh
 cd app-android
@@ -34,8 +34,8 @@ cd app-ios/KeyperCore && swift test -c release
 cd app-ios && xcodebuild -scheme Keyper -destination 'platform=iOS Simulator,name=iPhone 17' test
 ```
 
-Both cores run the SPEC vectors with the full 1 GiB Argon2id, which takes a few minutes. Lint
-should report no new warnings, and the iOS build none either.
+Both cores run the SPEC vectors with the full 1 GiB Argon2id, which takes a few minutes. Android
+lint should report no new warnings, and the iOS build no warnings at all.
 
 The two apps are kept alike on purpose: a change to the screen, the keyboard or the rules belongs
 in both, or should say why it cannot be.

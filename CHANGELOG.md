@@ -19,7 +19,7 @@ First release, with protocol v1.
   passes and 4 lanes; independent HMAC-derived entropy for 12 and 24 words.
 - Seven test vectors, reproduced by the app's core and by the independent Python reference.
 
-### App
+### Android app
 
 - Keyper's own keyboard for both fields, with no connection to the system keyboard: fixed
   layout, monospace keys, iPhone-style touch (nearest key, magnified preview, type on lift,
@@ -28,7 +28,8 @@ First release, with protocol v1.
 - Strength estimate with crack time and electricity cost for 1000 GPUs; a warning below
   US$100 million.
 - Progress and cancel for the minute-long derivation, off-heap working memory.
-- Copy with a 60-second clipboard clear, QR code, recovery drill.
+- Copy, cleared from the clipboard after 60 seconds or when the phone goes online; QR code;
+  recovery drill.
 - No screenshots, nothing stored, no permissions; English and Chinese.
 
 ### iOS app
@@ -41,4 +42,4 @@ First release, with protocol v1.
   link, cellular radio off; Bluetooth as a reminder. No Network framework, which would make
   iPhones sold in mainland China ask to allow wireless data.
 - Screenshots, recordings and the app switcher see nothing; the copied phrase stays on the device
-  and expires after 60 seconds.
+  and is cleared after 60 seconds or when the phone goes online.
