@@ -234,4 +234,4 @@ app-ios/Keyper/             iOS 界面：SwiftUI，键盘、输入框和防截�
 
 ## 许可证
 
-Copyright © 2026 Shelchin。Keyper 是自由软件，以 [GNU 通用公共许可证 v3.0](LICENSE) 发布。
+Copyright © 2026 Shelchin。Keyper 以 [MIT 许可证](LICENSE) 开源。

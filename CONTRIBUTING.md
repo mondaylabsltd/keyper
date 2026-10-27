@@ -63,5 +63,4 @@ implementations: regenerate them with `reference/make_fixtures.py` (and `compact
 - Update README.md and README-zh.md when behaviour visible to users changes, and CHANGELOG.md
   for anything notable.
 
-By contributing, you agree that your contributions are licensed under the
-[GNU General Public License v3.0](LICENSE).
+By contributing, you agree that your contributions are licensed under the [MIT License](LICENSE).

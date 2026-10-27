@@ -302,5 +302,4 @@ may alter a v1 phrase. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Copyright © 2026 Shelchin. Keyper is free software, licensed under the
-[GNU General Public License v3.0](LICENSE).
+Copyright © 2026 Shelchin. Keyper is open source under the [MIT License](LICENSE).
