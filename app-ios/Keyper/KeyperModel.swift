@@ -13,7 +13,7 @@ protocol TextTarget: AnyObject {
 
 /// The screen's state and rules, the same as the Android app's MainActivity: what is typed, the
 /// offline gate, the derivation, the phrase and the recovery drill. Nothing is stored: leaving the
-/// app or going online forgets it all.
+/// app or going online forgets the secret and the phrase, and keeps only the email.
 @MainActor
 @Observable
 final class KeyperModel {
@@ -83,6 +83,9 @@ final class KeyperModel {
     var showingQr = false
     private(set) var toast: String?
     @ObservationIgnored private var toastGeneration = 0
+    /// The pasteboard's change count just after Keyper copied the phrase: while it is unchanged, the
+    /// pasteboard still holds that copy, and Keyper may clear it without reading anything.
+    @ObservationIgnored private var copiedChangeCount: Int?
     /// Where the screen should scroll next; the view clears it once done.
     var scrollTarget: ScrollTarget?
 
@@ -193,10 +196,15 @@ final class KeyperModel {
     }
 
     private func finish(_ id: Int, _ result: Result<[UInt8], Error>, _ email: String, _ secret: String) {
+        // A stopped run can finish after a newer one has started: it must leave that one's state alone.
+        guard id == generation else { return }
         busy = false
         UIApplication.shared.isIdleTimerDisabled = false
-        guard id == generation else { return }
         derivation = nil
+        // The radios may have come on since the last poll: look again before showing a phrase. Going
+        // online now discards everything, as it would a phrase already on screen.
+        monitor.check()
+        guard offline else { return }
         switch result {
         case .success(let k):
             key = k
@@ -211,14 +219,19 @@ final class KeyperModel {
         }
     }
 
-    /// Cancel, leaving the app, or going online: discard the result and stop computing.
+    /// Cancel, leaving the app, or going online: discard the result and stop computing. The stopped
+    /// run's completion is ignored, so the screen is released here rather than there.
     func stopDerivation() {
         generation += 1
         derivation?.cancel()
         derivation = nil
+        busy = false
+        UIApplication.shared.isIdleTimerDisabled = false
     }
 
-    private func discardResult() {
+    /// Forgets the phrase; one that was copied leaves the pasteboard with it, unless `keepClipboard`.
+    private func discardResult(keepClipboard: Bool = false) {
+        if key != nil && !keepClipboard { clearCopiedPhrase() }
         if key != nil { for i in key!.indices { key![i] = 0 } } // overwritten in place before letting go
         key = nil
         inputs = nil
@@ -265,10 +278,18 @@ final class KeyperModel {
             [[UTType.utf8PlainText.identifier: phrase.joined(separator: " ")]],
             options: [.localOnly: true, .expirationDate: Date(timeIntervalSinceNow: 60)]
         )
+        copiedChangeCount = UIPasteboard.general.changeCount
         show(toast: strings["copied"], seconds: 2)
     }
 
     func clearSecret() { secret = "" }
+
+    /// Clears the pasteboard only while it still holds Keyper's copy: anything copied since is not ours.
+    private func clearCopiedPhrase() {
+        guard let count = copiedChangeCount else { return }
+        copiedChangeCount = nil
+        if UIPasteboard.general.changeCount == count { UIPasteboard.general.items = [] }
+    }
 
     func show(toast text: String, seconds: Double) {
         toastGeneration += 1
@@ -281,16 +302,20 @@ final class KeyperModel {
 
     // MARK: Lifecycle
 
-    /// Leaving the app forgets the secret and the phrase, and stops any derivation in flight.
+    /// Leaving the app forgets the secret and the phrase, and stops any derivation in flight. A copied
+    /// phrase stays on the pasteboard until its minute is up: the wallet is where it goes. Discarded
+    /// before the secret is cleared, whose own discard would otherwise take the pasteboard with it.
     func leave() {
         stopDerivation()
         drilling = false
         focus = nil
+        discardResult(keepClipboard: true)
         secret = ""
-        discardResult()
+        revealed = false
     }
 
-    /// Going back online forgets the secret and the phrase at once and discards a derivation in flight.
+    /// Going back online forgets the secret, the phrase and a copy of it at once, and discards a
+    /// derivation in flight.
     private func radiosChanged(_ now: OfflineMonitor.Radios) {
         radios = now
         guard !now.offline else { return }
@@ -298,7 +323,9 @@ final class KeyperModel {
         drilling = false
         focus = nil
         secret = ""
+        revealed = false
         discardResult()
+        clearCopiedPhrase() // even if the phrase on screen was already discarded
     }
 }
 

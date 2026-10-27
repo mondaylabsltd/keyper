@@ -8,6 +8,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
+import android.view.textclassifier.TextClassifier
 import android.widget.EditText
 
 /**
@@ -19,11 +20,13 @@ import android.widget.EditText
  * one out: the system keyboard may learn that a field has focus, never what it holds, and cannot
  * type into it. Its input type stays `TYPE_NULL`, which also keeps spell checkers away. Copy, cut,
  * paste, stylus handwriting and text set by accessibility services are refused, so text enters
- * only through Keyper's keyboard.
+ * only through Keyper's keyboard. Selecting a word never consults the system's text classifier,
+ * which would otherwise receive the text around it.
  */
 class KeyperField(context: Context, attrs: AttributeSet?) : EditText(context, attrs) {
     init {
         if (Build.VERSION.SDK_INT >= 33) isAutoHandwritingEnabled = false
+        setTextClassifier(TextClassifier.NO_OP)
     }
 
     override fun onCheckIsTextEditor() = true

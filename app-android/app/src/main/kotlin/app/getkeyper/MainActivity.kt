@@ -124,7 +124,6 @@ class MainActivity : Activity() {
     }
     /** The QR code or the weak-secret warning; both belong to the current input. */
     private var dialog: Dialog? = null
-    private var clearClipboard = Runnable {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -206,7 +205,10 @@ class MainActivity : Activity() {
         generate.setOnClickListener { onGenerate() }
         findViewById<View>(R.id.copy).setOnClickListener { copyPhrase() }
         findViewById<View>(R.id.qr).setOnClickListener { showQr() }
-        findViewById<View>(R.id.clear).setOnClickListener { secret.text.clear() }
+        findViewById<View>(R.id.clear).setOnClickListener {
+            secret.text.clear()
+            discardResult() // also when the sentence was empty already, which changes no text
+        }
         if (Build.VERSION.SDK_INT >= 33) {
             // The system stores the per-app language, so Keyper itself still stores nothing.
             findViewById<View>(R.id.language).apply {
@@ -232,6 +234,9 @@ class MainActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
+        // The timer runs on a clock that stops in deep sleep, so a phrase copied before the phone
+        // slept may have outlived its minute.
+        if (Copied.expired) Copied.clear(clipboard())
         radios = null
         handler.post(pollRadios)
     }
@@ -320,11 +325,12 @@ class MainActivity : Activity() {
     override fun onStop() {
         super.onStop()
         handler.removeCallbacks(pollRadios)
-        // Leaving the app forgets the secret and the phrase, and stops any derivation in flight.
+        // Leaving the app forgets the secret and the phrase, and stops any derivation in flight. A
+        // copied phrase stays on the clipboard until its minute is up: the wallet is where it goes.
         stopDerivation()
         drilling = false
+        discardResult(keepClipboard = true)
         secret.text.clear()
-        discardResult()
     }
 
     private fun onGenerate() {
@@ -356,10 +362,14 @@ class MainActivity : Activity() {
             .setMessage(getString(R.string.weak_message, duration(estimate.crackSeconds(gpus = 1000)), money(estimate.crackDollars())))
             .setNegativeButton(R.string.weak_edit, null)
             .setPositiveButton(R.string.weak_continue) { _, _ -> derive(e, s) }
-            .show()
+            .create()
+            .showSecure()
     }
 
     private fun derive(email: String, secret: String) {
+        // The radios afresh, not as last polled; "Generate anyway" may come long after the check.
+        checkOffline()
+        if (!offline) return
         val id = ++generation
         setBusy(true)
         showProgress(done = 0, total = 1, elapsedMs = 0)
@@ -376,7 +386,11 @@ class MainActivity : Activity() {
             }
             handler.post {
                 setBusy(false)
-                if (id != generation) return@post
+                checkOffline() // going online meanwhile bumps the generation
+                if (id != generation || !offline) {
+                    outcome.getOrNull()?.fill(0)
+                    return@post
+                }
                 outcome
                     .onSuccess {
                         key = it
@@ -452,14 +466,19 @@ class MainActivity : Activity() {
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         generate.isEnabled = offline && !busy
         secret.isEnabled = offline && !busy
-        email.isEnabled = !busy
+        email.isEnabled = offline && !busy
         progress.shown = busy
-        if (busy) hideKeyboard()
+        if (busy || !offline) {
+            hideKeyboard()
+            // A disabled field keeps its focus and cursor otherwise; the user picks a field again.
+            email.clearFocus()
+            secret.clearFocus()
+        }
     }
 
     /**
-     * Going back online forgets the secret and the phrase at once and discards a derivation
-     * in flight. None of the readings needs a permission.
+     * Going back online forgets the secret, the phrase and a copied phrase at once, and discards
+     * a derivation in flight. None of the readings needs a permission.
      */
     private fun checkOffline() {
         fun global(name: String) = Settings.Global.getInt(contentResolver, name, 0)
@@ -476,6 +495,7 @@ class MainActivity : Activity() {
             hideKeyboard()
             secret.text.clear()
             discardResult()
+            Copied.clear(clipboard()) // even if the phrase on screen was already discarded
         }
         offlineCard.shown = !offline
         stepAirplane.shown = !airplane
@@ -486,7 +506,9 @@ class MainActivity : Activity() {
         updateControls()
     }
 
-    private fun discardResult() {
+    /** Forgets the phrase; one that was copied leaves the clipboard with it, unless [keepClipboard]. */
+    private fun discardResult(keepClipboard: Boolean = false) {
+        if (key != null && !keepClipboard) Copied.clear(clipboard())
         key?.fill(0)
         key = null
         inputs?.fill(0)
@@ -537,6 +559,7 @@ class MainActivity : Activity() {
     private fun phrase(): List<String>? = key?.let { Keyper.mnemonic(it, wordsWanted()) }
 
     private fun showPhrase() {
+        if (drilling) return // the phrase stays hidden until the drill passes, whatever is toggled meanwhile
         val list = phrase() ?: return
         words.removeAllViews()
         val cells = list.mapIndexed { i, word -> wordCell(i + 1, word).also(words::addView) }
@@ -572,22 +595,65 @@ class MainActivity : Activity() {
     }
 
     private fun copyPhrase() {
+        checkOffline() // the radios afresh, not as last polled: the phrase leaves Keyper only offline
+        if (!offline) return
         val words = phrase() ?: return
-        val clipboard = applicationContext.getSystemService(ClipboardManager::class.java)
         val clip = ClipData.newPlainText(getString(R.string.result_title), words.joinToString(" "))
         // Keeps the phrase out of clipboard previews on Android 13+.
         clip.description.extras = PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
-        clipboard.setPrimaryClip(clip)
-        // Captures only the application-scoped clipboard, so it still runs after the activity is gone.
-        handler.removeCallbacks(clearClipboard)
-        clearClipboard = Runnable {
-            if (Build.VERSION.SDK_INT >= 28) clipboard.clearPrimaryClip() else clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
-        }
-        handler.postDelayed(clearClipboard, 60_000)
+        Copied.copy(clipboard(), clip)
         Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()
     }
 
+    /** The application-scoped clipboard, so that the timer clearing it may outlive the activity. */
+    private fun clipboard() = applicationContext.getSystemService(ClipboardManager::class.java)
+
+    /**
+     * The phrase Keyper last copied, while it may still be on the clipboard. It is cleared after a
+     * minute, when the phone goes online and when the phrase is discarded, but not when the user
+     * leaves Keyper: they copy, then switch to the wallet to paste. Process-wide, like the timer,
+     * so that a new instance of the screen still knows about it. Main thread only.
+     */
+    private object Copied {
+        private val handler = Handler(Looper.getMainLooper())
+        private var label: CharSequence? = null
+        /** The clip's own timestamp, read back once set: tells this copy from a later one with the same label. */
+        private var stamp = 0L
+        /** SystemClock.elapsedRealtime(), which keeps counting in deep sleep; the timer's clock does not. */
+        private var at = 0L
+        private var timer: Runnable? = null
+
+        val expired get() = label != null && SystemClock.elapsedRealtime() - at >= CLIPBOARD_MS
+
+        fun copy(clipboard: ClipboardManager, clip: ClipData) {
+            clipboard.setPrimaryClip(clip)
+            label = clip.description.label
+            stamp = clipboard.primaryClipDescription?.timestamp ?: 0
+            at = SystemClock.elapsedRealtime()
+            timer?.let(handler::removeCallbacks)
+            timer = Runnable { clear(clipboard) }.also { handler.postDelayed(it, CLIPBOARD_MS) }
+        }
+
+        /**
+         * Clears the clipboard unless it demonstrably holds something else. Only the description
+         * is read: reading another app's clip would make Android 12+ announce that Keyper pasted
+         * from it. Since Android 10 only the app in front may read even that; out of sight
+         * Keyper cannot tell, and clears to be safe, as the timer always has.
+         */
+        fun clear(clipboard: ClipboardManager) {
+            val ours = label ?: return
+            timer?.let(handler::removeCallbacks)
+            timer = null
+            label = null
+            val now = clipboard.primaryClipDescription
+            if (now != null && (now.label?.toString() != ours.toString() || (stamp != 0L && now.timestamp != stamp))) return
+            if (Build.VERSION.SDK_INT >= 28) clipboard.clearPrimaryClip() else clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
+        }
+    }
+
     private fun showQr() {
+        checkOffline()
+        if (!offline) return
         val words = phrase() ?: return
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -604,11 +670,9 @@ class MainActivity : Activity() {
         }
         dialog = Dialog(this, android.R.style.Theme_Material_Light_NoActionBar_Fullscreen).apply {
             setContentView(content)
-            window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE) // a dialog is a window of its own
             window?.attributes = window?.attributes?.apply { screenBrightness = 1f }
             content.setOnClickListener { dismiss() }
-            show()
-        }
+        }.showSecure()
     }
 
     private fun showStrength() {
@@ -670,7 +734,14 @@ class MainActivity : Activity() {
         AlertDialog.Builder(this)
             .setMessage(if (outOfMemory) getString(R.string.error_memory) else getString(R.string.error_failed, error.toString()))
             .setPositiveButton(android.R.string.ok, null)
-            .show()
+            .create()
+            .showSecure()
+    }
+
+    /** A dialog is a window of its own: without FLAG_SECURE it could be captured over the secure screen. */
+    private fun <T : Dialog> T.showSecure(): T = apply {
+        window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE) // before show(), so no frame escapes
+        show()
     }
 
     /** Since Android 15 the window is always edge to edge; keep content clear of the bars, cutout and keyboard. */
@@ -706,6 +777,7 @@ class MainActivity : Activity() {
         val TEST_DOMAIN = ByteArray(32) { it.toByte() }
         val DERIVATION = Any()
         const val CELL_MARGIN_DP = 3
+        const val CLIPBOARD_MS = 60_000L
         val NO_MENU = object : ActionMode.Callback {
             override fun onCreateActionMode(mode: ActionMode, menu: Menu) = false
             override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = false

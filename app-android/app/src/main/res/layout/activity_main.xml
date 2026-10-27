@@ -156,13 +156,17 @@
                 style="@style/Label"
                 android:text="@string/email_label" />
 
+            <!-- Like the secret: no saved state and no undo history, so the email outlives neither the
+                 screen nor a clear. -->
             <app.getkeyper.KeyperField
                 android:id="@+id/email"
                 style="@style/Field"
+                android:allowUndo="false"
                 android:fontFamily="monospace"
                 android:hint="@string/email_hint"
                 android:inputType="none"
                 android:maxLines="1"
+                android:saveEnabled="false"
                 tools:ignore="TextFields" />
 
             <LinearLayout

@@ -6,7 +6,7 @@
 
     <string name="offline_needed">请先断网</string>
     <string name="offline_airplane">打开飞行模式  ›</string>
-    <string name="offline_wifi">关闭 WiFi  ›</string>
+    <string name="offline_wifi">关闭 Wi-Fi  ›</string>
     <string name="offline_bluetooth">关闭蓝牙  ›</string>
     <string name="offline_bluetooth_hint">小米手机请在“设置 → 蓝牙”里关闭，控制中心的开关不算</string>
 
@@ -50,7 +50,7 @@
     <string name="qr_caption">轻触关闭</string>
 
     <string name="weak_title">这句话容易被破解</string>
-    <string name="weak_message">一千张显卡约 %1$s、电费约 %2$s 即可破解。建议写长一些。</string>
+    <string name="weak_message">一千张显卡约 %1$s、电费约 %2$s 即可破解。建议加入只有你知道的细节。</string>
     <string name="weak_edit">修改</string>
     <string name="weak_continue">仍然生成</string>
 

@@ -28,7 +28,7 @@
     <string name="strength_summary" tools:ignore="PluralsCandidate">%1$s · %2$d characters</string>
     <string name="secret_too_short" tools:ignore="PluralsCandidate">%1$d characters; at least %2$d needed</string>
     <string name="crack_time">A thousand GPUs: about %1$s and %2$s of electricity</string>
-    <string name="strength_tip">Make it longer, with details only you know. No quotes, lyrics or birthdays.</string>
+    <string name="strength_tip">Make it longer, with details only you know. No famous lines, lyrics or birthdays.</string>
 
     <string name="words_12">12 words</string>
     <string name="words_24">24 words</string>
@@ -52,7 +52,7 @@
     <string name="qr_caption">Tap to close</string>
 
     <string name="weak_title">Easy to crack</string>
-    <string name="weak_message">A thousand GPUs could crack it in about %1$s for %2$s of electricity. Make it longer.</string>
+    <string name="weak_message">A thousand GPUs could crack it in about %1$s for %2$s of electricity. Add details only you know.</string>
     <string name="weak_edit">Edit</string>
     <string name="weak_continue">Generate anyway</string>
 

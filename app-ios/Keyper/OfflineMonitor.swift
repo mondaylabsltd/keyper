@@ -24,10 +24,13 @@ final class OfflineMonitor {
     private var last: Radios?
 
     func start() {
-        // Polled, as on Android: neither source announces its changes.
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        // Polled, as on Android: neither source announces its changes. In the common modes, so the
+        // gate keeps watching while the page scrolls (the default mode alone pauses during tracking).
+        let timer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.check() }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
         check()
     }
 

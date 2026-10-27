@@ -5,8 +5,8 @@ plugins {
 }
 
 // Release signing comes from the git-ignored keystore.properties (storeFile, storePassword,
-// keyAlias, keyPassword); without it release builds use the debug key. Keyper keeps no data,
-// so reinstalling under a different key loses nothing.
+// keyAlias, keyPassword). Without it release builds are left unsigned rather than signed with
+// the debug key, so that no debug-signed release can reach anyone; CI builds them that way.
 val keystore = rootProject.file("keystore.properties").takeIf { it.exists() }
     ?.let { file -> Properties().apply { file.inputStream().use(::load) } }
 
@@ -36,7 +36,7 @@ android {
             optimization {
                 enable = true
             }
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 

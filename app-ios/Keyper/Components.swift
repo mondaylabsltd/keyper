@@ -166,6 +166,60 @@ struct TextLink: View {
     }
 }
 
+/// An alert drawn inside the screen. SwiftUI's .alert is presented by UIKit in a window of its own,
+/// outside the screen shield, where screenshots and recordings would see it. Laid out as the Android
+/// app's AlertDialog: title, message, then text buttons at the trailing edge.
+struct Dialog: View {
+    struct Action {
+        let title: String
+        let run: () -> Void
+    }
+
+    /// For UI tests, which cannot find it among the alerts.
+    let id: String
+    var title: String?
+    let message: String
+    let actions: [Action]
+    /// VoiceOver's escape gesture, as the cancel button of a system alert.
+    let cancel: () -> Void
+
+    var body: some View {
+        ZStack {
+            // The page beneath stays out of reach, as under a system alert; a tap outside does nothing.
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .contentShape(Rectangle())
+                .onTapGesture {}
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 0) {
+                if let title {
+                    Text(title).keyperFont(20, .medium).foregroundStyle(Color(Palette.text)).padding(.bottom, 12).accessibilityAddTraits(.isHeader)
+                }
+                Text(message).keyperFont(15).foregroundStyle(Color(Palette.textSecondary)).lineSpacing(2)
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    ForEach(actions.indices, id: \.self) { i in
+                        TextLink(title: actions[i].title, size: 15, action: actions[i].run).frame(minHeight: 44).padding(.horizontal, 12)
+                    }
+                }
+                .padding(.top, 12)
+            }
+            .padding(.top, 24)
+            .padding(.leading, 24)
+            .padding(.trailing, 12)
+            .padding(.bottom, 8)
+            .frame(maxWidth: 360, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 24).fill(Color(Palette.surface)))
+            .padding(.horizontal, 28)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier(id)
+            .accessibilityAddTraits(.isModal) // VoiceOver reads only the dialog, as it would an alert
+            .accessibilityAction(.escape, cancel)
+        }
+        .onAppear { UIAccessibility.post(notification: .screenChanged, argument: nil) }
+    }
+}
+
 /// The tinted buttons under the phrase.
 struct TonalButton: View {
     let title: String

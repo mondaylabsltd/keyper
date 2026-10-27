@@ -26,7 +26,7 @@
 "strength_summary" = "%1$@ · %2$d characters";
 "secret_too_short" = "%1$d characters; at least %2$d needed";
 "crack_time" = "A thousand GPUs: about %1$@ and %2$@ of electricity";
-"strength_tip" = "Make it longer, with details only you know. No quotes, lyrics or birthdays.";
+"strength_tip" = "Make it longer, with details only you know. No famous lines, lyrics or birthdays.";
 
 "words_12" = "12 words";
 "words_24" = "24 words";
@@ -50,7 +50,7 @@
 "qr_caption" = "Tap to close";
 
 "weak_title" = "Easy to crack";
-"weak_message" = "A thousand GPUs could crack it in about %1$@ for %2$@ of electricity. Make it longer.";
+"weak_message" = "A thousand GPUs could crack it in about %1$@ for %2$@ of electricity. Add details only you know.";
 "weak_edit" = "Edit";
 "weak_continue" = "Generate anyway";
 

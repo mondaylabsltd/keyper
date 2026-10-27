@@ -24,6 +24,20 @@ final class KeyperUITests: XCTestCase {
         add(attachment)
     }
 
+    /// Waits until Keyper's keyboard is open and has stopped moving: a key tapped while it still slides
+    /// in, or while the page scrolls the field above it, lands on the row below.
+    private func waitForKeyboard(file: StaticString = #filePath, line: UInt = #line) {
+        let key = app.keys["q"]
+        XCTAssertTrue(key.waitForExistence(timeout: 5), "Keyper's keyboard opens", file: file, line: line)
+        var frame = key.frame
+        for _ in 0..<20 {
+            usleep(150_000)
+            if key.frame == frame { return }
+            frame = key.frame
+        }
+        XCTFail("Keyper's keyboard keeps moving", file: file, line: line)
+    }
+
     /// Types text key by key on Keyper's keyboard, switching layers and shift as needed.
     private func type(_ text: String) {
         for c in text {
@@ -45,7 +59,7 @@ final class KeyperUITests: XCTestCase {
     func testTypeGenerateAndMatchTheReference() {
         let email = app.textFields["email"]
         email.tap()
-        XCTAssertTrue(app.keys["q"].waitForExistence(timeout: 5), "Keyper's keyboard opens")
+        waitForKeyboard()
         type("alice@example.com")
         XCTAssertEqual(email.value as? String, "alice@example.com")
         app.keys["Next"].tap()
@@ -98,9 +112,12 @@ final class KeyperUITests: XCTestCase {
     private func varied(_ image: CGImage, in rect: CGRect) -> Double {
         let (pixels, _, _) = rgba(image, in: rect)
         var differ = 0
-        for i in stride(from: 0, to: pixels.count, by: 4)
-        where abs(Int(pixels[i]) - Int(pixels[0])) + abs(Int(pixels[i + 1]) - Int(pixels[1])) + abs(Int(pixels[i + 2]) - Int(pixels[2])) > 24 {
-            differ += 1
+        // One typed term per channel: as a single expression it is too much for the type checker on CI.
+        for i in stride(from: 0, to: pixels.count, by: 4) {
+            let red: Int = abs(Int(pixels[i]) - Int(pixels[0]))
+            let green: Int = abs(Int(pixels[i + 1]) - Int(pixels[1]))
+            let blue: Int = abs(Int(pixels[i + 2]) - Int(pixels[2]))
+            if red + green + blue > 24 { differ += 1 }
         }
         return Double(differ) / Double(pixels.count / 4)
     }
@@ -125,7 +142,7 @@ final class KeyperUITests: XCTestCase {
 
     private func typeInputs(_ email: String, _ secret: String) {
         app.textFields["email"].tap()
-        XCTAssertTrue(app.keys["q"].waitForExistence(timeout: 5))
+        waitForKeyboard()
         type(email)
         app.keys["Next"].tap()
         type(secret)
@@ -149,16 +166,22 @@ final class KeyperUITests: XCTestCase {
 
         app.buttons["First time? Do a recovery drill  ›"].tap()
         XCTAssertFalse(words.exists, "the phrase hides during the drill")
-        XCTAssertTrue(app.keys["q"].waitForExistence(timeout: 5), "the drill opens the keyboard on the email")
+        waitForKeyboard() // the drill opens it on the email
         type("alice@example.com")
         app.keys["Next"].tap()
         type("In 2009 Grandma Li and I picked 7 green date")
+        // Shown, so that a mistyped key fails here, by name, rather than as a drill that never matches.
+        app.buttons["reveal"].tap()
+        let secret = app.textViews["secret"]
+        XCTAssertEqual(secret.value as? String, "In 2009 Grandma Li and I picked 7 green date")
         app.keys["Done"].tap()
         app.buttons["generate"].tap()
         XCTAssertTrue(app.staticTexts["Not the same as before"].waitForExistence(timeout: 5))
         // A tap puts the native cursor where it lands: tap after the end of the text to append.
-        app.textViews["secret"].coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.9)).tap()
+        secret.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.9)).tap()
+        waitForKeyboard()
         type("s")
+        XCTAssertEqual(secret.value as? String, "In 2009 Grandma Li and I picked 7 green dates")
         app.keys["Done"].tap()
         app.buttons["generate"].tap()
         XCTAssertTrue(words.waitForExistence(timeout: 5), "a matching drill shows the phrase again, without a second derivation")
@@ -184,10 +207,13 @@ final class KeyperUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["strength"].label, "Very weak · 21 characters")
         app.keys["Done"].tap()
         app.buttons["generate"].tap()
-        let alert = app.alerts["Easy to crack"]
-        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        // Drawn inside the screen shield, so not one of the app's alerts.
+        let dialog = app.descendants(matching: .any)["weak_dialog"]
+        XCTAssertTrue(dialog.waitForExistence(timeout: 5))
+        XCTAssertTrue(dialog.staticTexts["Easy to crack"].exists)
         shot("weak")
-        alert.buttons["Edit"].tap()
+        dialog.buttons["Edit"].tap()
+        XCTAssertTrue(dialog.waitForNonExistence(timeout: 5))
         XCTAssertFalse(app.descendants(matching: .any)["words"].exists)
     }
 
@@ -225,6 +251,53 @@ final class KeyperUITests: XCTestCase {
             XCTAssertTrue(app.buttons["generate"].waitForExistence(timeout: 10), "the app came back")
         }
         XCTAssertEqual(app.state, .runningForeground)
+    }
+
+    /// App Store screenshots, by hand only: KEYPER_STORE_SHOTS=offline takes the sentence typed and
+    /// the phrase, =online the offline gate, each in English and Chinese, as attachments named
+    /// store-<language>-<number>-<screen> for xcresulttool to export.
+    func testStoreScreenshots() throws {
+        guard let part = ProcessInfo.processInfo.environment["KEYPER_STORE_SHOTS"] else { throw XCTSkip("set KEYPER_STORE_SHOTS to offline or online") }
+        try XCTSkipUnless(isSimulator, "the offline state is simulated")
+        func store(_ name: String) {
+            let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
+        let language = app.buttons["language"]
+        if part == "online" {
+            app.terminate()
+            app.launchArguments = ["-KeyperAllowScreenshots", "-AppleLanguages", "(en)"]
+            app.launch()
+            XCTAssertTrue(app.descendants(matching: .any)["offline_card"].waitForExistence(timeout: 5))
+            store("store-en-03-offline-gate")
+            language.tap()
+            XCTAssertTrue(app.staticTexts["\u{8BF7}\u{5148}\u{65AD}\u{7F51}"].waitForExistence(timeout: 5)) // 请先断网
+            store("store-zh-03-offline-gate")
+            return
+        }
+        typeInputs("alice@example.com", "In 2009 Grandma Li and I picked 7 green dates")
+        app.keys["Done"].tap()
+        app.buttons["reveal"].tap()
+        XCTAssertTrue(app.keys["q"].waitForNonExistence(timeout: 5))
+        store("store-en-01-input")
+        language.tap()
+        XCTAssertTrue(app.staticTexts["\u{8F83}\u{5F3A} · 45 \u{4E2A}\u{5B57}\u{7B26}"].waitForExistence(timeout: 5))
+        store("store-zh-01-input")
+        language.tap()
+        app.buttons["generate"].tap()
+        let words = app.descendants(matching: .any)["words"]
+        XCTAssertTrue(words.waitForExistence(timeout: 600))
+        // The page's end in both languages: the phrase whole, with its buttons.
+        app.swipeUp()
+        sleep(3) // the scroll indicator fades
+        store("store-en-02-phrase")
+        language.tap()
+        XCTAssertTrue(app.staticTexts["\u{52A9}\u{8BB0}\u{8BCD}"].waitForExistence(timeout: 5)) // 助记词
+        app.swipeUp()
+        sleep(3)
+        store("store-zh-02-phrase")
     }
 
     /// The real gate on a phone, checked by hand: KEYPER_EXPECT=online or offline says what the

@@ -54,16 +54,22 @@ struct MainView: View {
         .animation(.easeOut(duration: 0.2), value: model.focus == nil)
         .overlay(alignment: .bottom) { toast }
         .overlay { if model.showingQr, let phrase = model.phrase { QrScreen(text: phrase.joined(separator: " "), caption: s["qr_caption"]) { model.showingQr = false } } }
-        .alert(s["weak_title"], isPresented: Binding(get: { model.weakWarning != nil }, set: { if !$0 { model.weakWarning = nil } }), presenting: model.weakWarning) { _ in
-            Button(s["weak_edit"], role: .cancel) { model.weakWarning = nil }
-            Button(s["weak_continue"]) { model.generateAnyway() }
-        } message: { estimate in
-            Text(s.format("weak_message", s.duration(estimate.crackSeconds(gpus: 1000)), s.money(estimate.crackDollars())))
+        // Overlays like the QR code, not .alert: they stay inside the screen shield.
+        .overlay {
+            if let estimate = model.weakWarning {
+                Dialog(
+                    id: "weak_dialog",
+                    title: s["weak_title"],
+                    message: s.format("weak_message", s.duration(estimate.crackSeconds(gpus: 1000)), s.money(estimate.crackDollars())),
+                    actions: [.init(title: s["weak_edit"]) { model.weakWarning = nil }, .init(title: s["weak_continue"]) { model.generateAnyway() }],
+                    cancel: { model.weakWarning = nil }
+                )
+            }
         }
-        .alert("", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
-            Button(s["ok"]) { model.errorMessage = nil }
-        } message: {
-            Text(model.errorMessage ?? "")
+        .overlay {
+            if let message = model.errorMessage {
+                Dialog(id: "error_dialog", message: message, actions: [.init(title: s["ok"]) { model.errorMessage = nil }], cancel: { model.errorMessage = nil })
+            }
         }
     }
 
