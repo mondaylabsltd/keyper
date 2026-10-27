@@ -11,7 +11,25 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			adapter: adapter(),
+			// Prerendered pages get this as a <meta> tag, with hashes for SvelteKit's inline scripts. The
+			// visit counter may load its one script file and send to its own host, and nothing else, so
+			// its server cannot switch on extras such as session replay. frame-ancestors and the other
+			// headers that a <meta> tag cannot carry are in static/_headers.
+			csp: {
+				mode: 'hash',
+				directives: {
+					'default-src': ['self'],
+					'script-src': ['self', 'https://tj.appsdata.org/api/script.js'],
+					'connect-src': ['self', 'https://tj.appsdata.org'],
+					'style-src': ['self'],
+					'style-src-attr': ['unsafe-inline'],
+					'img-src': ['self', 'data:'],
+					'object-src': ['none'],
+					'base-uri': ['self'],
+					'form-action': ['none']
+				}
+			}
 		})
 	],
 	test: {

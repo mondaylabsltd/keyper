@@ -64,7 +64,14 @@ export interface Content {
 			action: string;
 			guide: string;
 		};
-		store: { name: string; price: string; per: string; status: string };
+		store: {
+			name: string;
+			price: string;
+			per: string;
+			status: string;
+			googlePlay: string;
+			appStore: string;
+		};
 		note: string;
 	};
 	faq: { title: string; items: { q: string; a: string }[] };
@@ -79,7 +86,7 @@ export const en: Content = {
 	meta: {
 		title: 'Keyper: a recovery phrase you keep in your head',
 		description:
-			'On an offline phone, Keyper turns your email and a sentence only you know into a standard BIP39 recovery phrase. Same inputs, same phrase, forever. Open source, no permissions, Android and iPhone.'
+			'On an offline phone, Keyper turns your email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs always give the same phrase. Open source, no permissions, Android and iPhone.'
 	},
 	nav: {
 		how: 'How it works',
@@ -92,9 +99,9 @@ export const en: Content = {
 		eyebrow: 'For Android and iPhone',
 		title: 'A recovery phrase you keep in your head.',
 		lead: 'On an offline phone, Keyper turns your email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs always give the same phrase, so you do not need to write it down, and the app never saves what you type.',
-		primary: 'See how it works',
-		secondary: 'Read the security model',
-		note: 'Coming to Google Play and the App Store.'
+		primary: 'Get Keyper',
+		secondary: 'See how it works',
+		note: `${site.price}, paid once. Or build it yourself for free.`
 	},
 	shots: [
 		{ src: '/screens/en-input.png', alt: 'Typing the sentence on Keyper’s own keyboard' },
@@ -104,7 +111,7 @@ export const en: Content = {
 		'No permissions',
 		'Saves nothing you type',
 		'Works only offline',
-		'Protocol frozen',
+		'Same phrases in every version',
 		'MIT License'
 	],
 	how: {
@@ -112,7 +119,7 @@ export const en: Content = {
 		steps: [
 			{
 				title: 'Go offline',
-				text: 'Turn on airplane mode and switch off Wi-Fi and Bluetooth. Keyper lets you type your sentence only while the phone has no network connection.'
+				text: 'Turn on airplane mode and switch off Wi-Fi and Bluetooth. Keyper lets you type only while the phone has no network connection.'
 			},
 			{
 				title: 'Type two things',
@@ -144,7 +151,7 @@ export const en: Content = {
 			['50 bits', '890 years', 'US$313 million'],
 			['60 bits', '910,000 years', 'US$320 billion']
 		],
-		note: 'Above about 48.4 bits, the electricity alone passes US$100 million. Keyper estimates this while you type.',
+		note: 'Each extra bit doubles the number of guesses. Above about 48.4 bits, the electricity alone passes US$100 million. Keyper estimates these figures while you type.',
 		warning:
 			'Length alone does not make a sentence hard to guess. Famous lines, lyrics, proverbs and “my cat is called…” are an attacker’s first tries and fall for a few dollars. Use details only you know: names, years, places, numbers, a symbol or two.'
 	},
@@ -161,7 +168,7 @@ export const en: Content = {
 			},
 			{
 				title: 'Nothing you type is saved',
-				text: 'No account, no files, no backups. Leave the app and the sentence and the phrase are gone.'
+				text: 'No account, no files, no backups. When you leave the app, the sentence and the phrase are gone.'
 			},
 			{
 				title: 'No screenshots',
@@ -172,14 +179,14 @@ export const en: Content = {
 				text: 'Before you use the phrase, type both inputs again from memory. Keyper tells you at once whether they match.'
 			},
 			{
-				title: 'Clipboard cleared after 60 seconds',
-				text: 'After 60 seconds Keyper clears a copied phrase (on Android, only if the app is still running), and on iPhone it never reaches your other devices. Until then other apps on the phone can read it, so the QR code is safer.'
+				title: 'Clipboard cleared automatically',
+				text: 'A copied phrase is cleared from the clipboard after 60 seconds, or at once if the phone goes online. To keep it off the clipboard entirely, use the QR code.'
 			}
 		]
 	},
 	model: {
 		title: 'Security model',
-		lead: 'Keyper’s code and its domain constant are public: assume every attacker has them.',
+		lead: 'Everything in Keyper’s code is public, including the constants built into the app: assume every attacker has it.',
 		head: ['If someone has…', 'What still protects the phrase'],
 		rows: [
 			[
@@ -227,7 +234,7 @@ export const en: Content = {
 	},
 	pricing: {
 		title: 'Pricing',
-		lead: 'The store version and a build from source are the same app and give the same phrases.',
+		lead: 'The store version and a build from source are the same app and give the same phrases. Buying it saves you the build and pays for Keyper’s upkeep.',
 		build: {
 			name: 'Build it yourself',
 			price: 'Free',
@@ -243,7 +250,9 @@ export const en: Content = {
 			name: 'Google Play and the App Store',
 			price: site.price,
 			per: 'once',
-			status: 'Coming soon'
+			status: 'Coming soon',
+			googlePlay: 'Google Play',
+			appStore: 'App Store'
 		},
 		note: 'One price worldwide; each store shows it in your currency. Android and iPhone are separate purchases.'
 	},
@@ -264,7 +273,7 @@ export const en: Content = {
 			},
 			{
 				q: 'How do I know my copy is genuine?',
-				a: 'By where it came from: install Keyper only from its official Google Play and App Store listings, or build it yourself from the source, and turn off automatic updates for it. A tampered copy could save what you type and send it once the phone is online again; if the phone stays offline, it has no way to.'
+				a: 'Install Keyper only from its Google Play or App Store listing, or build it from the source, and turn off automatic updates for it. A tampered copy would not need the network to hurt you: it could show a phrase its maker already knows. To rule that out, check your phrase once with the open-source recovery script on an offline computer before you use it.'
 			},
 			{
 				q: 'Why must the phone be offline?',
@@ -288,28 +297,28 @@ export const zh: Content = {
 	meta: {
 		title: 'Keyper：记在脑子里的助记词',
 		description:
-			'在一台离线手机上，Keyper 用你的邮箱和一句只有你知道的话，生成标准 BIP39 助记词。同样的输入，永远得到同样的助记词。开源、零权限，支持 Android 和 iPhone。'
+			'在一台离线手机上，Keyper 用你的邮箱和一句只有你知道的话，生成标准 BIP39 助记词。同样的输入总是得到同样的助记词。开源、零权限，支持 Android 和 iPhone。'
 	},
 	nav: { how: '原理', security: '安全', pricing: '定价', faq: '常见问题', source: '源码' },
 	hero: {
 		eyebrow: 'Android 与 iPhone',
 		title: '记在脑子里的助记词。',
 		lead: '在一台离线手机上，Keyper 用你的邮箱和一句只有你知道的话，生成标准 BIP39 助记词。同样的输入总是得到同样的助记词，所以不用抄写，App 也从不保存你输入的内容。',
-		primary: '看看原理',
-		secondary: '安全模型',
-		note: '即将上架 Google Play 和 App Store。'
+		primary: '获取 Keyper',
+		secondary: '看看原理',
+		note: `${site.price}，一次买断。也可以自己免费编译。`
 	},
 	shots: [
 		{ src: '/screens/zh-input.png', alt: '用 Keyper 自带键盘输入那句话' },
 		{ src: '/screens/zh-result.png', alt: '12 个词的助记词' }
 	],
-	facts: ['零权限', '不保存你的输入', '只在离线时工作', '协议已冻结', 'MIT 许可证'],
+	facts: ['零权限', '不保存你的输入', '只在离线时工作', '每个版本算出的都一样', 'MIT 许可证'],
 	how: {
 		title: '原理',
 		steps: [
 			{
 				title: '先断网',
-				text: '打开飞行模式，关闭 Wi-Fi 和蓝牙。手机还有网络连接时，Keyper 不让你输入那句话。'
+				text: '打开飞行模式，关闭 Wi-Fi 和蓝牙。手机还有网络连接时，Keyper 不让你输入。'
 			},
 			{
 				title: '输入两样东西',
@@ -341,7 +350,7 @@ export const zh: Content = {
 			['50 位', '890 年', '3.1 亿美元'],
 			['60 位', '91 万年', '3200 亿美元']
 		],
-		note: '超过约 48.4 位熵，光电费就超过 1 亿美元。输入时 Keyper 会按这个模型估算。',
+		note: '每多 1 位，要猜的次数就翻一倍。超过约 48.4 位，光电费就超过 1 亿美元。你输入时，Keyper 会估算这几个数。',
 		warning:
 			'字多不等于难猜。名句、歌词、俗语、“我的猫叫某某”这类模板，攻击者最先试，几块钱电费就能命中。要用只有你知道的细节：人名、年份、地点、数字，再加一两个符号。'
 	},
@@ -350,7 +359,7 @@ export const zh: Content = {
 		items: [
 			{
 				title: '自带键盘',
-				text: '固定布局，只提供那句话允许的字符。系统输入法从不连接，没有谁能学习、同步或上传你输入的内容；粘贴和注入的按键都会被拦截。'
+				text: '固定布局，只提供那句话允许的字符。系统输入法从不连接，也就没法学习、同步或上传你输入的内容；粘贴和注入的按键都会被拦截。'
 			},
 			{
 				title: '断网门禁',
@@ -369,14 +378,14 @@ export const zh: Content = {
 				text: '使用助记词之前，凭记忆把两样输入再打一遍，Keyper 当场告诉你是否一致。'
 			},
 			{
-				title: '剪贴板 60 秒清除',
-				text: '60 秒后 Keyper 会清除复制的助记词（Android 上需要 App 仍在运行），在 iPhone 上也不会同步到你的其他设备。在此之前，手机上的其他 App 都能读到它，所以二维码更安全。'
+				title: '剪贴板自动清除',
+				text: '复制的助记词 60 秒后从剪贴板清除，手机一联网则立即清除。想让它完全不经过剪贴板，就用二维码。'
 			}
 		]
 	},
 	model: {
 		title: '安全模型',
-		lead: 'Keyper 的代码和域常量都是公开的，要当作每个攻击者都有。',
+		lead: 'Keyper 的代码完全公开，包括 App 里内置的常量，要当作每个攻击者都有。',
 		head: ['别人拿到了…', '还剩什么在保护你'],
 		rows: [
 			['你的邮箱', '那句话有多难猜：每猜一次都要 1 GiB × 128 遍'],
@@ -384,7 +393,7 @@ export const zh: Content = {
 			['邮箱和那句话', '没有了，这两样加起来就是助记词']
 		],
 		points: [
-			'这句话只用于 Keyper。',
+			'那句话只用在 Keyper 上，别在别处用。',
 			'用来生成的手机要干净：手机上已有的恶意软件，Keyper 防不住。'
 		]
 	},
@@ -418,7 +427,7 @@ export const zh: Content = {
 	},
 	pricing: {
 		title: '定价',
-		lead: '商店版和自己编译的是同一个 App，算出的助记词也相同。',
+		lead: '商店版和自己编译的是同一个 App，算出的助记词也相同。买商店版省去自己编译，也支持 Keyper 的持续维护。',
 		build: {
 			name: '自己编译',
 			price: '免费',
@@ -434,7 +443,9 @@ export const zh: Content = {
 			name: 'Google Play 与 App Store',
 			price: site.price,
 			per: '一次性',
-			status: '即将推出'
+			status: '即将推出',
+			googlePlay: 'Google Play',
+			appStore: 'App Store'
 		},
 		note: '全球统一定价，商店会按你所在地区的货币显示。Android 和 iPhone 需要分别购买。'
 	},
@@ -455,7 +466,7 @@ export const zh: Content = {
 			},
 			{
 				q: '怎么确认装的是正版？',
-				a: '看来源：只从 Google Play 和 App Store 上的官方页面安装，或者自己从源码编译，并关掉它的自动更新。篡改版可能存下你的输入，等手机联网后再发出去；手机一直不联网，它就发不出去。'
+				a: '只从 Google Play 或 App Store 上的官方页面安装，或者自己从源码编译，并关掉它的自动更新。篡改版不联网也能害你：它可以显示一组作者早就知道的助记词。要排除这种情况，在使用助记词之前，用开源恢复脚本在一台断网的电脑上核对一次。'
 			},
 			{
 				q: '为什么手机必须断网？',

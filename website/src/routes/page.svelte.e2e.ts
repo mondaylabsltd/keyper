@@ -16,6 +16,10 @@ for (const [path, lang, heading] of [
 		baseURL
 	}) => {
 		const elsewhere: string[] = [];
+		const blocked: string[] = [];
+		page.on('console', (message) => {
+			if (/Content Security Policy/i.test(message.text())) blocked.push(message.text());
+		});
 		page.on('request', (request) => {
 			const url = request.url();
 			if (!url.startsWith(baseURL!) && !url.startsWith(analytics)) elsewhere.push(url);
@@ -27,6 +31,7 @@ for (const [path, lang, heading] of [
 		await expect(page.locator('#faq details')).toHaveCount(5);
 		await expect(page.locator(`script[src^="${analytics}"]`)).toHaveCount(1);
 		expect(elsewhere).toEqual([]);
+		expect(blocked).toEqual([]);
 	});
 }
 
@@ -42,3 +47,9 @@ for (const [path, lang, heading] of [
 		await expect(page.locator('h1')).toHaveText(heading);
 	});
 }
+
+test('the site sends its security headers', async ({ request }) => {
+	const response = await request.get('/');
+	expect(response.headers()['x-frame-options']).toBe('DENY');
+	expect(response.headers()['x-content-type-options']).toBe('nosniff');
+});

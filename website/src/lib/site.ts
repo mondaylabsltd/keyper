@@ -9,7 +9,10 @@ export const site = {
 	/** The company address: security reports (SECURITY.md) and questions about the policies. */
 	email: 'hello@mondaylabs.ltd',
 	/** One price worldwide, paid once, on Google Play and the App Store; each store converts it. */
-	price: 'US$29.99'
+	price: 'US$29.99',
+	/** Store listings; while a link is null, the pricing card says the app is coming soon. */
+	googlePlay: null as string | null,
+	appStore: null as string | null
 };
 
 /** A file in the repository, or null while the repository is not public. */

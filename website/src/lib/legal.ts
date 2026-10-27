@@ -57,7 +57,7 @@ export const legalEn: Legal = {
 				heading: 'This website',
 				paragraphs: [
 					'getkeyper.app is a set of static pages hosted by Cloudflare. To deliver them and protect them from abuse, Cloudflare processes your IP address and the details of each request.',
-					'We count visits with Rybbit, an open-source analytics tool, hosted at tj.appsdata.org. It records the pages you view, the page that linked you here, your browser, language, screen size and approximate location (from your IP address), and keeps a random visitor ID in your browser’s local storage. It sets no cookies.'
+					'We count visits with Rybbit, an open-source analytics tool, hosted at tj.appsdata.org. It records the pages you view and their query parameters, the page that linked you here, the links you follow to other sites, your browser, language, screen size and approximate location (from your IP address), and keeps a random visitor ID in your browser’s local storage. It sets no cookies. The site’s security policy lets the script send data only to that server.'
 				]
 			},
 			{
@@ -89,7 +89,7 @@ export const legalEn: Legal = {
 			{
 				heading: 'What depends on you',
 				paragraphs: [
-					'The phrase can be generated again only from the same email and the same sentence, typed exactly as before. Nobody, including us, can recover them for you. Do the recovery drill before you use the phrase.',
+					'The phrase can be generated again only from the same email and the same sentence, with the sentence typed exactly as before. Nobody, including us, can recover them for you. Do the recovery drill before you use the phrase.',
 					'If others can guess your sentence, they can generate your phrase. Use a clean, offline phone, and install Keyper only from its official store listings or build it from the source.'
 				]
 			},
@@ -153,14 +153,14 @@ export const legalZh: Legal = {
 			{
 				heading: '本网站',
 				paragraphs: [
-					'getkeyper.app 是托管在 Cloudflare 上的静态网页。为了传送网页、防范滥用，Cloudflare 会处理你的 IP 地址和每次请求的信息。',
-					'我们用开源统计工具 Rybbit 统计访问量，服务托管在 tj.appsdata.org。它记录你浏览的页面、从哪个页面来、浏览器、语言、屏幕尺寸和大致位置（根据 IP 地址推断），并在浏览器的本地存储里保存一个随机的访客 ID。它不使用 Cookie。'
+					'getkeyper.app 是托管在 Cloudflare 上的静态网页。为了提供网页、防范滥用，Cloudflare 会处理你的 IP 地址和每次请求的信息。',
+					'我们用开源统计工具 Rybbit 统计访问量，服务托管在 tj.appsdata.org。它记录你浏览的页面及其网址参数、从哪个页面来、你点开的外部链接、浏览器、语言、屏幕尺寸和大致位置（根据 IP 地址推断），并在浏览器的本地存储里保存一个随机的访客 ID。它不使用 Cookie。本站的安全策略只允许这个脚本把数据发往该服务器。'
 				]
 			},
 			{
 				heading: '邮件',
 				paragraphs: [
-					'你给我们发邮件时，我们只用你的地址和邮件内容来回复，只保留到沟通结束所需为止。'
+					'你给我们发邮件时，我们只用你的地址和邮件内容来回复，只在沟通需要的期间保留。'
 				]
 			},
 			{
@@ -183,7 +183,7 @@ export const legalZh: Legal = {
 			{
 				heading: '取决于你的部分',
 				paragraphs: [
-					'只有输入同样的邮箱和同样的那句话，一字不差，才能再次生成助记词。任何人，包括我们，都没法替你找回。使用助记词之前，先做恢复演练。',
+					'只有输入同样的邮箱，并且一字不差地输入同样的那句话，才能再次生成助记词。任何人，包括我们，都没法替你找回。使用助记词之前，先做恢复演练。',
 					'别人猜得到你的那句话，就能算出你的助记词。请在干净的离线手机上使用，并且只从官方商店页面安装 Keyper，或者自己从源码编译。'
 				]
 			},
@@ -196,7 +196,7 @@ export const legalZh: Legal = {
 			{
 				heading: '免责声明',
 				paragraphs: [
-					'Keyper 按“原样”提供，不附带任何形式的担保。在法律允许的范围内，因使用 Keyper、忘记或输错输入内容、或手机被入侵造成的任何损失（包括资产损失），我们不承担责任。',
+					'Keyper 按“原样”提供，不附带任何形式的担保。在法律允许的范围内，因使用 Keyper、忘记或输错邮箱和那句话、或手机被入侵造成的任何损失（包括资产损失），我们不承担责任。',
 					'本条款不影响法律赋予你、且不能被排除的权利。'
 				]
 			},

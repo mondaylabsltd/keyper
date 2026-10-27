@@ -51,8 +51,8 @@
 			<h1>{c.hero.title}</h1>
 			<p class="lead">{c.hero.lead}</p>
 			<div class="actions">
-				<a class="button primary" href="#how">{c.hero.primary}</a>
-				<a class="button tonal" href="#security">{c.hero.secondary}</a>
+				<a class="button primary" href="#pricing">{c.hero.primary}</a>
+				<a class="button tonal" href="#how">{c.hero.secondary}</a>
 			</div>
 			<p class="note">{c.hero.note}</p>
 		</div>
@@ -249,7 +249,22 @@
 			<div class="card plan featured">
 				<h3>{c.pricing.store.name}</h3>
 				<p class="price">{c.pricing.store.price} <small>{c.pricing.store.per}</small></p>
-				<span class="store" aria-disabled="true">{c.pricing.store.status}</span>
+				{#if site.googlePlay || site.appStore}
+					<div class="stores">
+						{#if site.googlePlay}<a
+								class="button primary"
+								href={site.googlePlay}
+								rel="external">{c.pricing.store.googlePlay}</a
+							>{/if}
+						{#if site.appStore}<a
+								class="button primary"
+								href={site.appStore}
+								rel="external">{c.pricing.store.appStore}</a
+							>{/if}
+					</div>
+				{:else}
+					<span class="store" aria-disabled="true">{c.pricing.store.status}</span>
+				{/if}
 			</div>
 		</div>
 		<p class="caption">{c.pricing.note}</p>
@@ -926,6 +941,12 @@
 		gap: 8px;
 		color: var(--text-secondary);
 		font-size: 16px;
+	}
+
+	.stores {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
 	}
 
 	.plan .button,

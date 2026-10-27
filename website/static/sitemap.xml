@@ -8,4 +8,20 @@
 		<loc>https://getkeyper.app/zh</loc>
 		<xhtml:link rel="alternate" hreflang="en" href="https://getkeyper.app/" />
 	</url>
+	<url>
+		<loc>https://getkeyper.app/privacy</loc>
+		<xhtml:link rel="alternate" hreflang="zh-Hans" href="https://getkeyper.app/zh/privacy" />
+	</url>
+	<url>
+		<loc>https://getkeyper.app/zh/privacy</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://getkeyper.app/privacy" />
+	</url>
+	<url>
+		<loc>https://getkeyper.app/terms</loc>
+		<xhtml:link rel="alternate" hreflang="zh-Hans" href="https://getkeyper.app/zh/terms" />
+	</url>
+	<url>
+		<loc>https://getkeyper.app/zh/terms</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://getkeyper.app/terms" />
+	</url>
 </urlset>

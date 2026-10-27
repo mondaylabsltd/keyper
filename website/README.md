@@ -4,8 +4,10 @@ The landing page of Keyper, in English (`/`) and Chinese (`/zh`). SvelteKit, pre
 files and served by Cloudflare Workers.
 
 The pages use system fonts and load one third-party script, the visit counter in `src/app.html`
-(Rybbit, described in the privacy policy). The end-to-end tests block it and fail if a page requests
-anything else from another host.
+(Rybbit, described in the privacy policy). The Content Security Policy in `vite.config.ts` lets it
+load that one file and send only to its own host; the other security headers are in `_headers`. The
+end-to-end tests block it and fail if a page requests anything else from another host or breaks
+the policy.
 
 ## Develop
 
@@ -14,9 +16,11 @@ bun install
 bun run dev
 ```
 
-The words live in [`src/lib/content.ts`](src/lib/content.ts), one object per language; a unit
+The page text lives in [`src/lib/content.ts`](src/lib/content.ts) (the privacy policy and terms in
+[`src/lib/legal.ts`](src/lib/legal.ts)), one object per language; a unit
 test keeps the two in step. Site settings are in [`src/lib/site.ts`](src/lib/site.ts); while
-`repository` is null, the links to the source, the protocol and the security policy are left out.
+`repository` is null, the links to the source, the protocol and the security policy are left out,
+and while `googlePlay` and `appStore` are null, the pricing card says the app is coming soon.
 
 ## Check, test, build
 
