@@ -5,7 +5,7 @@ export const site = {
 	 * The public source repository, e.g. 'https://github.com/owner/keyper'. While it is null, the
 	 * links that need it (source, protocol, security policy) are left out rather than broken.
 	 */
-	repository: 'https://github.com/atshelchin/getkeyper' as string | null,
+	repository: 'https://github.com/mondaylabsltd/keyper' as string | null,
 	/** The company address: security reports (SECURITY.md) and questions about the policies. */
 	email: 'hello@mondaylabs.ltd',
 	/** One price worldwide, paid once, on Google Play and the App Store; each store converts it. */
