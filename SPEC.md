@@ -95,7 +95,7 @@ libraries (Python's argon2-cffi, Go's x/crypto, libsodium) do not expose that in
 with standard tools must stay possible.
 
 **Argon2id parameters.** Argon2id is the RFC 9106 recommendation for password hashing. The
-goal is that guessing any reasonable secret is not worth it: a secret of about 48 bits should
+goal is that guessing any reasonable secret is not worth it: a secret of about 48.4 bits should
 already cost an attacker more than US$100 million in electricity alone (§4). Phrases are
 generated rarely, so the derivation may take about a minute: 1 GiB × 128 passes, which the app
 computes in about a minute on a Snapdragon 870 (Redmi K40); a minute of full load showed no

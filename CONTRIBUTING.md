@@ -1,23 +1,24 @@
 # Contributing to Keyper
 
-Thanks for helping. Bug reports, translations, UI and accessibility improvements, documentation
+Bug reports, translations, UI and accessibility improvements, documentation
 and better tests are all welcome. For security issues, follow [SECURITY.md](SECURITY.md)
 instead of opening an issue.
 
 ## Ground rules
 
-Keyper is used to regenerate wallet recovery phrases from memory, possibly years from now. A few
-rules follow from that and are not negotiable:
+Keyper is used to regenerate wallet recovery phrases from memory, possibly years from now. These
+rules follow from that:
 
 1. **Protocol v1 is frozen.** No change may alter the phrase derived from any v1 input: not the
    alphabet, normalisation, minimum lengths, salt, HMAC labels, Argon2id parameters or wordlist.
    `KeyperTest.protocolV1IsFrozen` and the SPEC vectors fail the build if one does. Ideas that
    need a protocol change belong in an issue about a future v2.
-2. **The domain constant never changes** in this repository. `DomainTest` guards it.
-3. **No permissions, no network, no storage.** The app must keep working on an offline phone and
-   keep nothing.
-4. **No new runtime dependencies.** The app uses only the Android platform; the core uses only
-   the JDK. Test-only dependencies need a good reason.
+2. **The domain constant never changes** in this repository. Tests on both platforms pin its
+   domain ID and keep `Domain.kt` and `Domain.swift` equal.
+3. **No permissions, no network, and nothing the user types is kept.** The app must keep working
+   on an offline phone.
+4. **No new runtime dependencies.** The apps use only their platforms' frameworks; the cores use
+   only the JDK and the system's CryptoKit. Test-only dependencies need a good reason.
 5. **The strength meter may change; the rules it enforces may not.** It can warn differently,
    but it must never refuse a sentence that v1 accepts, or someone could be locked out.
 

@@ -24,7 +24,6 @@ export interface Content {
 	facts: string[];
 	how: {
 		title: string;
-		lead: string;
 		steps: { title: string; text: string }[];
 		flow: { email: string; sentence: string; slow: string; words: string };
 	};
@@ -36,12 +35,17 @@ export interface Content {
 		note: string;
 		warning: string;
 	};
-	features: { title: string; lead: string; items: { title: string; text: string }[] };
-	model: { title: string; head: [string, string]; rows: [string, string][]; points: string[] };
+	features: { title: string; items: { title: string; text: string }[] };
+	model: {
+		title: string;
+		lead: string;
+		head: [string, string];
+		rows: [string, string][];
+		points: string[];
+	};
 	platforms: { title: string; lead: string; android: string; ios: string; caption: string };
 	open: {
 		title: string;
-		lead: string;
 		/** `link.path` is a file in the repository, with an optional #anchor. */
 		items: { title: string; text: string; link?: { label: string; path: string } }[];
 		spec: string;
@@ -60,13 +64,11 @@ export interface Content {
 			action: string;
 			guide: string;
 		};
-		store: { name: string; price: string; per: string; points: string[] };
+		store: { name: string; price: string; per: string; status: string };
 		note: string;
 	};
 	faq: { title: string; items: { q: string; a: string }[] };
-	cta: { title: string; text: string; soon: string };
-	/** `check` names the code every official build shows at the bottom of its screen; `checkHint` explains it. */
-	footer: { license: string; security: string; check: string; checkHint: string };
+	footer: { license: string; security: string; privacy: string; terms: string };
 }
 
 export const en: Content = {
@@ -87,9 +89,9 @@ export const en: Content = {
 		source: 'Source'
 	},
 	hero: {
-		eyebrow: 'Open source · Offline only · Android & iPhone',
+		eyebrow: 'For Android and iPhone',
 		title: 'A recovery phrase you keep in your head.',
-		lead: 'On an offline phone, Keyper turns your email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs give the same phrase, forever. Nothing to write down, nothing stored.',
+		lead: 'On an offline phone, Keyper turns your email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs always give the same phrase, so you do not need to write it down, and the app never saves what you type.',
 		primary: 'See how it works',
 		secondary: 'Read the security model',
 		note: 'Coming to Google Play and the App Store.'
@@ -100,42 +102,41 @@ export const en: Content = {
 	],
 	facts: [
 		'No permissions',
-		'Nothing stored',
+		'Saves nothing you type',
 		'Works only offline',
 		'Protocol frozen',
-		'MIT licence'
+		'MIT License'
 	],
 	how: {
 		title: 'How it works',
-		lead: 'Your email and your sentence go in. A standard recovery phrase comes out, usable with any wallet. Keyper keeps nothing: next time, type the same two things again.',
 		steps: [
 			{
 				title: 'Go offline',
-				text: 'Turn on airplane mode and switch off Wi-Fi and Bluetooth. Keyper will not let you type your sentence until the phone is offline, and forgets everything the moment it is back online.'
+				text: 'Turn on airplane mode and switch off Wi-Fi and Bluetooth. Keyper lets you type your sentence only while the phone has no network connection.'
 			},
 			{
 				title: 'Type two things',
-				text: 'Your email, then a sentence only you know, both on Keyper’s own keyboard. No system or third-party keyboard ever sees them.'
+				text: 'Your email, then a sentence only you know, both on Keyper’s own keyboard. The email ignores capitals and punctuation; the sentence does not: every capital, symbol and space between words counts.'
 			},
 			{
 				title: 'Wait a minute',
-				text: 'Keyper runs Argon2id over 1 GiB of memory, 128 times. About a minute on a phone: deliberately slow, so that guessing is slow too.'
+				text: 'Keyper runs Argon2id over 1 GiB of memory, 128 passes. About a minute on a phone: deliberately slow, so that guessing is slow too.'
 			},
 			{
 				title: 'Use the phrase',
-				text: '12 or 24 standard BIP39 words. Copy them into a wallet on the same phone or show them as a QR code. A recovery drill checks you can type it all again.'
+				text: '12 or 24 standard BIP39 words. Copy them into a wallet on the same phone or show them as a QR code.'
 			}
 		],
 		flow: {
-			email: 'Email (only a salt)',
+			email: 'Your email',
 			sentence: 'Your sentence',
 			slow: 'Argon2id · 1 GiB × 128',
 			words: '12 or 24 BIP39 words'
 		}
 	},
 	cost: {
-		title: 'Expensive to guess, if your sentence is yours',
-		lead: 'Every guess costs an attacker the same minute of memory-hard work you spent once. With assumptions that favour the attacker, here is what a search costs:',
+		title: 'What guessing costs',
+		lead: 'Every guess repeats the minute of work your phone does; a top GPU manages about 20 a second. With assumptions that favour the attacker:',
 		head: ['How unguessable the sentence is', '1000 top GPUs', 'Electricity alone'],
 		rows: [
 			['30 bits', '7.5 hours', 'US$300'],
@@ -143,13 +144,12 @@ export const en: Content = {
 			['50 bits', '890 years', 'US$313 million'],
 			['60 bits', '910,000 years', 'US$320 billion']
 		],
-		note: 'From about 48 bits on, the electricity alone passes US$100 million. Keyper estimates this while you type.',
+		note: 'Above about 48.4 bits, the electricity alone passes US$100 million. Keyper estimates this while you type.',
 		warning:
-			'Long is not the same as hard to guess. Famous lines, lyrics, proverbs and “my cat is called…” are an attacker’s first tries and fall for a few dollars. Use details only you know: names, years, places, numbers, a symbol or two.'
+			'Length alone does not make a sentence hard to guess. Famous lines, lyrics, proverbs and “my cat is called…” are an attacker’s first tries and fall for a few dollars. Use details only you know: names, years, places, numbers, a symbol or two.'
 	},
 	features: {
-		title: 'Built to stay offline and leave nothing behind',
-		lead: 'Everything around the derivation exists to keep your sentence on your phone and in your head.',
+		title: 'Protections',
 		items: [
 			{
 				title: 'Its own keyboard',
@@ -157,11 +157,11 @@ export const en: Content = {
 			},
 			{
 				title: 'An offline gate',
-				text: 'You can only type and generate offline. Going back online wipes the sentence and the phrase at once.'
+				text: 'You can only type and generate while the phone has no network connection. When a connection comes back, the sentence and the phrase are wiped at once.'
 			},
 			{
-				title: 'Nothing stored',
-				text: 'No account, no files, no backups, no network. Leave the app and the sentence and the phrase are gone.'
+				title: 'Nothing you type is saved',
+				text: 'No account, no files, no backups. Leave the app and the sentence and the phrase are gone.'
 			},
 			{
 				title: 'No screenshots',
@@ -169,64 +169,56 @@ export const en: Content = {
 			},
 			{
 				title: 'A recovery drill',
-				text: 'Before you move any funds, type both inputs again from memory. Keyper tells you at once whether they match.'
+				text: 'Before you use the phrase, type both inputs again from memory. Keyper tells you at once whether they match.'
 			},
 			{
-				title: 'A short-lived clipboard',
-				text: 'A copied phrase is marked sensitive and leaves the clipboard after 60 seconds. On iPhone it never reaches your other devices.'
+				title: 'Clipboard cleared after 60 seconds',
+				text: 'After 60 seconds Keyper clears a copied phrase (on Android, only if the app is still running), and on iPhone it never reaches your other devices. Until then other apps on the phone can read it, so the QR code is safer.'
 			}
 		]
 	},
 	model: {
-		title: 'What protects you, honestly',
+		title: 'Security model',
+		lead: 'Keyper’s code and its domain constant are public: assume every attacker has them.',
 		head: ['If someone has…', 'What still protects the phrase'],
 		rows: [
 			[
-				'only your sentence',
-				'your email, and the domain constant if the app was never published'
-			],
-			[
-				'the app and your email',
+				'your email',
 				'how hard your sentence is to guess: every guess costs 1 GiB × 128 passes'
 			],
-			['the app, your email and your sentence', 'nothing: together they are the phrase']
+			['your sentence', 'only your email, which is usually not a secret'],
+			['your email and your sentence', 'nothing: together they are the phrase']
 		],
 		points: [
-			'Keyper is an algorithm, not a vault. Its security is your sentence and the cost of each guess.',
-			'Use the sentence for Keyper only, and do the recovery drill before you rely on it.',
+			'Use the sentence for Keyper only.',
 			'The phone you use should be clean: Keyper cannot protect you from malware already on it.'
 		]
 	},
 	platforms: {
 		title: 'Android and iPhone, the same phrase',
-		lead: 'Two native apps that follow one frozen specification. They are tested against the same vectors: the same email and sentence give the same words on either phone.',
+		lead: 'The same email and sentence give the same words on either phone.',
 		android: 'Android 8.1 or later',
 		ios: 'iOS 17 or later',
 		caption: 'Both need 4 GB of RAM or more. English and Chinese.'
 	},
 	open: {
-		title: 'Open, frozen, and recoverable without us',
-		lead: 'You should never need Keyper the company, or even Keyper the app, to get your phrase back.',
+		title: 'A frozen protocol, and recovery without the app',
 		items: [
 			{
 				title: 'A frozen protocol',
-				text: 'Protocol v1 is written down exactly and will never change. Tests pin every constant, so no update can alter a phrase you already have.'
+				text: 'Protocol v1 is written down exactly and will never change. Tests pin every constant, so an update that changed a phrase would fail them.'
 			},
 			{
-				title: 'Independent implementations',
-				text: 'Kotlin on Android, Swift on iPhone and an independent Python reference all reproduce the same test vectors, checked against standard libraries.'
+				title: 'Three implementations',
+				text: 'Kotlin on Android, Swift on iPhone and a Python reference all reproduce the same test vectors, which are checked against standard libraries.'
 			},
 			{
 				title: 'No phone? Use a computer',
-				text: 'Lost the phone, or the app is gone? Run the open-source recovery script on any computer, type the same email and sentence, and get the same phrase in about half a minute. No Keyper app needed.',
+				text: 'If the phone is lost or the app is no longer available, the open-source recovery script gives the same phrase on a computer in about half a minute. Install it and the two libraries it needs, disconnect the computer from the network, then type the same email and sentence.',
 				link: {
 					label: 'How to recover on a computer',
 					path: 'README.md#recovering-without-the-app'
 				}
-			},
-			{
-				title: 'Open source',
-				text: 'Under the MIT License. Anyone may read, build and verify every line, and build on it.'
 			}
 		],
 		spec: 'Read the protocol',
@@ -234,16 +226,15 @@ export const en: Content = {
 		source: 'Browse the source'
 	},
 	pricing: {
-		title: 'One price, paid once. Or free.',
-		lead: 'The app is the same either way: the same features and the same phrases. What the store version adds is convenience.',
+		title: 'Pricing',
+		lead: 'The store version and a build from source are the same app and give the same phrases.',
 		build: {
 			name: 'Build it yourself',
 			price: 'Free',
 			per: 'forever',
 			points: [
-				'The complete source, under the MIT License',
-				'The same app and the same phrases as the store version',
-				'Needs Android Studio or Xcode, and an afternoon'
+				'Needs Android Studio, or Xcode on a Mac',
+				'On iPhone, a build signed with a free Apple account must be reinstalled every 7 days'
 			],
 			action: 'How to build',
 			guide: 'README.md#building-and-maintaining'
@@ -252,66 +243,40 @@ export const en: Content = {
 			name: 'Google Play and the App Store',
 			price: site.price,
 			per: 'once',
-			points: [
-				'Official signed builds, published only on these two stores',
-				'Updates through the store, which you can turn off on the offline phone',
-				'No subscription, no in-app purchases, no ads, no account',
-				'Supports the continued development of Keyper'
-			]
+			status: 'Coming soon'
 		},
-		note: 'One price worldwide; each store shows it in your currency. Android and iPhone are bought separately, as the two stores require.'
+		note: 'One price worldwide; each store shows it in your currency. Android and iPhone are separate purchases.'
 	},
 	faq: {
 		title: 'Questions',
 		items: [
-			{
-				q: 'If it is open source, why pay?',
-				a: 'You do not have to. Anyone can build Keyper from the source for free. Buying it from a store gets you a signed build and updates without setting up a build, and keeps the project maintained.'
-			},
 			{
 				q: 'Is Keyper a wallet?',
 				a: 'No. Keyper only produces the recovery phrase. Put it into any wallet that accepts a standard 12- or 24-word BIP39 phrase. Keyper never holds or moves funds.'
 			},
 			{
 				q: 'Why does it need my email?',
-				a: 'It is a salt, not a secret: it makes the same sentence give unrelated phrases for different people, so an attacker has to attack one person at a time. Case, dots and spaces do not matter, and a phone number works too.'
+				a: 'So that the same sentence gives different phrases for different people, and an attacker has to guess one person at a time. The email does not need to be secret. Keyper uses only its letters and digits and ignores case, so Alice@Example.com, alice@example.com and alice.@example.com give the same phrase. A phone number works too. Your sentence is the opposite: one different capital, symbol or space between words gives a different phrase.'
 			},
 			{
 				q: 'What if I forget the sentence?',
-				a: 'Then the phrase is gone. Nobody can recover it, which is the point. Choose a sentence you will remember for years, keep its spelling consistent, and do the recovery drill.'
-			},
-			{
-				q: 'What if Keyper disappears?',
-				a: 'The protocol is public and the Python reference runs anywhere. Keep a copy of the source and of the app you used: with them, your phrase can always be derived again.'
-			},
-			{
-				q: 'Can I use Chinese?',
-				a: 'Write it in pinyin, for example “Wo de di yi zhi mao jiao MiMi!”. The sentence uses letters, digits and 18 unambiguous symbols, so it can be typed the same way on any phone or computer, years from now.'
+				a: 'Then the phrase is gone; nobody can recover it. Choose a sentence you will remember for years, keep its spelling consistent, and do the recovery drill.'
 			},
 			{
 				q: 'How do I know my copy is genuine?',
-				a: 'By where it came from: install Keyper only from its official Google Play and App Store listings, or build it yourself from the source. The compatibility code at the bottom of the screen only tells you that the phrases will match; a tampered copy could show it too. Keep the phone offline for good and turn off automatic updates: offline, even a tampered copy cannot send anything.'
+				a: 'By where it came from: install Keyper only from its official Google Play and App Store listings, or build it yourself from the source, and turn off automatic updates for it. A tampered copy could save what you type and send it once the phone is online again; if the phone stays offline, it has no way to.'
 			},
 			{
 				q: 'Why must the phone be offline?',
-				a: 'So that your sentence and phrase only ever exist on a phone that cannot send them anywhere. Keyper itself has no network access at all; the gate keeps you from using it on a connected phone by mistake.'
+				a: 'So that your sentence and phrase only ever exist on a phone that cannot send them anywhere. Keyper itself never connects to the network; the gate keeps you from using it on a connected phone by mistake.'
 			}
 		]
-	},
-	cta: {
-		title: 'Keep your phrase where no one can find it.',
-		text:
-			'Keyper is finishing its first release for Android and iPhone: ' +
-			site.price +
-			' once from the stores, or free to build.',
-		soon: 'Coming soon'
 	},
 	footer: {
 		license: 'Open source under the MIT License.',
 		security: 'Report a vulnerability',
-		check: 'Compatibility code',
-		checkHint:
-			'Shown at the bottom of every official Keyper. Apps with the same code give the same phrases; it cannot prove an app is genuine.'
+		privacy: 'Privacy Policy',
+		terms: 'Terms of Service'
 	}
 };
 
@@ -327,29 +292,28 @@ export const zh: Content = {
 	},
 	nav: { how: '原理', security: '安全', pricing: '定价', faq: '常见问题', source: '源码' },
 	hero: {
-		eyebrow: '开源 · 只在离线时工作 · Android 与 iPhone',
+		eyebrow: 'Android 与 iPhone',
 		title: '记在脑子里的助记词。',
-		lead: '在一台离线手机上，Keyper 用你的邮箱和一句只有你知道的话，生成标准 BIP39 助记词。同样的输入，永远得到同样的助记词：不用抄写，什么也不存。',
+		lead: '在一台离线手机上，Keyper 用你的邮箱和一句只有你知道的话，生成标准 BIP39 助记词。同样的输入总是得到同样的助记词，所以不用抄写，App 也从不保存你输入的内容。',
 		primary: '看看原理',
 		secondary: '安全模型',
 		note: '即将上架 Google Play 和 App Store。'
 	},
 	shots: [
-		{ src: '/screens/zh-input.png', alt: '用 Keyper 自带键盘输入记忆文本' },
+		{ src: '/screens/zh-input.png', alt: '用 Keyper 自带键盘输入那句话' },
 		{ src: '/screens/zh-result.png', alt: '12 个词的助记词' }
 	],
-	facts: ['零权限', '什么都不存', '只在离线时工作', '协议已冻结', 'MIT 许可证'],
+	facts: ['零权限', '不保存你的输入', '只在离线时工作', '协议已冻结', 'MIT 许可证'],
 	how: {
 		title: '原理',
-		lead: '输入邮箱和一句话，得到一组标准助记词，任何钱包都能用。Keyper 什么都不保存：下次再输入同样的两样东西即可。',
 		steps: [
 			{
 				title: '先断网',
-				text: '打开飞行模式，关闭 Wi-Fi 和蓝牙。手机没断网，Keyper 就不让你输入那句话；一旦重新联网，它立即忘掉一切。'
+				text: '打开飞行模式，关闭 Wi-Fi 和蓝牙。手机还有网络连接时，Keyper 不让你输入那句话。'
 			},
 			{
 				title: '输入两样东西',
-				text: '先输入邮箱，再输入只有你知道的一句话，都用 Keyper 自带的键盘。系统和第三方输入法完全接触不到。'
+				text: '先输入邮箱，再输入只有你知道的一句话，都用 Keyper 自带的键盘。邮箱不分大小写、忽略标点；那句话不一样，大小写、符号和词之间的空格都算数。'
 			},
 			{
 				title: '等一分钟',
@@ -357,19 +321,19 @@ export const zh: Content = {
 			},
 			{
 				title: '使用助记词',
-				text: '12 或 24 个标准 BIP39 词。复制到同一台手机的钱包，或用二维码给另一台设备扫描。恢复演练会确认你能再完整输入一遍。'
+				text: '12 或 24 个标准 BIP39 词。复制到同一台手机的钱包，或用二维码给另一台设备扫描。'
 			}
 		],
 		flow: {
-			email: '邮箱（只作盐）',
+			email: '你的邮箱',
 			sentence: '你的那句话',
 			slow: 'Argon2id · 1 GiB × 128',
 			words: '12 或 24 个 BIP39 词'
 		}
 	},
 	cost: {
-		title: '只要那句话真是你自己的，就很难猜',
-		lead: '你算一次花的那一分钟，攻击者每猜一次都要花。按偏向攻击者的假设，暴力搜索的代价是：',
+		title: '猜一次要花多少',
+		lead: '你手机上那一分钟的计算，攻击者每猜一次都得重做一遍，顶级显卡每秒也只能做约 20 次。按偏向攻击者的假设：',
 		head: ['那句话有多难猜', '一千张顶级显卡', '光电费'],
 		rows: [
 			['30 位', '7.5 小时', '300 美元'],
@@ -377,13 +341,12 @@ export const zh: Content = {
 			['50 位', '890 年', '3.1 亿美元'],
 			['60 位', '91 万年', '3200 亿美元']
 		],
-		note: '约 48 位熵起，光电费就超过 1 亿美元。输入时 Keyper 会按这个模型估算。',
+		note: '超过约 48.4 位熵，光电费就超过 1 亿美元。输入时 Keyper 会按这个模型估算。',
 		warning:
 			'字多不等于难猜。名句、歌词、俗语、“我的猫叫某某”这类模板，攻击者最先试，几块钱电费就能命中。要用只有你知道的细节：人名、年份、地点、数字，再加一两个符号。'
 	},
 	features: {
-		title: '只在离线时工作，什么也不留下',
-		lead: '围绕计算的每一处设计，都是为了让那句话只存在于你的手机和你的脑子里。',
+		title: '保护措施',
 		items: [
 			{
 				title: '自带键盘',
@@ -391,11 +354,11 @@ export const zh: Content = {
 			},
 			{
 				title: '断网门禁',
-				text: '只有断网时才能输入和生成。一旦联网，记忆文本和助记词立即清除。'
+				text: '只有手机没有网络连接时才能输入和生成。一旦恢复连接，那句话和助记词立即清除。'
 			},
 			{
-				title: '什么都不存',
-				text: '没有账户、没有文件、没有备份、不联网。离开 App，记忆文本和助记词就没了。'
+				title: '不保存你的输入',
+				text: '没有账户、没有文件、没有备份。离开 App，那句话和助记词就没了。'
 			},
 			{
 				title: '防截屏',
@@ -403,55 +366,50 @@ export const zh: Content = {
 			},
 			{
 				title: '恢复演练',
-				text: '在往钱包转钱之前，凭记忆把两样输入再打一遍，Keyper 当场告诉你是否一致。'
+				text: '使用助记词之前，凭记忆把两样输入再打一遍，Keyper 当场告诉你是否一致。'
 			},
 			{
-				title: '短命的剪贴板',
-				text: '复制的助记词标记为敏感，60 秒后离开剪贴板；在 iPhone 上也不会同步到你的其他设备。'
+				title: '剪贴板 60 秒清除',
+				text: '60 秒后 Keyper 会清除复制的助记词（Android 上需要 App 仍在运行），在 iPhone 上也不会同步到你的其他设备。在此之前，手机上的其他 App 都能读到它，所以二维码更安全。'
 			}
 		]
 	},
 	model: {
-		title: '坦白讲，什么在保护你',
+		title: '安全模型',
+		lead: 'Keyper 的代码和域常量都是公开的，要当作每个攻击者都有。',
 		head: ['别人拿到了…', '还剩什么在保护你'],
 		rows: [
-			['只有你的那句话', '你的邮箱；App 从未公开时还有域常量'],
-			['App 和你的邮箱', '那句话有多难猜：每猜一次都要 1 GiB × 128 遍'],
-			['App、邮箱和那句话', '没有了，这三样加起来就是助记词']
+			['你的邮箱', '那句话有多难猜：每猜一次都要 1 GiB × 128 遍'],
+			['你的那句话', '只剩邮箱，而邮箱通常不是秘密'],
+			['邮箱和那句话', '没有了，这两样加起来就是助记词']
 		],
 		points: [
-			'Keyper 是一个算法，不是保险箱。安全靠的是你那句话，和每次猜测的代价。',
-			'这句话只用于 Keyper，依赖它之前先做一次恢复演练。',
+			'这句话只用于 Keyper。',
 			'用来生成的手机要干净：手机上已有的恶意软件，Keyper 防不住。'
 		]
 	},
 	platforms: {
 		title: 'Android 与 iPhone，同一组助记词',
-		lead: '两个原生 App 遵循同一份冻结的规范，用同一套测试向量验证：同样的邮箱和那句话，在哪台手机上都得到同样的词。',
+		lead: '同样的邮箱和那句话，在哪台手机上都得到同样的词。',
 		android: 'Android 8.1 及以上',
 		ios: 'iOS 17 及以上',
 		caption: '都需要 4 GB 以上内存。中英双语。'
 	},
 	open: {
-		title: '公开、冻结，离开我们也能恢复',
-		lead: '找回助记词，永远不应该依赖 Keyper 这家公司，甚至不应该依赖 Keyper 这个 App。',
+		title: '冻结的协议，以及不靠 App 恢复',
 		items: [
 			{
 				title: '协议已冻结',
-				text: 'v1 协议精确成文，永远不会改。测试钉死了每一个常量，任何更新都不可能改变你已有的助记词。'
+				text: 'v1 协议精确成文，永远不会改。测试钉死了每一个常量，任何会改变助记词的更新都通不过测试。'
 			},
 			{
-				title: '互相独立的实现',
-				text: 'Android 上的 Kotlin、iPhone 上的 Swift 和一份独立的 Python 参考实现，都复现同一组测试向量，并对照标准库逐一核验。'
+				title: '三套实现',
+				text: 'Android 上的 Kotlin、iPhone 上的 Swift 和一份 Python 参考实现，都复现同一组测试向量，这些向量都对照标准库核验过。'
 			},
 			{
 				title: '没有手机，用电脑也能找回',
-				text: '手机丢了、App 没了也不怕：在任何一台电脑上运行开源的恢复脚本，输入同样的邮箱和那句话，半分钟左右就能算出同一组助记词，不需要 Keyper App。',
+				text: '手机丢了或者 App 下架了，开源的恢复脚本能在电脑上半分钟左右算出同一组助记词。先装好脚本和它需要的两个库，断开电脑的网络，再输入同样的邮箱和那句话。',
 				link: { label: '怎样在电脑上恢复', path: 'README-zh.md#脱离-app-恢复' }
-			},
-			{
-				title: '开源',
-				text: '以 MIT 许可证发布。任何人都能阅读、构建、核验每一行代码，也可以在它的基础上继续开发。'
 			}
 		],
 		spec: '阅读协议规范',
@@ -459,16 +417,15 @@ export const zh: Content = {
 		source: '浏览源码'
 	},
 	pricing: {
-		title: '一次买断，或者免费',
-		lead: '两种方式得到的是同一个 App：功能一样，助记词也一样。商店版多的只是省事。',
+		title: '定价',
+		lead: '商店版和自己编译的是同一个 App，算出的助记词也相同。',
 		build: {
 			name: '自己编译',
 			price: '免费',
 			per: '永久',
 			points: [
-				'完整源码，MIT 许可证',
-				'与商店版完全相同的 App，同样的助记词',
-				'需要 Android Studio 或 Xcode，以及一个下午'
+				'需要 Android Studio，或者 Mac 上的 Xcode',
+				'iPhone 上用免费 Apple 账户签名的版本，每 7 天要重新安装一次'
 			],
 			action: '怎样编译',
 			guide: 'README-zh.md#构建与维护'
@@ -477,45 +434,28 @@ export const zh: Content = {
 			name: 'Google Play 与 App Store',
 			price: site.price,
 			per: '一次性',
-			points: [
-				'官方签名版本，只在这两家商店发布',
-				'通过商店更新，离线手机上可以关掉自动更新',
-				'不订阅、不内购、无广告、无需账户',
-				'支持 Keyper 的持续开发'
-			]
+			status: '即将推出'
 		},
-		note: '全球统一定价，商店会按你所在地区的货币显示。Android 和 iPhone 需分别购买，这是两家商店的规定。'
+		note: '全球统一定价，商店会按你所在地区的货币显示。Android 和 iPhone 需要分别购买。'
 	},
 	faq: {
 		title: '常见问题',
 		items: [
-			{
-				q: '开源为什么还要付费？',
-				a: '不付费也完全可以：任何人都能从源码免费编译 Keyper。在商店购买，得到的是官方签名版本和自动更新，不用自己搭编译环境，同时支持项目持续维护。'
-			},
 			{
 				q: 'Keyper 是钱包吗？',
 				a: '不是。Keyper 只负责生成助记词。把它导入任何支持标准 12 或 24 词 BIP39 助记词的钱包即可。Keyper 从不持有、也不转移资产。'
 			},
 			{
 				q: '为什么要填邮箱？',
-				a: '邮箱是盐，不是秘密：它让同一句话在不同人那里得到无关的助记词，攻击者只能一个人一个人地猜。大小写、点和空格都不影响，用手机号也可以。'
+				a: '为了让同一句话在不同人那里得到不同的助记词，攻击者只能一个人一个人地猜。邮箱不需要保密。Keyper 只取邮箱里的英文字母和数字，不分大小写，所以 Alice@Example.com、alice@example.com 和 alice.@example.com 算出的是同一组助记词。也可以用手机号代替邮箱。那句话正好相反：大小写、符号、词之间的空格，错一处，助记词就完全不同。'
 			},
 			{
 				q: '忘了那句话怎么办？',
-				a: '那组助记词就再也找不回来了，没有人能帮你恢复，这正是设计初衷。选一句多年后还记得的话，拼写保持一致，并做一次恢复演练。'
-			},
-			{
-				q: 'Keyper 不在了怎么办？',
-				a: '协议是公开的，Python 参考实现在任何电脑上都能运行。留一份源码和你用过的 App：有它们，助记词随时能再算出来。'
-			},
-			{
-				q: '能用中文吗？',
-				a: '用拼音写，比如 “Wo de di yi zhi mao jiao MiMi!”。那句话由字母、数字和 18 个不易混淆的符号组成，多年后在任何手机或电脑上都能原样输入。'
+				a: '那组助记词就找不回来了，没有人能帮你恢复。选一句多年后还记得的话，拼写保持一致，并做一次恢复演练。'
 			},
 			{
 				q: '怎么确认装的是正版？',
-				a: '看来源：只从 Google Play 和 App Store 上的官方页面安装，或者自己从源码编译。屏幕底部的兼容码只能说明算出的助记词一致，篡改版也可以显示同样的码。这台手机从此保持断网，并关掉自动更新：断了网，即使是篡改版也发不出任何东西。'
+				a: '看来源：只从 Google Play 和 App Store 上的官方页面安装，或者自己从源码编译，并关掉它的自动更新。篡改版可能存下你的输入，等手机联网后再发出去；手机一直不联网，它就发不出去。'
 			},
 			{
 				q: '为什么手机必须断网？',
@@ -523,19 +463,10 @@ export const zh: Content = {
 			}
 		]
 	},
-	cta: {
-		title: '把助记词放在谁也找不到的地方。',
-		text:
-			'Keyper 的 Android 和 iPhone 首个版本正在收尾：商店版 ' +
-			site.price +
-			' 一次买断，自己编译免费。',
-		soon: '即将推出'
-	},
 	footer: {
 		license: '以 MIT 许可证开源。',
 		security: '报告安全漏洞',
-		check: '兼容码',
-		checkHint:
-			'官方 Keyper 屏幕最底部都显示这串码。码相同，算出的助记词就相同；但它证明不了 App 是正版。'
+		privacy: '隐私政策',
+		terms: '服务条款'
 	}
 };

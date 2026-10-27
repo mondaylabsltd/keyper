@@ -76,7 +76,6 @@
 
 	<section id="how" class="section wrap">
 		<h2>{c.how.title}</h2>
-		<p class="section-lead">{c.how.lead}</p>
 		<div
 			class="flow"
 			role="img"
@@ -137,7 +136,6 @@
 
 	<section class="section wrap">
 		<h2>{c.features.title}</h2>
-		<p class="section-lead">{c.features.lead}</p>
 		<ul class="features">
 			{#each c.features.items as item, i (item.title)}
 				<li class="card">
@@ -153,6 +151,7 @@
 
 	<section class="section wrap">
 		<h2>{c.model.title}</h2>
+		<p class="section-lead">{c.model.lead}</p>
 		<div class="card table-card">
 			<table class="model">
 				<thead>
@@ -207,7 +206,6 @@
 
 	<section class="section wrap">
 		<h2>{c.open.title}</h2>
-		<p class="section-lead">{c.open.lead}</p>
 		<ul class="open">
 			{#each c.open.items as item (item.title)}
 				<li>
@@ -251,10 +249,7 @@
 			<div class="card plan featured">
 				<h3>{c.pricing.store.name}</h3>
 				<p class="price">{c.pricing.store.price} <small>{c.pricing.store.per}</small></p>
-				<ul>
-					{#each c.pricing.store.points as point (point)}<li>{point}</li>{/each}
-				</ul>
-				<span class="store" aria-disabled="true">{c.cta.soon}</span>
+				<span class="store" aria-disabled="true">{c.pricing.store.status}</span>
 			</div>
 		</div>
 		<p class="caption">{c.pricing.note}</p>
@@ -271,16 +266,6 @@
 			{/each}
 		</div>
 	</section>
-
-	<section class="cta wrap">
-		<Logo size={64} />
-		<h2>{c.cta.title}</h2>
-		<p>{c.cta.text}</p>
-		<div class="stores">
-			<span class="store" aria-disabled="true">Google Play · {c.cta.soon}</span>
-			<span class="store" aria-disabled="true">App Store · {c.cta.soon}</span>
-		</div>
-	</section>
 </main>
 
 <footer class="footer">
@@ -288,16 +273,14 @@
 		<div class="brand"><Logo size={24} /><span>Keyper</span></div>
 		<p>{c.footer.license}</p>
 		<p>
-			<strong>{c.footer.check}</strong> <span class="mono">{site.domainId}</span> · {c.footer
-				.checkHint}
-		</p>
-		<p>
-			<a href="mailto:{site.securityEmail}?subject=Keyper%20security" rel="external"
+			<a href="mailto:{site.email}?subject=Keyper%20security" rel="external"
 				>{c.footer.security}</a
 			>
+			· <a href={resolve(c.path === '/' ? '/privacy' : '/zh/privacy')}>{c.footer.privacy}</a>
+			· <a href={resolve(c.path === '/' ? '/terms' : '/zh/terms')}>{c.footer.terms}</a>
 			· <a href={resolve(c.other.path)} hreflang={c.other.hreflang}>{c.other.label}</a>
 		</p>
-		<p class="quiet">© 2026 Keyper</p>
+		<p class="quiet">© 2026 MONDAY LABS LTD</p>
 	</div>
 </footer>
 
@@ -1003,31 +986,6 @@
 		color: var(--text-secondary);
 	}
 
-	/* CTA */
-	.cta {
-		margin-block: 104px 72px;
-		padding: 56px 24px;
-		text-align: center;
-		display: grid;
-		justify-items: center;
-		gap: 16px;
-		background: linear-gradient(160deg, var(--accent-soft), var(--surface));
-		border: 1px solid var(--outline);
-		border-radius: 28px;
-	}
-
-	.cta p {
-		color: var(--text-secondary);
-	}
-
-	.stores {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 12px;
-		margin-top: 8px;
-	}
-
 	.store {
 		border: 1px dashed var(--outline);
 		background: var(--surface);
@@ -1035,6 +993,10 @@
 		padding: 10px 18px;
 		font-size: 15px;
 		color: var(--text-secondary);
+	}
+
+	main {
+		padding-bottom: 96px;
 	}
 
 	/* Footer */

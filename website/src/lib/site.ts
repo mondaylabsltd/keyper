@@ -6,10 +6,8 @@ export const site = {
 	 * links that need it (source, protocol, security policy) are left out rather than broken.
 	 */
 	repository: 'https://github.com/atshelchin/getkeyper' as string | null,
-	/** Where security reports go (SECURITY.md). */
-	securityEmail: 'hi@shelchin.com',
-	/** The domain ID the official builds show in their footer (SPEC.md, Domain.kt, Domain.swift). */
-	domainId: 'A248-7EAB',
+	/** The company address: security reports (SECURITY.md) and questions about the policies. */
+	email: 'hello@mondaylabs.ltd',
 	/** One price worldwide, paid once, on Google Play and the App Store; each store converts it. */
 	price: 'US$29.99'
 };

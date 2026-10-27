@@ -1,15 +1,13 @@
 # Security policy
 
-Keyper derives wallet recovery phrases, so security reports are the most valuable contribution
-this project can receive.
-
 ## Reporting a vulnerability
 
-Please email **hi@shelchin.com** with "Keyper security" in the subject. Do not open a public
+Please email **hello@mondaylabs.ltd** with "Keyper security" in the subject. Do not open a public
 issue or pull request for a vulnerability.
 
-Include what you found, how to reproduce it, the app version (system settings → Apps → Keyper),
-the domain ID from the app's footer, and the device and Android version if relevant. You should get an
+Include what you found, how to reproduce it, the app version (Android: Settings → Apps → Keyper;
+iPhone: Settings → General → iPhone Storage → Keyper),
+the domain ID from the app's footer, and the device and system version if relevant. You should get an
 acknowledgement within a week. Fixes are released as soon as they are ready, and you will be
 credited unless you prefer otherwise.
 

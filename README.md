@@ -1,8 +1,8 @@
 # Keyper
 
 **A recovery phrase you keep in your head.** On an offline Android phone or iPhone, Keyper turns your
-email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs give
-the same phrase, forever, so there is nothing to write down and nothing is stored.
+email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs always
+give the same phrase, so you do not need to write it down. Keyper stores nothing.
 
 English · [简体中文](README-zh.md)
 
@@ -20,22 +20,21 @@ English · [简体中文](README-zh.md)
 
 - **Standard output.** BIP39 phrases of 12 or 24 words, usable with any wallet.
 - **Expensive to guess.** Every guess costs an Argon2id run over 1 GiB of memory, 128 passes:
-  about a minute on a Snapdragon 870. For a sentence of about 48 bits of entropy, the
-  attacker's electricity bill alone passes US$100 million.
+  about a minute on a Snapdragon 870. Above about 48.4 bits of entropy in the sentence,
+  the attacker's electricity bill alone passes US$100 million.
 - **Its own keyboard.** Both fields are typed only on Keyper's keyboard. The system keyboard
   never connects, so it cannot learn, sync or upload what you type.
 - **Offline gate.** You can only type and generate with airplane mode on and Wi-Fi and
   Bluetooth off. Going back online wipes everything at once.
-- **Nothing stored, nothing requested.** No permissions, no storage, no network, no
-  third-party runtime dependencies, on either platform. The Android APK is about 95 KB, the iOS
-  app well under 1 MB.
+- **No permissions.** Neither app asks for a permission, uses the network or has a third-party
+  runtime dependency. The Android APK is about 95 KB, the iOS app well under 1 MB.
 - **Recovery drill.** Re-type both inputs from memory and confirm on the spot that you can
   recover the phrase later.
 - **Open protocol.** [SPEC.md](SPEC.md) defines the derivation exactly (v1 is frozen), and an
   independent [Python implementation](reference/keyper.py) reproduces it.
 
 Android 8.1 (API 27) or later, or iOS 17 or later, with 4 GB of RAM or more. English and
-Chinese. Both apps derive the same phrases from the same inputs.
+Chinese.
 
 ## How it works
 
@@ -46,22 +45,23 @@ sentence ─ collapse extra spaces ─ HMAC-SHA256(domain) ─ Argon2id(1 GiB ×
 ```
 
 - **The sentence uses 80 characters**: `A`–`Z`, `a`–`z`, `0`–`9` and 18 symbols
-  `! @ # $ % ^ & * ( ) . , ? - _ + = /`. Case, symbols and the spaces between words count;
+  `! @ # $ % ^ & * ( ) . , ? - _ + = /`. **Case, symbols and the spaces between words count**;
   extra spaces (runs of spaces, spaces at either end) do not. There are no quotes, `|`, `\`,
   `:` or `;`, which are easy to mistype or misread. Other languages are written in Latin
   letters, for example pinyin: `Wo de di yi zhi mao jiao MiMi!`
-- **The email is only a salt.** Case, dots, dashes and spaces drop out, so `138-0000-0000`
-  and `13800000000` are the same. A phone number works as well.
+- **The email is only a salt, and unlike the sentence it forgives.** Only its ASCII letters and
+  digits count, regardless of case, so `Alice@Example.com` and `alice@example.com`, or
+  `138-0000-0000` and `13800000000`, are the same. A phone number works as well.
 - **12 and 24 words are independent.** Knowing one tells nothing about the other.
 - **The domain constant** is 32 random bytes in
-  [`Domain.kt`](app-android/app/src/main/kotlin/app/getkeyper/Domain.kt). It makes the same
+  [`Domain.kt`](app-android/app/src/main/kotlin/app/getkeyper/Domain.kt) and
+  [`Domain.swift`](app-ios/Keyper/Domain.swift). It makes the same
   sentence give different phrases in different deployments. It ships inside the app, so it
   is public, not a secret.
 
 The email-as-salt construction is the standard one (WarpWallet uses it too): the same sentence
 gives unrelated phrases for different people, and an attacker has to attack one person at a
-time. One email can go with several sentences, each giving its own phrase. There is no account
-and no index.
+time. One email can go with several sentences, each giving its own phrase.
 
 ### The keyboard
 
@@ -87,17 +87,17 @@ q w e r t y u i o p            1 2 3 4 5 6 7 8 9 0
 - The fields give the system keyboard no connection at all. Paste, the long-press menu,
   drag-and-drop, hardware keys and injected key events are all blocked.
 
-## Security model: read this first
+## Security model
+
+The code and the domain constant are public: assume every attacker has them.
 
 | An attacker has… | What still protects the phrase |
 |---|---|
-| only your sentence | your email, and the domain constant if the app was never distributed |
-| the app and your email | how hard your sentence is to guess: every guess costs 1 GiB × 128 passes |
-| the app, your email and your sentence | nothing: together they are the phrase |
+| your email | how hard your sentence is to guess: every guess costs 1 GiB × 128 passes |
+| your sentence | only your email, which is usually not a secret |
+| your email and your sentence | nothing: together they are the phrase |
 
-1. **Once the app is out, the domain constant is public.** From then on only the sentence
-   stands between an attacker and the phrase.
-2. **Hard to guess is not the same as long.** Famous lines, lyrics, proverbs and templates like
+1. **Length does not make a sentence hard to guess.** Famous lines, lyrics, proverbs and templates like
    "my cat is called X" are an attacker's first guesses and fall for a few dollars of
    electricity. Use details only you know: names, years, places, numbers, a symbol or two.
 
@@ -111,9 +111,9 @@ q w e r t y u i o p            1 2 3 4 5 6 7 8 9 0
    The app estimates this while you type, using assumptions that favour the attacker
    ([SPEC.md §4](SPEC.md#4-security-model)). Below US$100 million it warns you before
    generating, but it cannot recognise famous lines, so don't use one.
-3. **Do the recovery drill before you move funds.** After generating, tap "First time? Do a
+2. **Do the recovery drill before you use the phrase.** After generating, tap "First time? Do a
    recovery drill" and re-type both inputs from memory.
-4. **If the domain constant is lost or changed, no phrase can ever be regenerated.** See
+3. **If the domain constant is lost or changed, no phrase can ever be regenerated.** See
    [Building and maintaining](#building-and-maintaining).
 
 Other protections: leaving the app wipes the sentence and the phrase, a copied phrase leaves the
@@ -249,9 +249,9 @@ python3 reference/keyper.py --self-test    # checks the vectors in SPEC.md
 | iOS permissions | the built Info.plist and the linked libraries | no usage descriptions, no background modes; system frameworks only |
 
 Argon2id, 1 GiB × 128 passes, 4 lanes: Redmi K40 (Snapdragon 870) release build 64.6 s, with no
-throttling over a minute of full load; iPhone 11 (A13) about 72 s; desktop JVM (M2 Pro) about 22 s;
-Swift (M2 Pro) about 25 s; argon2-cffi (reference C code, M2 Pro) about 25 s. Reproduce with `./gradlew :core:test` and `./gradlew :core:bench`; on a
-phone, with a debug build:
+throttling over a minute of full load; iPhone 11 (A13) about 72 s; desktop JVM (M2 Pro) about
+22 s; Swift (M2 Pro) about 25 s; argon2-cffi (reference C code, M2 Pro) about 25 s. Reproduce with
+`./gradlew :core:test` and `./gradlew :core:bench`; on a phone, with a debug build:
 `adb shell 'CLASSPATH=$(pm path app.getkeyper.private | cut -d: -f2) app_process / app.getkeyper.DeviceBenchKt'`.
 `reference/make_fixtures.py` generates the test fixtures from the independent implementations
 above.
@@ -278,8 +278,6 @@ above.
   kernel after each run. Memory forensics is outside the threat model.
 - 4 GB of RAM or more is needed. Not tested on 32-bit or low-end phones; phones slower than a
   K40 may take several minutes.
-- The application ID `app.getkeyper.private` contains a Java keyword, so the code namespace is
-  `app.getkeyper`.
 - targetSdk 36; behaviour changes in Android 17 (API 37) have not been evaluated yet.
 
 ## Repository layout
@@ -305,4 +303,4 @@ may alter a v1 phrase. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Copyright © 2026 Shelchin. Keyper is open source under the [MIT License](LICENSE).
+Copyright © 2026 MONDAY LABS LTD. Keyper is open source under the [MIT License](LICENSE).

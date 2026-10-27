@@ -11,7 +11,7 @@ things: whether users can still recover exactly years later, and leaks while typ
 ## 1. Conclusions
 
 1. **With a sentence that is hard enough to guess, recovering the phrase does not pay.** Every
-   guess costs 1 GiB of memory × 128 passes; for a sentence of about 48 bits or more, the
+   guess costs 1 GiB of memory × 128 passes; for a sentence of about 48.4 bits or more, the
    electricity alone exceeds US$100 million (under assumptions that favour the attacker, see
    [SPEC §4](../SPEC.md#4-security-model)).
 2. **How guessable the sentence is lies outside the app's control.** Famous lines, lyrics,
@@ -59,7 +59,7 @@ cleared when leaving the app.
 | 8. Two people sharing an email who happen to choose the same sentence | Very rare | — | Everyone uses their own email |
 
 **When the phrase cannot be recovered**: the attacker has the APK, the algorithm, the domain
-constant and your email, but your sentence is a long one only you know (about 48 bits of entropy
+constant and your email, but your sentence is a long one only you know (about 48.4 bits of entropy
 or more). Every guess then costs an Argon2id run of 1 GiB × 128 passes, and the expected cost
 exceeds US$100 million.
 
