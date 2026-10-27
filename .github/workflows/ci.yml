@@ -8,35 +8,38 @@ on:
 permissions:
   contents: read
 
+# Actions are pinned by commit; the comment names the release.
 jobs:
   android:
     name: Android tests, lint and build
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4 # also validates the Gradle wrapper
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0, also validates the Gradle wrapper
       - name: Test, lint and build
         working-directory: app-android
-        # :core:test runs SPEC's vectors with the full 1 GiB Argon2id.
-        run: ./gradlew :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleRelease
+        # :core:test runs SPEC's vectors with the full 1 GiB Argon2id. Without a keystore the
+        # release APK and bundle are left unsigned.
+        run: ./gradlew :core:test :app:testDebugUnitTest :app:lintDebug :app:assembleRelease :app:bundleRelease
       - name: Upload reports
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: reports
           path: app-android/*/build/reports/
 
   ios:
     name: iOS core and app tests
-    runs-on: macos-15
+    # Xcode 26, as the README requires.
+    runs-on: macos-26
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Core tests, including SPEC's 1 GiB vectors
         working-directory: app-ios/KeyperCore
         run: swift test -c release
@@ -55,11 +58,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-          cache: pip
-          cache-dependency-path: reference/requirements.txt
-      - run: pip install -r reference/requirements.txt
+      # Exactly what the README's recovery steps install, hashes checked.
+      - run: pip install --require-hashes -r reference/requirements-recovery.txt
       - run: python reference/keyper.py --self-test
+
+  website:
+    name: Website lint, types and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run check
+      - run: bunx vitest --run --project server
+      - run: bunx playwright install --with-deps chromium
+      - run: bunx playwright test

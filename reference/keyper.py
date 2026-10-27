@@ -6,7 +6,7 @@ reference C implementation) and BIP39 from Trezor's python-mnemonic. Use it to
 cross-check the app, or to recover mnemonics without the app if you still have
 the domain constant.
 
-    pip install -r requirements.txt
+    pip install --require-hashes -r requirements-recovery.txt
     python3 keyper.py --domain-file ../app-android/app/src/main/kotlin/app/getkeyper/Domain.kt
     python3 keyper.py --self-test    # checks SPEC.md's vectors
 """
@@ -66,7 +66,10 @@ def domain_id(domain: bytes) -> str:
     return f"{h[0:4]}-{h[4:8]}"
 
 
-# Mirrored in SPEC.md and KeyperTest.kt.
+# The official Keyper's domain ID (Domain.kt, Domain.swift).
+OFFICIAL_DOMAIN_ID = "A248-7EAB"
+
+# Mirrored in SPEC.md, KeyperTest.kt and the Swift core's tests.
 TEST_DOMAIN = bytes(range(32))
 VECTORS = [
     ("alice@example.com", "correct horse battery staple"),
@@ -130,15 +133,23 @@ def main() -> None:
     if not args.domain_file:
         ap.error("--domain-file is required")
     with open(args.domain_file) as f:
-        found = re.search(r"\b[0-9a-fA-F]{64}\b", f.read())
-    if not found:
-        ap.error(f"no 64-digit hex domain constant in {args.domain_file}")
-    domain = bytes.fromhex(found.group())
-    print("domain id", domain_id(domain), file=sys.stderr)
+        found = set(re.findall(r"\b[0-9a-fA-F]{64}\b", f.read()))
+    if len(found) != 1:
+        ap.error(f"{args.domain_file} must hold exactly one 64-digit hex domain constant, found {len(found)}")
+    domain = bytes.fromhex(found.pop())
+    if domain == TEST_DOMAIN:
+        ap.error("that is SPEC's test domain constant, not a real deployment's; pass Domain.kt or Domain.swift")
+    official = domain_id(domain) == OFFICIAL_DOMAIN_ID
+    print("domain id", domain_id(domain), "(official Keyper)" if official else "(NOT the official Keyper)", file=sys.stderr)
+    # The sentence is not echoed, so it is asked twice: one typo would silently give another phrase.
     email = input("email: ")
-    secret = getpass.getpass("secret: ")
-    print(mnemonic(derive_key(email, secret, domain), args.words))
-
+    secret = getpass.getpass("sentence: ")
+    if getpass.getpass("sentence again: ") != secret:
+        sys.exit("the two sentences differ; nothing derived")
+    try:
+        print(mnemonic(derive_key(email, secret, domain), args.words))
+    except ValueError as e:
+        sys.exit(str(e))
 
 if __name__ == "__main__":
     main()
