@@ -14,6 +14,7 @@
 "secret_label" = "Secret sentence";
 "secret_hint" = "A sentence only you know";
 "secret_hint_offline" = "Available once offline";
+"secret_rule" = "Capitals, symbols and the spaces between words all count here. The email ignores them.";
 "show" = "Show";
 "secret_hidden_value" = "%d characters, hidden";
 "hide" = "Hide";

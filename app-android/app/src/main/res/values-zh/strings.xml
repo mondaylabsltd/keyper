@@ -15,6 +15,7 @@
     <string name="secret_label">记忆文本</string>
     <string name="secret_hint">只有你知道的一句话，可用英文或拼音</string>
     <string name="secret_hint_offline">断网后可输入</string>
+    <string name="secret_rule">这里大小写、符号和词之间的空格都算数；邮箱则忽略这些。</string>
     <string name="show">显示</string>
     <string name="hide">隐藏</string>
 

@@ -205,6 +205,12 @@
                 android:minLines="3"
                 android:saveEnabled="false" />
 
+            <!-- Unlike the email, the secret counts every capital, symbol and space between words. -->
+            <TextView
+                style="@style/Help"
+                android:layout_marginTop="6dp"
+                android:text="@string/secret_rule" />
+
             <!-- Appears once something is typed. -->
             <LinearLayout
                 android:id="@+id/strength_block"

@@ -13,6 +13,7 @@
 "secret_label" = "记忆文本";
 "secret_hint" = "只有你知道的一句话，可用英文或拼音";
 "secret_hint_offline" = "断网后可输入";
+"secret_rule" = "这里大小写、符号和词之间的空格都算数；邮箱则忽略这些。";
 "show" = "显示";
 "secret_hidden_value" = "%d 个字符，已隐藏";
 "hide" = "隐藏";

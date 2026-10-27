@@ -178,6 +178,8 @@ struct MainView: View {
                     }
                 }
                 .fieldBox(focused: model.focus == .secret)
+                // Unlike the email, the secret counts every capital, symbol and space between words.
+                Text(s["secret_rule"]).keyperFont(12).foregroundStyle(Color(Palette.textTertiary)).lineSpacing(2).padding(.top, 6)
                 if let error = model.secretError { errorText(error) }
                 if let strength = model.strength { strengthBlock(strength) }
             }

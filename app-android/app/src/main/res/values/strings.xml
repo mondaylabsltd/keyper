@@ -17,6 +17,7 @@
     <string name="secret_label">Secret sentence</string>
     <string name="secret_hint">A sentence only you know</string>
     <string name="secret_hint_offline">Available once offline</string>
+    <string name="secret_rule">Capitals, symbols and the spaces between words all count here. The email ignores them.</string>
     <string name="show">Show</string>
     <string name="hide">Hide</string>
 
