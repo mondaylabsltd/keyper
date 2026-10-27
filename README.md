@@ -154,7 +154,9 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
 5. **Copy** the phrase into a wallet app on the same phone (the clipboard clears after 60
    seconds), or show the **QR code** to another device.
 6. The footer shows the build's domain ID (`A248-7EAB` for this repository). The same ID means
-   the same phrases. If it ever changes, **stop** and find out why before using the phrase.
+   the same phrases. If it ever changes, **stop** and find out why before using the phrase. The
+   ID does not prove a build is genuine, since a tampered build can show it too: that comes from
+   installing only from the official store listings, or building from source.
 
 ## Building and maintaining
 
@@ -293,6 +295,7 @@ app-android/core/           pure Kotlin/JVM: protocol, Argon2id, BLAKE2b, BIP39,
 app-android/app/            Android UI: keyboard, offline gate, recovery drill; platform views only
 app-ios/KeyperCore/         Swift package: the same core in Swift, on the system's CryptoKit
 app-ios/Keyper/             iOS UI: SwiftUI, with UIKit for the keyboard, the fields and the screen shield
+website/                    getkeyper.app: SvelteKit, prerendered, on Cloudflare
 ```
 
 ## Contributing

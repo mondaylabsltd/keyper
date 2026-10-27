@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+	<url>
+		<loc>https://getkeyper.app/</loc>
+		<xhtml:link rel="alternate" hreflang="zh-Hans" href="https://getkeyper.app/zh" />
+	</url>
+	<url>
+		<loc>https://getkeyper.app/zh</loc>
+		<xhtml:link rel="alternate" hreflang="en" href="https://getkeyper.app/" />
+	</url>
+</urlset>

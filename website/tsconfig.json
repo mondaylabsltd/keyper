@@ -1,0 +1,11 @@
+{
+	"extends": "$app/tsconfig",
+	"compilerOptions": {
+		"strict": true,
+		// The sources are all TypeScript. Without this, the build output that `wrangler types`
+		// references (.svelte-kit/cloudflare/_worker.js) is type-checked as JavaScript after a build.
+		"checkJs": false,
+		"types": ["$app/types", "node", "./worker-configuration.d.ts"]
+	},
+	"include": ["src", "vite.config.ts", "playwright.config.ts"]
+}

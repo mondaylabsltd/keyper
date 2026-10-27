@@ -108,6 +108,7 @@ App 内的其他保护：离开 App 立即清空记忆文本和助记词；复�
 4. 第一次用这句话时，做一次恢复演练。
 5. **复制**到同一台手机的钱包 App（60 秒后清空），或用**二维码**给另一台设备扫描。
 6. 页脚显示构建的域指纹（本仓库为 `A248-7EAB`）。指纹一样，助记词就一样；指纹变了就**不要用**，先弄清原因。
+   指纹证明不了 App 是正版，篡改版也能显示同样的指纹；正版只能靠来源保证：只从官方商店页面安装，或者自己从源码编译。
 
 ## 构建与维护
 
@@ -226,6 +227,7 @@ app-android/core/           纯 Kotlin/JVM：协议、Argon2id、BLAKE2b、BIP39
 app-android/app/            Android 界面：自带键盘、断网门禁、恢复演练（只用平台控件）
 app-ios/KeyperCore/         Swift 包：同一套核心的 Swift 实现，基于系统 CryptoKit
 app-ios/Keyper/             iOS 界面：SwiftUI，键盘、输入框和防截屏层用 UIKit
+website/                    官网 getkeyper.app：SvelteKit 预渲染，部署在 Cloudflare
 ```
 
 ## 参与贡献
