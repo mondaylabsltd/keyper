@@ -39,7 +39,7 @@ class ClipboardTest {
     private fun sleepPast(copiedAt: Long) = SystemClock.sleep(maxOf(0, copiedAt + LOADED_MS + 1_500 - System.currentTimeMillis()))
 
     /** When the clip was set, by the clipboard's own wall-clock timestamp. */
-    private fun copiedAt(): Long = k.onMain { k.clipboard.primaryClipDescription!!.timestamp }
+    private fun copiedAt(): Long = k.readClipboard { it.primaryClipDescription!!.timestamp }
 
     /**
      * Copies, checks the phrase is still there a little before [lifetimeMs] and gone soon after it.
@@ -138,5 +138,20 @@ class ClipboardTest {
         k.copyOther(label = k.context.getString(R.string.result_title), text = "not a phrase")
         sleepPast(copiedAt)
         assertEquals("not a phrase", k.clipText())
+    }
+
+    /**
+     * The tests' own clipboard reader tells "empty" from "unreadable": with Keyper's screen stopped
+     * (no window focus), a plain read is denied and comes back empty, while [KeyperRule.clipText]
+     * still sees the clip that is there. So a null from it means the clipboard really is empty.
+     */
+    @Test
+    fun theTestsClipboardReaderIsNotFooledByMissingFocus() {
+        k.copyOther()
+        k.scenario.moveToState(Lifecycle.State.CREATED) // stopped: no window focus
+        val plain = k.onMain { if (k.clipboard.hasPrimaryClip()) k.clipboard.primaryClip?.getItemAt(0)?.text?.toString() else null }
+        assertNull("control: a plain read without focus was not denied, so this proves nothing", plain)
+        assertEquals("groceries: milk, eggs", k.clipText())
+        k.scenario.moveToState(Lifecycle.State.RESUMED)
     }
 }

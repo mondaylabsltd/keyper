@@ -5,6 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.graphics.Bitmap
 import android.os.ParcelFileDescriptor
+import android.os.PersistableBundle
 import android.os.SystemClock
 import android.view.InputDevice
 import android.view.MotionEvent
@@ -16,13 +17,18 @@ import android.widget.GridLayout
 import android.widget.TextView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.PerformException
 import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.runner.lifecycle.ActivityLifecycleCallback
+import androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry
+import androidx.test.runner.lifecycle.Stage
 import app.getkeyper.core.Keyper
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.rules.TestRule
@@ -73,6 +79,7 @@ class KeyperRule(
                 fakeKey(email, secret)
             }
             TestHooks.clipboardMs = null
+            TestHooks.suppressClipboardOverlay = true // emulators only; see TestHooks
             onMain { Copied.reset(context) } // each test starts a fresh session: the first copy warns
             try {
                 if (launch) launch()
@@ -82,15 +89,24 @@ class KeyperRule(
                     runCatching { onMain { clipboard.clearPrimaryClip() } }
                     scenario.close()
                 }
+                ActivityLifecycleMonitorRegistry.getInstance().removeLifecycleCallback(stopWatcher)
                 TestHooks.radios = null
                 TestHooks.derive = null
                 TestHooks.clipboardMs = null
+                TestHooks.suppressClipboardOverlay = null
             }
         }
     }
 
+    /** When (uptime) Keyper's screen was stopped during the test: leaving wipes the phrase, so a stop the test did not ask for explains a vanished phrase. */
+    val stops: MutableList<Long> = java.util.Collections.synchronizedList(mutableListOf())
+    private val stopWatcher = ActivityLifecycleCallback { activity, stage ->
+        if (activity is MainActivity && stage == Stage.STOPPED) stops += SystemClock.uptimeMillis()
+    }
+
     fun launch() {
         prepareDevice()
+        ActivityLifecycleMonitorRegistry.getInstance().addLifecycleCallback(stopWatcher)
         scenario = ActivityScenario.launch(MainActivity::class.java)
         waitFor("Keyper in front with window focus", 30_000) { read { it.hasWindowFocus() } }
         if (realRadios) instrumentation.waitForIdleSync() else awaitOffline(radios == OFFLINE)
@@ -207,8 +223,20 @@ class KeyperRule(
         fillInputs(email, secret, R.id.drill_email, R.id.drill_secret)
 
     fun tap(id: Int) {
-        onView(withId(id)).perform(scrollTo(), click())
+        try {
+            onView(withId(id)).perform(scrollTo(), click())
+        } catch (e: PerformException) {
+            throw AssertionError("could not tap ${context.resources.getResourceEntryName(id)}${stopsNote()}", e)
+        }
     }
+
+    /**
+     * Why a view may be gone: Keyper's screen was stopped during the test, and leaving wipes the
+     * phrase by design. On the CI emulator's 320x640 screen, SystemUI's clipboard overlay crashed
+     * after a copy (ArrayIndexOutOfBoundsException in StaticLayout), which stops the app in front.
+     */
+    fun stopsNote(): String =
+        if (stops.isEmpty()) "" else "; Keyper's screen was stopped ${stops.size}× during the test (which wipes the phrase): see logcat for what took over, e.g. a SystemUI crash"
 
     /** Taps Copy, confirming the warning that the first copy of a session shows. */
     fun copy() {
@@ -243,21 +271,48 @@ class KeyperRule(
     /** The phrase is not on screen: its card is hidden, or the page it is on is. */
     fun phraseHidden() = !onScreen(R.id.result)
 
-    // --- Clipboard: read while Keyper is in front, as Android 10+ requires ----------------------------
+    // --- Clipboard: what it really holds, whichever window has focus ----------------------------------
 
     val clipboard: ClipboardManager get() = context.getSystemService(ClipboardManager::class.java)
 
-    /** The clipboard's text, or null when it is empty. */
-    fun clipText(): String? = onMain {
-        if (!clipboard.hasPrimaryClip()) null
-        else clipboard.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()?.ifEmpty { null }
+    /**
+     * Runs [read] on the main thread with the shell's READ_CLIPBOARD_IN_BACKGROUND adopted, dropped
+     * again at once. Without it Android 10+ answers an app without window focus as if the clipboard
+     * were empty (logging "Denying clipboard access"), so "unreadable" would look like "cleared": on
+     * CI, after SystemUI crashed and took focus, another app's clip read back as null although Keyper
+     * had logged "clear: another clip, kept". Keyper's own code cannot run during the block (it runs
+     * on the main thread too), so the app under test keeps its real, focus-bound access.
+     */
+    fun <T> readClipboard(read: (ClipboardManager) -> T): T = onMain {
+        val automation = instrumentation.uiAutomation
+        automation.adoptShellPermissionIdentity(READ_CLIPBOARD_IN_BACKGROUND)
+        try {
+            read(clipboard)
+        } finally {
+            automation.dropShellPermissionIdentity()
+        }
     }
 
-    fun clipLabel(): String? = onMain { clipboard.primaryClipDescription?.label?.toString() }
+    /** The clipboard's text, or null when it is empty (never because it could not be read). */
+    fun clipText(): String? = readClipboard { cb ->
+        if (!cb.hasPrimaryClip()) null
+        else cb.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()?.ifEmpty { null }
+    }
 
-    /** Another app's clip, copied after Keyper's. */
-    fun copyOther(label: String = "notes", text: String = "groceries: milk, eggs") =
-        onMain { clipboard.setPrimaryClip(ClipData.newPlainText(label, text)) }
+    fun clipLabel(): String? = readClipboard { it.primaryClipDescription?.label?.toString() }
+
+    /**
+     * Another app's clip, copied after Keyper's, and read back at once: proof that a later null is an
+     * empty clipboard. On an emulator it asks SystemUI not to show its clipboard overlay for it.
+     */
+    fun copyOther(label: String = "notes", text: String = "groceries: milk, eggs") {
+        onMain {
+            clipboard.setPrimaryClip(ClipData.newPlainText(label, text).apply {
+                description.extras = PersistableBundle().apply { putBoolean(SUPPRESS_OVERLAY, true) }
+            })
+        }
+        assertEquals("another app's clip did not read back", text, clipText())
+    }
 
     // --- System state -----------------------------------------------------------------------------
 
@@ -289,6 +344,10 @@ class KeyperRule(
     }
 
     companion object {
+        const val READ_CLIPBOARD_IN_BACKGROUND = "android.permission.READ_CLIPBOARD_IN_BACKGROUND"
+        /** SystemUI skips its clipboard overlay for a clip with this extra, on emulators only (ClipboardListener). */
+        const val SUPPRESS_OVERLAY = "com.android.systemui.SUPPRESS_CLIPBOARD_OVERLAY"
+
         /** A stand-in for K: any 32 bytes that depend on both inputs. */
         fun fakeKey(email: String, secret: String): ByteArray =
             MessageDigest.getInstance("SHA-256")

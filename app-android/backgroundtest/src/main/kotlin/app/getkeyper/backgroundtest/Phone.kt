@@ -69,6 +69,7 @@ class Phone : TestRule {
         ua.serviceInfo = ua.serviceInfo.apply { flags = flags or AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS }
         shell("am force-stop $KEYPER")
         shell("setprop debug.keyper.fake_derive 1")
+        shell("setprop debug.keyper.suppress_overlay 1") // no SystemUI clipboard overlay over Keyper (emulators only)
         clipboardLifetime(null)
         // As KeyperRule: no "not responding" dialog or clipboard overlay may take focus mid-test.
         shell("settings put global hide_error_dialogs 1")
@@ -88,6 +89,7 @@ class Phone : TestRule {
     private fun cleanUp() {
         runCatching { withReader { it.wipe() } }
         shell("setprop debug.keyper.fake_derive 0")
+        shell("setprop debug.keyper.suppress_overlay 0")
         clipboardLifetime(null)
         shell("am force-stop $KEYPER")
         home()

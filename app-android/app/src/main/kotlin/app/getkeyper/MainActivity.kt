@@ -733,8 +733,11 @@ class MainActivity : Activity() {
         if (!offline) return
         val words = phrase() ?: return
         val clip = ClipData.newPlainText(getString(R.string.result_title), words.joinToString(" "))
-        // Keeps the phrase out of clipboard previews on Android 13+.
-        clip.description.extras = PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
+        clip.description.extras = PersistableBundle().apply {
+            putBoolean("android.content.extra.IS_SENSITIVE", true) // keeps the phrase out of clipboard previews on Android 13+
+            // Debug test runs only (always false in release builds): no SystemUI clipboard overlay on an emulator.
+            if (TestHooks.suppressClipboardOverlay == true) putBoolean("com.android.systemui.SUPPRESS_CLIPBOARD_OVERLAY", true)
+        }
         Copied.copy(this, clip)
         Copied.warned = true
         Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()

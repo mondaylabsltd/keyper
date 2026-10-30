@@ -11,9 +11,9 @@ import java.security.MessageDigest
  * Every hook is null by default, and null means the real behaviour.
  *
  * The tests in :backgroundtest run in a process of their own, so that Keyper's process can be
- * cached, frozen and killed as on a real phone; they cannot reach these fields. For them, two
+ * cached, frozen and killed as on a real phone; they cannot reach these fields. For them, three
  * hooks also read a `debug.keyper.*` system property, which `adb shell setprop` (or the test, as
- * the shell) sets and clears: [clipboardMs] and [derive].
+ * the shell) sets and clears: [clipboardMs], [derive] and [suppressClipboardOverlay].
  */
 internal object TestHooks {
     /** Replaces the radio readings: [airplane mode on, Wi-Fi on, Bluetooth on]. */
@@ -33,6 +33,16 @@ internal object TestHooks {
      */
     @Volatile var clipboardMs: Long? = null
         get() = field ?: property("debug.keyper.clipboard_ms")?.toLongOrNull()?.takeIf { it > 0 }
+
+    /**
+     * Asks SystemUI not to show its clipboard overlay for Keyper's copy, which it honours on
+     * emulators only. On Android 14 the overlay can no longer be switched off with device_config, and
+     * on the CI emulator's 320x640 screen it stayed on top of Keyper indefinitely, taking the touches
+     * meant for it (or crashed SystemUI, which stopped Keyper and so wiped the phrase). Falls back to
+     * `debug.keyper.suppress_overlay`.
+     */
+    @Volatile var suppressClipboardOverlay: Boolean? = null
+        get() = field ?: if (property("debug.keyper.suppress_overlay") == "1") true else null
 
     /** A line in logcat (tag KeyperTest) for the tests to observe; never anything typed or derived. */
     fun log(message: String) {

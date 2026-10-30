@@ -9,5 +9,6 @@ internal object TestHooks {
     val radios: (() -> List<Boolean>)? get() = null
     val derive: ((email: String, secret: String) -> ByteArray)? get() = null
     val clipboardMs: Long? get() = null
+    val suppressClipboardOverlay: Boolean? get() = null
     @Suppress("UNUSED_PARAMETER") fun log(message: String) {}
 }

@@ -1,7 +1,6 @@
 package app.getkeyper
 
 import android.accessibilityservice.AccessibilityServiceInfo
-import android.content.ClipData
 import android.os.Bundle
 import android.os.SystemClock
 import android.text.InputType
@@ -91,7 +90,7 @@ class OwnKeyboardTest {
     @Test
     fun pasteCutAndCopyAreRefused() {
         for (id in fields) {
-            k.onMain { k.clipboard.setPrimaryClip(ClipData.newPlainText("other", "pasted99")) }
+            k.copyOther(label = "other", text = "pasted99")
             k.focus(id)
             k.typeKeys("ab")
             k.read { a ->
@@ -132,7 +131,7 @@ class OwnKeyboardTest {
     fun accessibilityCannotSetOrPasteText() {
         val automation = k.instrumentation.uiAutomation
         automation.serviceInfo = automation.serviceInfo.apply { flags = flags or AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS }
-        k.onMain { k.clipboard.setPrimaryClip(ClipData.newPlainText("other", "pasted99")) }
+        k.copyOther(label = "other", text = "pasted99")
         val setText = Bundle().apply { putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "injected") }
         val refused = listOf(AccessibilityAction.ACTION_SET_TEXT, AccessibilityAction.ACTION_PASTE, AccessibilityAction.ACTION_CUT, AccessibilityAction.ACTION_COPY)
         for (id in fields) {
