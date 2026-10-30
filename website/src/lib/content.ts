@@ -27,27 +27,23 @@ export interface Content {
 		steps: { title: string; text: string }[];
 		flow: { email: string; sentence: string; slow: string; words: string };
 	};
-	cost: {
+	security: {
 		title: string;
 		lead: string;
 		head: [string, string, string];
 		rows: [string, string, string][];
 		note: string;
+		/** `path` is a file in the repository, with an optional #anchor. */
+		model: { label: string; path: string };
 		warning: string;
+		/** One per icon in Landing.svelte, in order. */
+		items: { title: string; text: string }[];
 	};
-	features: { title: string; items: { title: string; text: string }[] };
-	model: {
-		title: string;
-		lead: string;
-		head: [string, string];
-		rows: [string, string][];
-		points: string[];
-	};
-	platforms: { title: string; lead: string; android: string; ios: string; caption: string };
 	open: {
 		title: string;
 		/** `link.path` is a file in the repository, with an optional #anchor. */
 		items: { title: string; text: string; link?: { label: string; path: string } }[];
+		requirements: string;
 		spec: string;
 		security: string;
 		source: string;
@@ -86,7 +82,7 @@ export const en: Content = {
 	meta: {
 		title: 'Keyper: a recovery phrase you keep in your head',
 		description:
-			'On an offline phone, Keyper turns your email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs always give the same phrase. Open source, no permissions, Android and iPhone.'
+			'On an offline phone, Keyper turns your email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs always give the same phrase. Open source, for Android and iPhone.'
 	},
 	nav: {
 		how: 'How it works',
@@ -98,40 +94,30 @@ export const en: Content = {
 	hero: {
 		eyebrow: 'For Android and iPhone',
 		title: 'A recovery phrase you keep in your head.',
-		lead: 'On an offline phone, Keyper turns your email and a sentence only you know into a standard BIP39 recovery phrase. The same inputs always give the same phrase, so you do not need to write it down, and the app never saves what you type.',
+		lead: 'Keyper derives a standard BIP39 recovery phrase from your email and a sentence only you know, on an offline phone. The derivation is deterministic, so there is nothing to write down or store.',
 		primary: 'Get Keyper',
-		secondary: 'See how it works',
+		secondary: 'How it works',
 		note: `${site.price}, paid once. Or build it yourself for free.`
 	},
 	shots: [
 		{ src: '/screens/en-input.png', alt: 'Typing the sentence on Keyper’s own keyboard' },
 		{ src: '/screens/en-result.png', alt: 'A 12-word recovery phrase' }
 	],
-	facts: [
-		'No permissions',
-		'Saves nothing you type',
-		'Works only offline',
-		'Same phrases in every version',
-		'MIT License'
-	],
+	facts: ['Works only offline', 'Stores nothing you type', 'Open source'],
 	how: {
 		title: 'How it works',
 		steps: [
 			{
 				title: 'Go offline',
-				text: 'Turn on airplane mode and switch off Wi-Fi and Bluetooth. Keyper lets you type only while the phone has no network connection.'
+				text: 'Turn on airplane mode and turn off Wi-Fi and Bluetooth. Keyper accepts no input while the phone has a network connection.'
 			},
 			{
 				title: 'Type two things',
-				text: 'Your email, then a sentence only you know, both on Keyper’s own keyboard. The email ignores capitals and punctuation; the sentence does not: every capital, symbol and space between words counts.'
+				text: 'Your email, then your sentence, on Keyper’s own keyboard. In the sentence, capitals, symbols and the spaces between words all count.'
 			},
 			{
-				title: 'Wait a minute',
-				text: 'Keyper runs Argon2id over 1 GiB of memory, 128 passes. About a minute on a phone: deliberately slow, so that guessing is slow too.'
-			},
-			{
-				title: 'Use the phrase',
-				text: '12 or 24 standard BIP39 words. Copy them into a wallet on the same phone or show them as a QR code.'
+				title: 'Get your phrase',
+				text: 'About a minute later: 12 or 24 words for any BIP39 wallet. Copy them, or scan the QR code.'
 			}
 		],
 		flow: {
@@ -141,107 +127,79 @@ export const en: Content = {
 			words: '12 or 24 BIP39 words'
 		}
 	},
-	cost: {
-		title: 'What guessing costs',
-		lead: 'Every guess repeats the minute of work your phone does; a top GPU manages about 20 a second. With assumptions that favour the attacker:',
-		head: ['How unguessable the sentence is', '1000 top GPUs', 'Electricity alone'],
+	security: {
+		title: 'Security',
+		lead: 'Every guess costs one full Argon2id run. Assuming 1000 data-centre GPUs, each at 20 guesses a second and 40 J per guess, and electricity at US$0.05 per kWh, searching half the space takes:',
+		head: ['Entropy', 'Time', 'Electricity'],
 		rows: [
 			['30 bits', '7.5 hours', 'US$300'],
 			['40 bits', '320 days', 'US$305,000'],
 			['50 bits', '890 years', 'US$313 million'],
 			['60 bits', '910,000 years', 'US$320 billion']
 		],
-		note: 'Each extra bit doubles the number of guesses. Above about 48.4 bits, the electricity alone passes US$100 million. Keyper estimates these figures while you type.',
+		note: 'Hardware not included. Keyper estimates the entropy as you type and warns below US$100 million.',
+		model: { label: 'How these figures are derived', path: 'SPEC.md#4-security-model' },
 		warning:
-			'Length alone does not make a sentence hard to guess. Famous lines, lyrics, proverbs and “my cat is called…” are an attacker’s first tries and fall for a few dollars. Use details only you know: names, years, places, numbers, a symbol or two.'
-	},
-	features: {
-		title: 'Protections',
+			'Length doesn’t make a sentence hard to guess: famous lines, lyrics and “my cat is called…” fall for a few dollars, and the estimate can’t recognise them. Use details only you know.',
 		items: [
 			{
 				title: 'Its own keyboard',
-				text: 'A fixed keyboard with exactly the characters a sentence may use. The system keyboard never connects, so nothing learns, syncs or uploads what you type. Paste and injected keys are blocked.'
+				text: 'The fields never connect to the system keyboard, so no keyboard app can log or sync input.'
 			},
 			{
-				title: 'An offline gate',
-				text: 'You can only type and generate while the phone has no network connection. When a connection comes back, the sentence and the phrase are wiped at once.'
+				title: 'Offline gate',
+				text: 'Going online wipes the sentence, the phrase and the clipboard.'
 			},
 			{
-				title: 'Nothing you type is saved',
-				text: 'No account, no files, no backups. When you leave the app, the sentence and the phrase are gone.'
+				title: 'Nothing stored',
+				text: 'Nothing is written to storage. Leaving the app wipes the sentence and the phrase.'
 			},
 			{
 				title: 'No screenshots',
-				text: 'Screenshots and screen recordings see nothing, and the app switcher shows a blank page.'
+				text: 'Screenshots, recordings and the app switcher show nothing.'
 			},
 			{
-				title: 'A recovery drill',
-				text: 'Before you use the phrase, type both inputs again from memory. Keyper tells you at once whether they match.'
+				title: 'Recovery drill',
+				text: 'Re-type both inputs from memory and check they give the same phrase.'
 			},
 			{
-				title: 'Clipboard cleared automatically',
-				text: 'A copied phrase is cleared from the clipboard after 60 seconds, or at once if the phone goes online. To keep it off the clipboard entirely, use the QR code.'
+				title: 'Clipboard cleared',
+				text: 'A copied phrase is cleared after 60 seconds. The QR code avoids the clipboard.'
 			}
 		]
-	},
-	model: {
-		title: 'Security model',
-		lead: 'Everything in Keyper’s code is public, including the constants built into the app: assume every attacker has it.',
-		head: ['If someone has…', 'What still protects the phrase'],
-		rows: [
-			[
-				'your email',
-				'how hard your sentence is to guess: every guess costs 1 GiB × 128 passes'
-			],
-			['your sentence', 'only your email, which is usually not a secret'],
-			['your email and your sentence', 'nothing: together they are the phrase']
-		],
-		points: [
-			'Use the sentence for Keyper only.',
-			'The phone you use should be clean: Keyper cannot protect you from malware already on it.'
-		]
-	},
-	platforms: {
-		title: 'Android and iPhone, the same phrase',
-		lead: 'The same email and sentence give the same words on either phone.',
-		android: 'Android 8.1 or later',
-		ios: 'iOS 17 or later',
-		caption: 'Both need 4 GB of RAM or more. English and Chinese.'
 	},
 	open: {
-		title: 'A frozen protocol, and recovery without the app',
+		title: 'Open, and recoverable without the app',
 		items: [
 			{
+				title: 'Android and iPhone',
+				text: 'The same inputs give the same phrase on both.'
+			},
+			{
 				title: 'A frozen protocol',
-				text: 'Protocol v1 is written down exactly and will never change. Tests pin every constant, so an update that changed a phrase would fail them.'
+				text: 'Published, pinned by tests and never changing, so every version gives the same phrases.'
 			},
 			{
-				title: 'Three implementations',
-				text: 'Kotlin on Android, Swift on iPhone and a Python reference all reproduce the same test vectors, which are checked against standard libraries.'
-			},
-			{
-				title: 'No phone? Use a computer',
-				text: 'If the phone is lost or the app is no longer available, the open-source recovery script gives the same phrase on a computer in about half a minute. Install it and the two libraries it needs, disconnect the computer from the network, then type the same email and sentence.',
-				link: {
-					label: 'How to recover on a computer',
-					path: 'README.md#recovering-without-the-app'
-				}
+				title: 'Recover on a computer',
+				text: 'An independent Python implementation, on argon2-cffi and Trezor’s mnemonic, gives the same phrase on an offline computer.',
+				link: { label: 'How to recover', path: 'README.md#recovering-without-the-app' }
 			}
 		],
+		requirements: 'Android 8.1 or iOS 17 and later, 4 GB of RAM. English and Chinese.',
 		spec: 'Read the protocol',
 		security: 'Security policy',
 		source: 'Browse the source'
 	},
 	pricing: {
 		title: 'Pricing',
-		lead: 'The store version and a build from source are the same app and give the same phrases. Buying it saves you the build and pays for Keyper’s upkeep.',
+		lead: 'The store version and a build from source are the same app. Buying saves you the build and pays for Keyper’s upkeep.',
 		build: {
 			name: 'Build it yourself',
 			price: 'Free',
 			per: 'forever',
 			points: [
 				'Needs Android Studio, or Xcode on a Mac',
-				'On iPhone, a build signed with a free Apple account must be reinstalled every 7 days'
+				'On iPhone, a free Apple account means reinstalling every 7 days'
 			],
 			action: 'How to build',
 			guide: 'README.md#building-and-maintaining'
@@ -254,30 +212,38 @@ export const en: Content = {
 			googlePlay: 'Google Play',
 			appStore: 'App Store'
 		},
-		note: 'One price worldwide; each store shows it in your currency. Android and iPhone are separate purchases.'
+		note: 'One price worldwide. Android and iPhone are bought separately.'
 	},
 	faq: {
 		title: 'Questions',
 		items: [
 			{
+				q: 'Isn’t this a brain wallet?',
+				a: 'It is one, built against what broke the old ones. Those used a single unsalted SHA-256, so one guess could be checked against every address at once, millions of times a second. Keyper salts with your email, so each person is attacked separately, and runs Argon2id over 1 GiB, 128 times: about 20 guesses a second even on a data-centre GPU. It still can’t save a sentence someone can guess.'
+			},
+			{
 				q: 'Is Keyper a wallet?',
-				a: 'No. Keyper only produces the recovery phrase. Put it into any wallet that accepts a standard 12- or 24-word BIP39 phrase. Keyper never holds or moves funds.'
+				a: 'No. It only makes the recovery phrase; use it in any BIP39 wallet. Keyper never holds or moves funds.'
 			},
 			{
 				q: 'Why does it need my email?',
-				a: 'So that the same sentence gives different phrases for different people, and an attacker has to guess one person at a time. The email does not need to be secret. Keyper uses only its letters and digits and ignores case, so Alice@Example.com, alice@example.com and alice.@example.com give the same phrase. A phone number works too. Your sentence is the opposite: one different capital, symbol or space between words gives a different phrase.'
+				a: 'So the same sentence gives different phrases for different people, and an attacker has to guess one person at a time. Only its letters and digits count, so Alice@Example.com and alice@example.com are the same. A phone number works too.'
+			},
+			{
+				q: 'What if someone learns my email?',
+				a: 'The email isn’t a secret. They would still have to guess your sentence, at the cost above. Someone with both has your phrase, so use the sentence for Keyper only.'
 			},
 			{
 				q: 'What if I forget the sentence?',
-				a: 'Then the phrase is gone; nobody can recover it. Choose a sentence you will remember for years, keep its spelling consistent, and do the recovery drill.'
+				a: 'The phrase is gone; nobody can recover it. Pick a sentence you will remember for years and keep its spelling the same.'
 			},
 			{
 				q: 'How do I know my copy is genuine?',
-				a: 'Install Keyper only from its Google Play or App Store listing, or build it from the source, and turn off automatic updates for it. A tampered copy would not need the network to hurt you: it could show a phrase its maker already knows. To rule that out, check your phrase once with the open-source recovery script on an offline computer before you use it.'
+				a: 'Install it only from Google Play or the App Store, or build it from source, and turn off automatic updates for it. A tampered copy could show a phrase its maker knows, so check your phrase once with the recovery script on an offline computer.'
 			},
 			{
 				q: 'Why must the phone be offline?',
-				a: 'So that your sentence and phrase only ever exist on a phone that cannot send them anywhere. Keyper itself never connects to the network; the gate keeps you from using it on a connected phone by mistake.'
+				a: 'So the sentence and the phrase only exist on a phone that can’t send them anywhere. Keyper itself never connects; on Android it doesn’t even hold the network permission. It can’t protect you from malware already on the phone, so use one you trust.'
 			}
 		]
 	},
@@ -297,13 +263,13 @@ export const zh: Content = {
 	meta: {
 		title: 'Keyper：记在脑子里的助记词',
 		description:
-			'在一台离线手机上，Keyper 用你的邮箱和一句只有你知道的话，生成标准 BIP39 助记词。同样的输入总是得到同样的助记词。开源、零权限，支持 Android 和 iPhone。'
+			'在一台离线手机上，Keyper 用你的邮箱和一句只有你知道的话，生成标准 BIP39 助记词。同样的输入总是得到同样的助记词。开源，支持 Android 和 iPhone。'
 	},
 	nav: { how: '原理', security: '安全', pricing: '定价', faq: '常见问题', source: '源码' },
 	hero: {
 		eyebrow: 'Android 与 iPhone',
 		title: '记在脑子里的助记词。',
-		lead: '在一台离线手机上，Keyper 用你的邮箱和一句只有你知道的话，生成标准 BIP39 助记词。同样的输入总是得到同样的助记词，所以不用抄写，App 也从不保存你输入的内容。',
+		lead: 'Keyper 在离线手机上，用你的邮箱和一句只有你知道的话推导出标准 BIP39 助记词。推导是确定性的，所以不用抄写，也不用存储。',
 		primary: '获取 Keyper',
 		secondary: '看看原理',
 		note: `${site.price}，一次买断。也可以自己免费编译。`
@@ -312,25 +278,21 @@ export const zh: Content = {
 		{ src: '/screens/zh-input.png', alt: '用 Keyper 自带键盘输入那句话' },
 		{ src: '/screens/zh-result.png', alt: '12 个词的助记词' }
 	],
-	facts: ['零权限', '不保存你的输入', '只在离线时工作', '每个版本算出的都一样', 'MIT 许可证'],
+	facts: ['只在离线时工作', '不保存你的输入', '开源'],
 	how: {
 		title: '原理',
 		steps: [
 			{
 				title: '先断网',
-				text: '打开飞行模式，关闭 Wi-Fi 和蓝牙。手机还有网络连接时，Keyper 不让你输入。'
+				text: '打开飞行模式，关闭 Wi-Fi 和蓝牙。手机还有网络连接时，Keyper 不接受输入。'
 			},
 			{
 				title: '输入两样东西',
-				text: '先输入邮箱，再输入只有你知道的一句话，都用 Keyper 自带的键盘。邮箱不分大小写、忽略标点；那句话不一样，大小写、符号和词之间的空格都算数。'
+				text: '用 Keyper 自带的键盘输入邮箱和那句话。那句话里，大小写、符号和词之间的空格都算数。'
 			},
 			{
-				title: '等一分钟',
-				text: 'Keyper 用 1 GiB 内存跑 128 遍 Argon2id，手机上约一分钟。故意算得慢，别人猜起来也就慢。'
-			},
-			{
-				title: '使用助记词',
-				text: '12 或 24 个标准 BIP39 词。复制到同一台手机的钱包，或用二维码给另一台设备扫描。'
+				title: '拿到助记词',
+				text: '约一分钟后得到 12 或 24 个词，任何 BIP39 钱包都能用。可以复制，也可以扫二维码。'
 			}
 		],
 		flow: {
@@ -340,101 +302,61 @@ export const zh: Content = {
 			words: '12 或 24 个 BIP39 词'
 		}
 	},
-	cost: {
-		title: '猜一次要花多少',
-		lead: '你手机上那一分钟的计算，攻击者每猜一次都得重做一遍，顶级显卡每秒也只能做约 20 次。按偏向攻击者的假设：',
-		head: ['那句话有多难猜', '一千张顶级显卡', '光电费'],
+	security: {
+		title: '安全',
+		lead: '每猜一次都要完整跑一遍 Argon2id。假设攻击者有 1000 张数据中心级显卡，每张每秒猜 20 次、每次耗电 40 焦耳，电价每度 0.05 美元，平均搜完一半空间需要：',
+		head: ['熵', '时间', '电费'],
 		rows: [
 			['30 位', '7.5 小时', '300 美元'],
 			['40 位', '320 天', '30 万美元'],
 			['50 位', '890 年', '3.1 亿美元'],
 			['60 位', '91 万年', '3200 亿美元']
 		],
-		note: '每多 1 位，要猜的次数就翻一倍。超过约 48.4 位，光电费就超过 1 亿美元。你输入时，Keyper 会估算这几个数。',
+		note: '不含硬件成本。你输入时 Keyper 会估算熵，低于 1 亿美元会提醒。',
+		model: { label: '这些数字怎么算的', path: 'SPEC.md#4-security-model' },
 		warning:
-			'字多不等于难猜。名句、歌词、俗语、“我的猫叫某某”这类模板，攻击者最先试，几块钱电费就能命中。要用只有你知道的细节：人名、年份、地点、数字，再加一两个符号。'
-	},
-	features: {
-		title: '保护措施',
+			'字多不等于难猜：名句、歌词、“我的猫叫某某”，几块钱电费就能猜中，而且估算认不出它们。要用只有你知道的细节。',
 		items: [
-			{
-				title: '自带键盘',
-				text: '固定布局，只提供那句话允许的字符。系统输入法从不连接，也就没法学习、同步或上传你输入的内容；粘贴和注入的按键都会被拦截。'
-			},
-			{
-				title: '断网门禁',
-				text: '只有手机没有网络连接时才能输入和生成。一旦恢复连接，那句话和助记词立即清除。'
-			},
-			{
-				title: '不保存你的输入',
-				text: '没有账户、没有文件、没有备份。离开 App，那句话和助记词就没了。'
-			},
-			{
-				title: '防截屏',
-				text: '截屏和录屏都看不到内容，多任务界面里也是空白。'
-			},
-			{
-				title: '恢复演练',
-				text: '使用助记词之前，凭记忆把两样输入再打一遍，Keyper 当场告诉你是否一致。'
-			},
+			{ title: '自带键盘', text: '输入框从不连接系统输入法，任何输入法都无法记录或同步。' },
+			{ title: '断网门禁', text: '一联网，那句话、助记词和剪贴板立即清除。' },
+			{ title: '什么都不保存', text: '不写入任何存储。离开 App，那句话和助记词立即清除。' },
+			{ title: '防截屏', text: '截屏、录屏和多任务界面都看不到内容。' },
+			{ title: '恢复演练', text: '凭记忆再输一遍，核对结果是否一致。' },
 			{
 				title: '剪贴板自动清除',
-				text: '复制的助记词 60 秒后从剪贴板清除，手机一联网则立即清除。想让它完全不经过剪贴板，就用二维码。'
+				text: '复制的助记词 60 秒后清除。用二维码则完全不经过剪贴板。'
 			}
 		]
 	},
-	model: {
-		title: '安全模型',
-		lead: 'Keyper 的代码完全公开，包括 App 里内置的常量，要当作每个攻击者都有。',
-		head: ['别人拿到了…', '还剩什么在保护你'],
-		rows: [
-			['你的邮箱', '那句话有多难猜：每猜一次都要 1 GiB × 128 遍'],
-			['你的那句话', '只剩邮箱，而邮箱通常不是秘密'],
-			['邮箱和那句话', '没有了，这两样加起来就是助记词']
-		],
-		points: [
-			'那句话只用在 Keyper 上，别在别处用。',
-			'用来生成的手机要干净：手机上已有的恶意软件，Keyper 防不住。'
-		]
-	},
-	platforms: {
-		title: 'Android 与 iPhone，同一组助记词',
-		lead: '同样的邮箱和那句话，在哪台手机上都得到同样的词。',
-		android: 'Android 8.1 及以上',
-		ios: 'iOS 17 及以上',
-		caption: '都需要 4 GB 以上内存。中英双语。'
-	},
 	open: {
-		title: '冻结的协议，以及不靠 App 恢复',
+		title: '开源，不靠 App 也能恢复',
 		items: [
+			{ title: 'Android 和 iPhone', text: '同样的输入，两个平台得到同样的助记词。' },
 			{
 				title: '协议已冻结',
-				text: 'v1 协议精确成文，永远不会改。测试钉死了每一个常量，任何会改变助记词的更新都通不过测试。'
+				text: '算法公开，由测试锁定，永不改变，所以每个版本结果都一样。'
 			},
 			{
-				title: '三套实现',
-				text: 'Android 上的 Kotlin、iPhone 上的 Swift 和一份 Python 参考实现，都复现同一组测试向量，这些向量都对照标准库核验过。'
-			},
-			{
-				title: '没有手机，用电脑也能找回',
-				text: '手机丢了或者 App 下架了，开源的恢复脚本能在电脑上半分钟左右算出同一组助记词。先装好脚本和它需要的两个库，断开电脑的网络，再输入同样的邮箱和那句话。',
+				title: '用电脑恢复',
+				text: '独立的 Python 实现（基于 argon2-cffi 和 Trezor 的 mnemonic）能在断网的电脑上算出同一组助记词。',
 				link: { label: '怎样在电脑上恢复', path: 'README-zh.md#脱离-app-恢复' }
 			}
 		],
+		requirements: 'Android 8.1 或 iOS 17 及以上，4 GB 以上内存。中英双语。',
 		spec: '阅读协议规范',
 		security: '安全政策',
 		source: '浏览源码'
 	},
 	pricing: {
 		title: '定价',
-		lead: '商店版和自己编译的是同一个 App，算出的助记词也相同。买商店版省去自己编译，也支持 Keyper 的持续维护。',
+		lead: '商店版和自己编译的是同一个 App。买商店版省去编译，也支持 Keyper 的持续维护。',
 		build: {
 			name: '自己编译',
 			price: '免费',
 			per: '永久',
 			points: [
-				'需要 Android Studio，或者 Mac 上的 Xcode',
-				'iPhone 上用免费 Apple 账户签名的版本，每 7 天要重新安装一次'
+				'需要 Android Studio，或 Mac 上的 Xcode',
+				'iPhone 上用免费 Apple 账户签名，每 7 天要重装一次'
 			],
 			action: '怎样编译',
 			guide: 'README-zh.md#构建与维护'
@@ -447,30 +369,38 @@ export const zh: Content = {
 			googlePlay: 'Google Play',
 			appStore: 'App Store'
 		},
-		note: '全球统一定价，商店会按你所在地区的货币显示。Android 和 iPhone 需要分别购买。'
+		note: '全球统一价。Android 和 iPhone 需要分别购买。'
 	},
 	faq: {
 		title: '常见问题',
 		items: [
 			{
+				q: '这不就是脑钱包吗？',
+				a: '是，但针对旧脑钱包被攻破的原因做了设计。旧的脑钱包只做一次不加盐的 SHA-256，猜一次就能同时核对所有地址，每秒能试数百万次。Keyper 用邮箱作盐，攻击者只能逐个人攻击；再用 1 GiB 内存跑 128 遍 Argon2id，即使是数据中心级显卡，每秒也只能猜约 20 次。但如果那句话能被猜到，它也保不住。'
+			},
+			{
 				q: 'Keyper 是钱包吗？',
-				a: '不是。Keyper 只负责生成助记词。把它导入任何支持标准 12 或 24 词 BIP39 助记词的钱包即可。Keyper 从不持有、也不转移资产。'
+				a: '不是。它只生成助记词，导入任何 BIP39 钱包即可。Keyper 从不持有或转移资产。'
 			},
 			{
 				q: '为什么要填邮箱？',
-				a: '为了让同一句话在不同人那里得到不同的助记词，攻击者只能一个人一个人地猜。邮箱不需要保密。Keyper 只取邮箱里的英文字母和数字，不分大小写，所以 Alice@Example.com、alice@example.com 和 alice.@example.com 算出的是同一组助记词。也可以用手机号代替邮箱。那句话正好相反：大小写、符号、词之间的空格，错一处，助记词就完全不同。'
+				a: '让同一句话在不同人那里得到不同的助记词，攻击者只能一个人一个人地猜。只取邮箱里的字母和数字，不分大小写，所以 Alice@Example.com 和 alice@example.com 是同一个。也可以用手机号。'
+			},
+			{
+				q: '别人知道了我的邮箱怎么办？',
+				a: '邮箱不是秘密。对方还得猜出那句话，代价见上表。邮箱和那句话都被拿到，助记词就暴露了，所以那句话只用在 Keyper 上。'
 			},
 			{
 				q: '忘了那句话怎么办？',
-				a: '那组助记词就找不回来了，没有人能帮你恢复。选一句多年后还记得的话，拼写保持一致，并做一次恢复演练。'
+				a: '助记词就找不回来了，任何人都帮不了你。选一句多年后还记得的话，拼写保持一致。'
 			},
 			{
 				q: '怎么确认装的是正版？',
-				a: '只从 Google Play 或 App Store 上的官方页面安装，或者自己从源码编译，并关掉它的自动更新。篡改版不联网也能害你：它可以显示一组作者早就知道的助记词。要排除这种情况，在使用助记词之前，用开源恢复脚本在一台断网的电脑上核对一次。'
+				a: '只从 Google Play 或 App Store 安装，或自己从源码编译，并关掉它的自动更新。篡改版可能显示一组作者早就知道的助记词，所以使用前请用恢复脚本在断网的电脑上核对一次。'
 			},
 			{
-				q: '为什么手机必须断网？',
-				a: '这样那句话和助记词只会出现在一台什么都发不出去的手机上。Keyper 自己完全不联网；门禁是为了防止你在联网的手机上误用。'
+				q: '为什么必须断网？',
+				a: '这样那句话和助记词只存在于一台发不出任何东西的手机上。Keyper 本身从不联网，在 Android 上连网络权限都没有；但它防不住手机上已有的恶意软件，所以请用你信任的手机。'
 			}
 		]
 	},

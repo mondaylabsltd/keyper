@@ -110,17 +110,18 @@
 	</section>
 
 	<section id="security" class="section wrap">
-		<h2>{c.cost.title}</h2>
-		<p class="section-lead">{c.cost.lead}</p>
+		<h2>{c.security.title}</h2>
+		<p class="section-lead">{c.security.lead}</p>
 		<div class="card table-card">
 			<table>
 				<thead>
 					<tr
-						>{#each c.cost.head as cell (cell)}<th scope="col">{cell}</th>{/each}</tr
+						>{#each c.security.head as cell (cell)}<th scope="col">{cell}</th
+							>{/each}</tr
 					>
 				</thead>
 				<tbody>
-					{#each c.cost.rows as row, i (row[0])}
+					{#each c.security.rows as row, i (row[0])}
 						<tr class:safe={i >= 2}>
 							<th scope="row">{row[0]}</th>
 							<td>{row[1]}</td>
@@ -129,16 +130,18 @@
 					{/each}
 				</tbody>
 			</table>
-			<p class="table-note">{c.cost.note}</p>
+			<p class="table-note">
+				{c.security.note}
+				{#if repoFile(c.security.model.path)}<a
+						href={repoFile(c.security.model.path)}
+						rel="external">{c.security.model.label} →</a
+					>{/if}
+			</p>
 		</div>
-		<p class="warning">{c.cost.warning}</p>
-	</section>
-
-	<section class="section wrap">
-		<h2>{c.features.title}</h2>
+		<p class="warning">{c.security.warning}</p>
 		<ul class="features">
-			{#each c.features.items as item, i (item.title)}
-				<li class="card">
+			{#each c.security.items as item, i (item.title)}
+				<li>
 					<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"
 						><path d={icons[i]} /></svg
 					>
@@ -147,61 +150,6 @@
 				</li>
 			{/each}
 		</ul>
-	</section>
-
-	<section class="section wrap">
-		<h2>{c.model.title}</h2>
-		<p class="section-lead">{c.model.lead}</p>
-		<div class="card table-card">
-			<table class="model">
-				<thead>
-					<tr
-						><th scope="col">{c.model.head[0]}</th><th scope="col">{c.model.head[1]}</th
-						></tr
-					>
-				</thead>
-				<tbody>
-					{#each c.model.rows as row (row[0])}
-						<tr><th scope="row">{row[0]}</th><td>{row[1]}</td></tr>
-					{/each}
-				</tbody>
-			</table>
-		</div>
-		<ul class="points">
-			{#each c.model.points as point (point)}<li>{point}</li>{/each}
-		</ul>
-	</section>
-
-	<section class="section wrap platforms">
-		<div>
-			<h2>{c.platforms.title}</h2>
-			<p class="section-lead">{c.platforms.lead}</p>
-			<p class="caption">{c.platforms.caption}</p>
-		</div>
-		<div class="pair">
-			<figure>
-				<img
-					class="phone"
-					src={c.lang === 'zh' ? '/screens/zh-result.png' : '/screens/en-result.png'}
-					alt="Android"
-					width="540"
-					height="1205"
-					loading="lazy"
-				/>
-				<figcaption>{c.platforms.android}</figcaption>
-			</figure>
-			<figure>
-				<img
-					class="phone"
-					src="/screens/ios-result.png"
-					alt="iPhone"
-					width="540"
-					height="1174"
-					loading="lazy"
-				/>
-				<figcaption>{c.platforms.ios}</figcaption>
-			</figure>
-		</div>
 	</section>
 
 	<section class="section wrap">
@@ -219,6 +167,7 @@
 				</li>
 			{/each}
 		</ul>
+		<p class="caption">{c.open.requirements}</p>
 		{#if site.repository}
 			<div class="actions">
 				{#if spec}<a class="button tonal" href={spec} rel="external">{c.open.spec}</a>{/if}
@@ -527,7 +476,7 @@
 
 	/* Sections */
 	.section {
-		padding-block: 88px 0;
+		padding-block: 120px 0;
 	}
 
 	h2 {
@@ -650,8 +599,8 @@
 		padding: 0;
 		margin: 40px 0 0;
 		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 20px;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 32px;
 	}
 
 	.steps li {
@@ -677,13 +626,7 @@
 		font-size: 15px;
 	}
 
-	@media (max-width: 960px) {
-		.steps {
-			grid-template-columns: repeat(2, 1fr);
-		}
-	}
-
-	@media (max-width: 560px) {
+	@media (max-width: 760px) {
 		.steps {
 			grid-template-columns: 1fr;
 		}
@@ -721,7 +664,7 @@
 		white-space: nowrap;
 	}
 
-	table:not(.model) td {
+	td {
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 	}
@@ -753,10 +696,6 @@
 		border-left: 4px solid var(--danger);
 	}
 
-	.model th {
-		white-space: normal;
-	}
-
 	@media (max-width: 560px) {
 		th,
 		td {
@@ -773,17 +712,16 @@
 	.features {
 		list-style: none;
 		padding: 0;
-		margin: 36px 0 0;
+		margin: 64px 0 0;
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: 20px;
+		gap: 40px 48px;
 	}
 
 	.features li {
-		padding: 24px;
 		display: grid;
 		align-content: start;
-		gap: 10px;
+		gap: 8px;
 	}
 
 	.features p {
@@ -808,74 +746,40 @@
 	}
 
 	@media (max-width: 600px) {
+		.section {
+			padding-block: 80px 0;
+		}
+
 		.features {
-			grid-template-columns: 1fr;
+			margin-top: 48px;
+			gap: 32px 20px;
+		}
+
+		.features p {
+			font-size: 15px;
 		}
 	}
 
-	.points {
-		margin: 24px 0 0;
-		padding-left: 1.2em;
-		color: var(--text-secondary);
-		display: grid;
-		gap: 8px;
-	}
-
-	/* Platforms */
-	.platforms {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 48px;
-		align-items: center;
-	}
-
+	/* Small print under a section */
 	.caption {
 		margin-top: 16px;
 		color: var(--text-tertiary);
 		font-size: 15px;
 	}
 
-	.pair {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 20px;
-	}
-
-	figure {
-		margin: 0;
-		display: grid;
-		gap: 12px;
-		justify-items: center;
-	}
-
-	figcaption {
-		font-size: 14px;
-		color: var(--text-secondary);
-		font-weight: 500;
-	}
-
-	@media (max-width: 860px) {
-		.platforms {
-			grid-template-columns: 1fr;
-		}
-
-		.pair {
-			max-width: 460px;
-		}
-	}
-
 	/* Open */
 	.open {
 		list-style: none;
 		padding: 0;
-		margin: 36px 0 0;
+		margin: 40px 0 0;
 		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 28px 40px;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 32px 40px;
 	}
 
 	.open li {
 		display: grid;
+		align-content: start;
 		gap: 8px;
 		padding-left: 18px;
 		border-left: 3px solid var(--gold-end);
@@ -896,7 +800,7 @@
 		text-decoration: underline;
 	}
 
-	@media (max-width: 700px) {
+	@media (max-width: 860px) {
 		.open {
 			grid-template-columns: 1fr;
 		}

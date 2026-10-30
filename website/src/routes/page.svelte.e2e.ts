@@ -28,7 +28,7 @@ for (const [path, lang, heading] of [
 		await expect(page.locator('html')).toHaveAttribute('lang', lang);
 		await expect(page.locator('h1')).toHaveText(heading);
 		await expect(page.locator('#how')).toBeVisible();
-		await expect(page.locator('#faq details')).toHaveCount(5);
+		await expect(page.locator('#faq details')).toHaveCount(7);
 		await expect(page.locator(`script[src^="${analytics}"]`)).toHaveCount(1);
 		expect(elsewhere).toEqual([]);
 		expect(blocked).toEqual([]);
