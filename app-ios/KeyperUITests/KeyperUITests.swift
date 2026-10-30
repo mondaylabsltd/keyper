@@ -1,7 +1,9 @@
 import XCTest
 
 /// Drives the app through its own keyboard, as a user would. On the simulator the offline gate is
-/// simulated; screenshots need the screen shield off. Both switches exist only in Debug builds.
+/// simulated; screenshots need the screen shield off; and every test but the two that need the real
+/// phrase (the reference check, the store screenshots) derives with the instant stand-in. These
+/// switches exist only in Debug builds.
 @MainActor
 final class KeyperUITests: XCTestCase {
     private var app: XCUIApplication!
@@ -12,8 +14,12 @@ final class KeyperUITests: XCTestCase {
         simulateOffline = isSimulator || ProcessInfo.processInfo.environment["KEYPER_SIMULATE_OFFLINE"] != nil
         app.launchArguments = ["-KeyperAllowScreenshots"] + (simulateOffline ? ["-KeyperSimulateOffline"] : [])
         app.launchArguments += ["-AppleLanguages", "(en)"]
+        if !Self.realDerivation.contains(where: name.contains) { app.launchArguments.append("-KeyperFakeDerivation") }
         app.launch()
     }
+
+    /// The tests that run the real 1 GiB derivation; the rest use the instant stand-in.
+    private static let realDerivation = ["testTypeGenerateAndMatchTheReference", "testStoreScreenshots"]
 
     /// The app was launched with the offline state simulated, so the test can also go online.
     private var simulateOffline = false
@@ -154,10 +160,21 @@ final class KeyperUITests: XCTestCase {
     /// Types the standard inputs, generates (the real derivation) and waits for the phrase to stop
     /// moving; returns the phrase's label.
     @discardableResult
-    private func generatePhrase() -> String {
-        typeInputs("alice@example.com", "In 2009 Grandma Li and I picked 7 green dates")
-        app.keys["Done"].tap()
-        app.buttons["generate"].tap()
+    private func generatePhrase(short: Bool = false) -> String {
+        if short {
+            // Quick to type, for tests that assert nothing about the inputs: too short to rate
+            // "good", so through the weak-sentence warning.
+            typeInputs(Self.shortEmail, Self.shortSentence)
+            app.keys["Done"].tap()
+            app.buttons["generate"].tap()
+            let weak = app.descendants(matching: .any)["weak_dialog"]
+            XCTAssertTrue(weak.waitForExistence(timeout: 5), "no warning for a short sentence")
+            weak.buttons["Generate anyway"].tap()
+        } else {
+            typeInputs("alice@example.com", "In 2009 Grandma Li and I picked 7 green dates")
+            app.keys["Done"].tap()
+            app.buttons["generate"].tap()
+        }
         let words = app.descendants(matching: .any)["words"]
         XCTAssertTrue(words.waitForExistence(timeout: 600), "the phrase appears")
         waitUntilStill(app.buttons["First time? Do a recovery drill  ›"])
@@ -179,12 +196,22 @@ final class KeyperUITests: XCTestCase {
 
     private var drillTitle: XCUIElement { app.staticTexts["drill_title"] }
 
+    private static let shortEmail = "a@b.io"
+    private static let shortSentence = "qwe rty uiop"
+
     /// The whole accessibility tree, labels and values (hidden elements are not in it), holds none
-    /// of the phrase, the sentence or what the drill page took: nothing to reach by navigation.
-    private func assertNothingSensitiveInTheTree(_ when: String, file: StaticString = #filePath, line: UInt = #line) {
+    /// of the phrase (`phrase`, its label as shown), the sentence (`typed`) or what the drill page
+    /// took: nothing to reach by navigation.
+    private func assertNothingSensitiveInTheTree(_ when: String, phrase: String, typed: [String], file: StaticString = #filePath, line: UInt = #line) {
         let tree = app.debugDescription
         XCTAssertFalse(app.descendants(matching: .any)["words"].exists, "\(when): the phrase", file: file, line: line)
-        for needle in ["ripple", "naive", "crunch", "patrol", "goose", "Grandma", "In 2009", "characters, hidden", "\u{4E2A}\u{5B57}\u{7B26}\u{FF0C}\u{5DF2}\u{9690}\u{85CF}", "drill_"] {
+        // Each word as its cell shows it ("01  word"), and the first three as the copy joins them.
+        let cells = phrase.matches(of: /\d\d\u{00A0}\u{00A0}[a-z]+/).map { String($0.output) }
+        XCTAssertEqual(cells.count, 12, "unreadable phrase label: the check proves nothing", file: file, line: line)
+        let words = cells.map { String($0.split(separator: "\u{00A0}").last!) }
+        let needles = cells + [words.prefix(3).joined(separator: " ")] + typed
+            + ["characters, hidden", "\u{4E2A}\u{5B57}\u{7B26}\u{FF0C}\u{5DF2}\u{9690}\u{85CF}", "drill_"]
+        for needle in needles {
             XCTAssertFalse(tree.contains(needle), "\(when): the accessibility tree holds \(needle)", file: file, line: line)
         }
     }
@@ -298,7 +325,7 @@ final class KeyperUITests: XCTestCase {
         XCTAssertFalse(drillTitle.exists, "leaving the app left the drill page open")
         XCTAssertFalse(words.exists, "leaving the app forgets the phrase")
         XCTAssertEqual(app.staticTexts["strength"].exists, false, "and the secret")
-        assertNothingSensitiveInTheTree("after leaving from the drill page")
+        assertNothingSensitiveInTheTree("after leaving from the drill page", phrase: phrase, typed: ["Grandma", "In 2009"])
         app.buttons["language"].tap()
     }
 
@@ -306,11 +333,11 @@ final class KeyperUITests: XCTestCase {
     /// empty again; going online on the drill page wipes it and leaves it, with the phrase.
     func testDrillBackAndGoingOnline() throws {
         try XCTSkipUnless(simulateOffline, "going online is simulated (simulator, or KEYPER_SIMULATE_OFFLINE)")
-        let phrase = generatePhrase()
+        let phrase = generatePhrase(short: true)
         let words = app.descendants(matching: .any)["words"]
         openDrill()
         waitForKeyboard()
-        type("alice@example.com")
+        type(Self.shortEmail)
         app.buttons["drill_back"].tap()
         XCTAssertTrue(drillTitle.waitForNonExistence(timeout: 5), "Back closes the drill page")
         XCTAssertTrue(words.waitForExistence(timeout: 5))
@@ -320,9 +347,9 @@ final class KeyperUITests: XCTestCase {
         waitUntilStill(app.buttons["First time? Do a recovery drill  ›"])
         openDrill() // checks that what was typed last time is gone
         waitForKeyboard()
-        type("alice@example.com")
+        type(Self.shortEmail)
         app.keys["Next"].tap()
-        type("In 2009")
+        type("qwe")
         simulateWifi(on: true)
         XCTAssertTrue(drillTitle.waitForNonExistence(timeout: 5), "going online left the drill page open")
         XCTAssertTrue(app.descendants(matching: .any)["offline_card"].waitForExistence(timeout: 5), "the first page, with the gate")
@@ -330,11 +357,11 @@ final class KeyperUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["strength"].exists, "going online kept the sentence")
         XCTAssertFalse(app.buttons["First time? Do a recovery drill  ›"].exists)
         XCTAssertFalse(app.keys["q"].exists, "the keyboard stayed open")
-        assertNothingSensitiveInTheTree("after going online on the drill page")
+        assertNothingSensitiveInTheTree("after going online on the drill page", phrase: phrase, typed: [Self.shortSentence, "qwe"])
         simulateWifi(on: false)
         XCTAssertTrue(app.descendants(matching: .any)["offline_card"].waitForNonExistence(timeout: 5))
         XCTAssertFalse(words.exists || drillTitle.exists, "back offline, something came back")
-        assertNothingSensitiveInTheTree("back offline")
+        assertNothingSensitiveInTheTree("back offline", phrase: phrase, typed: [Self.shortSentence, "qwe"])
     }
 
     /// Debug builds with -KeyperSimulateOffline listen for these (OfflineMonitor).

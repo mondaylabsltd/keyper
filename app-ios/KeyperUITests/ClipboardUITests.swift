@@ -27,8 +27,9 @@ final class ClipboardUITests: XCTestCase {
         try await super.tearDown()
     }
 
+    /// With the instant stand-in for the derivation: these tests are about the copy, not the phrase.
     private func launch(clipboardSeconds: Int?) {
-        app.launchArguments = ["-KeyperAllowScreenshots", "-KeyperSimulateOffline", "-AppleLanguages", "(en)"]
+        app.launchArguments = ["-KeyperAllowScreenshots", "-KeyperSimulateOffline", "-KeyperFakeDerivation", "-AppleLanguages", "(en)"]
         if let clipboardSeconds { app.launchArguments += ["-KeyperClipboardSeconds", String(clipboardSeconds)] }
         app.launch()
         XCTAssertTrue(app.buttons["generate"].waitForExistence(timeout: 10))
@@ -108,16 +109,29 @@ final class ClipboardUITests: XCTestCase {
         }
     }
 
-    /// Types the inputs, generates (the real derivation) and waits for the phrase.
+    /// Short inputs, quick to type key by key: these tests are about the copy, not the phrase. No
+    /// sentence this short rates "good", so Generate warns first.
+    static let email = "a@b.io"
+    static let sentence = "qwe rty uiop"
+
+    /// Types the short inputs, generates (with the instant stand-in) and waits for the phrase.
     private func generate() {
         app.textFields["email"].tap()
         waitForKeyboard()
-        type("alice@example.com")
+        type(Self.email)
         app.keys["Next"].tap()
-        type("In 2009 Grandma Li and I picked 7 green dates")
+        type(Self.sentence)
         app.keys["Done"].tap()
+        tapGenerate()
+    }
+
+    /// Generate, through the weak-sentence warning, then waits for the phrase to stop moving.
+    private func tapGenerate() {
         app.buttons["generate"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["words"].waitForExistence(timeout: 600), "the phrase appears")
+        let weak = app.descendants(matching: .any)["weak_dialog"]
+        XCTAssertTrue(weak.waitForExistence(timeout: 5), "no warning for a short sentence")
+        weak.buttons["Generate anyway"].tap()
+        XCTAssertTrue(app.descendants(matching: .any)["words"].waitForExistence(timeout: 60), "the phrase appears")
         waitUntilStill(app.buttons["Copy"])
     }
 
@@ -175,65 +189,55 @@ final class ClipboardUITests: XCTestCase {
     private enum Away: String { case front, background, terminated, forceQuit }
 
     /// Copies with a short lifetime, then leaves Keyper `away` while the deadline passes. Checked twice
-    /// through Keyper's eyes: before the deadline (the copy must still be there, so the check can see
-    /// it at all) and after. With `otherAppCopies`, the runner, as another app, copies something
-    /// itself right after Keyper's copy; that newer content must survive Keyper's deadline.
-    private func expiry(_ away: Away, otherAppCopies: Bool, lifetime: Double = 30) {
+    /// through Keyper's eyes: right after the copy (it must be there, so the check can see it at all;
+    /// done at once, so a slow runner cannot reach the deadline first) and once the deadline is well
+    /// past (`margin`). With `otherAppCopies`, the runner, as another app, copies something itself
+    /// right after Keyper's copy; that newer content must survive Keyper's deadline. The real 60
+    /// seconds, and the copy surviving Keyper's trip to the background, are
+    /// testRealSixtySecondCopyExpiresInTheBackground's.
+    private func expiry(_ away: Away, otherAppCopies: Bool, lifetime: Double = 10, margin: Double = 5) {
         launch(clipboardSeconds: Int(lifetime))
         generate()
         let copied = tapCopy()
-        var expected = state
         if otherAppCopies {
             copyAsAnotherApp()
-            expected = state
-            XCTAssertTrue(expected.otherApp, "the app cannot see the runner's copy")
         }
-
         // Change counts are only recorded: a relaunched Keyper saw a different one from the process
         // that copied (16 against 24, after a force-quit), and a field's focus moves it too.
         var runnerCounts = ["copy \(UIPasteboard.general.changeCount)"]
-        func early() {
-            let now = state
-            runnerCounts.append("early \(UIPasteboard.general.changeCount)")
-            XCTAssertLessThan(Date().timeIntervalSince(copied), lifetime - 2, "checked too late to see the copy before its deadline")
-            XCTAssertEqual(now.content, expected.content, "the pasteboard changed before the deadline")
+        let expected = state
+        XCTAssertLessThan(Date().timeIntervalSince(copied), lifetime, "checked too late to see the copy before its deadline")
+        XCTAssertTrue(expected.hasStrings, "nothing on the pasteboard right after the copy")
+        if otherAppCopies {
+            XCTAssertTrue(expected.otherApp && !expected.keyperCopy, "the app cannot see the runner's copy")
+        } else {
+            XCTAssertTrue(expected.keyperCopy, "Keyper's copy is not there right after copying")
         }
+
         var stateAtDeadline = ""
+        let deadline = copied.addingTimeInterval(lifetime + margin)
         switch away {
         case .front:
-            sleep(3)
-            early()
-            wait(until: copied.addingTimeInterval(lifetime + 5))
+            wait(until: deadline)
             XCTAssertEqual(app.state, .runningForeground)
         case .background:
-            // Keyper's own scene phase is the evidence that it went to the background: leaving forgets
-            // the phrase. (XCUIApplication.state is recorded too, but on the iOS 26 simulator it can
-            // still read "foreground" seconds after Home.)
             XCUIDevice.shared.press(.home)
-            sleep(3)
-            stateAtDeadline = " (app state \(app.state.rawValue) 3 s after Home"
-            activate()
-            XCTAssertFalse(app.descendants(matching: .any)["words"].exists, "Keyper never went to the background (the phrase is still there)")
-            early()
-            XCUIDevice.shared.press(.home)
-            wait(until: copied.addingTimeInterval(lifetime + 5))
-            stateAtDeadline += ", \(app.state.rawValue) at the deadline; 4 = foreground)"
+            wait(until: deadline)
+            stateAtDeadline = " (app state \(app.state.rawValue) at the deadline; 4 = foreground)"
             XCTAssertTrue(XCUIApplication(bundleIdentifier: "com.apple.springboard").wait(for: .runningForeground, timeout: 1), "the home screen is not in front")
             activate()
+            // Keyper's own scene phase is the evidence that it went to the background: leaving forgets
+            // the phrase. (XCUIApplication.state can still read "foreground" seconds after Home on the
+            // iOS 26 simulator.)
+            XCTAssertFalse(app.descendants(matching: .any)["words"].exists, "Keyper never went to the background (the phrase is still there)")
         case .terminated:
             app.terminate()
-            launch(clipboardSeconds: Int(lifetime))
-            early()
-            app.terminate()
             XCTAssertEqual(app.state, .notRunning)
-            wait(until: copied.addingTimeInterval(lifetime + 5))
+            wait(until: deadline)
             launch(clipboardSeconds: Int(lifetime))
         case .forceQuit:
             forceQuitFromTheAppSwitcher()
-            launch(clipboardSeconds: Int(lifetime))
-            early()
-            forceQuitFromTheAppSwitcher()
-            wait(until: copied.addingTimeInterval(lifetime + 5))
+            wait(until: deadline)
             launch(clipboardSeconds: Int(lifetime))
         }
         let late = state
@@ -363,12 +367,10 @@ final class ClipboardUITests: XCTestCase {
         XCTAssertFalse(discarded.hasStrings || discarded.keyperCopy, "discarding the phrase left its copy")
 
         app.keys["Delete"].tap()
-        XCTAssertEqual(app.textFields["email"].value as? String, "alice@example.com")
+        XCTAssertEqual(app.textFields["email"].value as? String, Self.email)
         app.keys["Next"].tap()
         app.keys["Done"].tap() // the sentence is still there: discarding keeps the inputs
-        app.buttons["generate"].tap()
-        XCTAssertTrue(app.descendants(matching: .any)["words"].waitForExistence(timeout: 600), "the phrase appears again")
-        waitUntilStill(app.buttons["Copy"])
+        tapGenerate()
         tapCopy(warning: false)
         simulateWifi(on: true)
         XCTAssertTrue(app.descendants(matching: .any)["offline_card"].waitForExistence(timeout: 5), "Keyper saw the network come back")
@@ -391,7 +393,7 @@ final class ClipboardUITests: XCTestCase {
         XCTAssertFalse(app.buttons["First time? Do a recovery drill  ›"].exists)
         let after = state
         XCTAssertFalse(after.hasStrings || after.keyperCopy, "Clear all left Keyper's copy")
-        XCTAssertFalse(app.debugDescription.contains("alice@example.com"), "the email is still in the accessibility tree")
+        XCTAssertFalse(app.debugDescription.contains(Self.email), "the email is still in the accessibility tree")
     }
 
     /// Whatever is copied after Keyper's copy is someone else's: neither discarding the phrase nor

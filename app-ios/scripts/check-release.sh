@@ -14,7 +14,7 @@ if nm -u "$bin" | grep -qx '_memset_s'; then
 else
   echo "FAIL: memset_s is not linked; the wipes may have been optimised away"; fail=1
 fi
-for hook in KeyperAllowScreenshots KeyperSimulateOffline KeyperClipboardSeconds KeyperBench KeyperInterfaces pasteboard_state PasteboardProbe DeviceBench KEYPER-BENCH KEYPER-IF; do
+for hook in KeyperAllowScreenshots KeyperSimulateOffline KeyperClipboardSeconds KeyperFakeDerivation InstantDerivation keyper-ui-test-stand-in KeyperBench KeyperInterfaces pasteboard_state PasteboardProbe DeviceBench KEYPER-BENCH KEYPER-IF; do
   if strings -a "$bin" | grep -q "$hook"; then
     echo "FAIL: test hook $hook is in the Release binary"; fail=1
   fi

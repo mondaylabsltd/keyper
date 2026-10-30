@@ -82,8 +82,12 @@ extension KeyperClaims {
             if overlay == "drill_passed" { #expect(h.model.drillResult == .passed) }
             #expect(Self.differingShare(without, with) > 0.05, "\(overlay) did not appear: the check proves nothing")
             #expect(window.rootViewController?.presentedViewController == nil, "\(overlay) is presented outside the shield")
-            let windowsAfter = Set(hostScene.windows.filter { !$0.isHidden }.map(ObjectIdentifier.init))
-            #expect(windowsAfter.subtracting(windowsBefore).isEmpty, "\(overlay) opened a window of its own")
+            let opened = hostScene.windows.filter { !$0.isHidden && !windowsBefore.contains(ObjectIdentifier($0)) }
+            // UIKit's own window for the text cursor, made the first time any field in the process
+            // takes the focus (the drill page focuses its email), may appear; it must draw nothing.
+            let effects = opened.filter { String(describing: type(of: $0)) == "UITextEffectsWindow" }
+            for effect in effects { #expect(variedShare(Self.layers(effect)) < 0.001, "\(overlay): UIKit's text effects window draws something") }
+            #expect(opened.count == effects.count, "\(overlay) opened a window of its own: \(opened.map { String(describing: type(of: $0)) })")
             #expect(variedShare(Self.capture(window)) < 0.001, "\(overlay) shows in a capture")
 
             // The control: the same screen without the shield shows in a capture.
@@ -121,10 +125,12 @@ extension KeyperClaims {
             #expect(variedShare(try await render(.background)) < 0.001, "the app switcher would see the screen (background)")
         }
 
-        /// Going online or leaving the app from the drill page: the drill page is gone, and no field
-        /// left in the window (the main page's, which lay under the drill page, included) holds the
-        /// sentence or the drill's typing; the phrase is gone from the page.
-        @Test(arguments: ["online", "leave"])
+        /// Going online, leaving the app or Clear all from the drill page: the page is gone at once,
+        /// with no exit animation keeping it on screen, and no field left in the window (the main
+        /// page's, which lay under the drill page, included) holds the sentence or the drill's
+        /// typing. Checked right after the window's next layout pass, with no time for an animation;
+        /// Back, the control, slides out, and is still there at that point.
+        @Test(arguments: ["online", "leave", "clearAll", "back"])
         func nothingSensitiveRemainsInTheViews(how: String) async throws {
             let h = Harness()
             h.generated()
@@ -144,15 +150,28 @@ extension KeyperClaims {
             #expect(typed.contains { $0.id == "drill_secret" && $0.text == "In 2009 Grandma" } && typed.contains { $0.id == "secret" && $0.text == Harness.sentence },
                     "the drill page's field holds nothing: the check proves nothing (\(typed))")
 
-            if how == "online" { h.goOnline() } else { h.model.leave() }
-            try await spin(1)
+            switch how {
+            case "online": h.goOnline()
+            case "leave": h.model.leave()
+            case "clearAll": h.model.clearAll()
+            default: h.model.closeDrill() // Back
+            }
+            window.layoutIfNeeded() // SwiftUI applies the change in this pass; no animation time passes
 
             let left = Self.fields(in: window)
-            #expect(!left.contains { $0.id.hasPrefix("drill_") }, "the drill page's fields are still in the window")
-            for field in left where field.id != "email" {
-                #expect(field.text.isEmpty, "\(field.id) still holds \(field.text.count) characters")
+            if how == "back" {
+                // The control: an animated exit is still on screen at this point, so the check sees one.
+                #expect(left.contains { $0.id == "drill_email" }, "Back left at once: this check could not see an exit animation")
+                #expect(h.model.showsResult, "Back keeps the phrase")
+                try await spin(1)
+                #expect(!Self.fields(in: window).contains { $0.id.hasPrefix("drill_") }, "Back never finished")
+                return
             }
-            #expect(left.first { $0.id == "email" }?.text == Harness.email, "the email is kept, by design")
+            #expect(!left.contains { $0.id.hasPrefix("drill_") }, "the drill page is still in the window after \(how): \(left.map(\.id))")
+            for field in left where field.id != "email" || how == "clearAll" {
+                #expect(field.text.isEmpty, "\(field.id) still holds \(field.text.count) characters after \(how)")
+            }
+            if how != "clearAll" { #expect(left.first { $0.id == "email" }?.text == Harness.email, "the email is kept, by design") }
             #expect(h.model.phrase == nil && !h.model.drilling)
         }
 

@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import KeyperCore
 import os
@@ -77,6 +78,34 @@ final class Derivation: KeyDerivation, @unchecked Sendable {
 }
 
 #if DEBUG
+/// Debug builds only, for UI tests (`-KeyperFakeDerivation`): an instant, deterministic stand-in for
+/// the 1 GiB Argon2id run, so that tests about the clipboard, the drill, the gate or the shield do
+/// not each spend a minute deriving. The stand-in key is SHA-256 of a label and the normalised
+/// inputs: the same inputs give the same phrase, other inputs another. It is not Keyper's key; the
+/// one UI test that compares the phrase with the reference runs the real derivation.
+final class InstantDerivation: KeyDerivation, @unchecked Sendable {
+    static let argument = "-KeyperFakeDerivation"
+
+    func start(
+        email: String,
+        secret: String,
+        domain: [UInt8],
+        progress: @escaping @Sendable (_ done: Int, _ total: Int, _ elapsed: TimeInterval) -> Void,
+        completion: @escaping @Sendable (Result<[UInt8], Error>) -> Void
+    ) {
+        let text = "keyper-ui-test-stand-in\n" + Keyper.normalizeEmail(email) + "\n" + Keyper.normalizeSecret(secret)
+        let key = Array(SHA256.hash(data: Array(text.utf8)))
+        // On the main queue, as the real derivation reports, and after start returns.
+        DispatchQueue.main.async {
+            progress(1, 1, 0)
+            completion(.success(key))
+        }
+    }
+
+    /// A stopped run's completion is ignored by the model, as for the real derivation.
+    func cancel() {}
+}
+
 /// Debug builds only: `-KeyperBench` runs SPEC's first vector with the app's own memory mapping and
 /// prints the time, for phones (`xcrun devicectl device process launch --console ... -KeyperBench`).
 enum DeviceBench {

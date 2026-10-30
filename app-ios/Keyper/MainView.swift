@@ -27,7 +27,9 @@ struct MainView: View {
                             .zIndex(1)
                     }
                 }
-                .animation(.easeInOut(duration: 0.3), value: model.drilling)
+                // nil when the page must go at once; it also overrides the keyboard's animation below,
+                // which would otherwise slide the page out with it.
+                .animation(model.drillSlides ? .easeInOut(duration: 0.3) : nil, value: model.drilling)
             }
             if model.focus != nil {
                 KeyboardBar(model: model)

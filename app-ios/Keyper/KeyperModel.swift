@@ -97,6 +97,10 @@ final class KeyperModel {
     enum DrillResult { case mismatch, passed }
     /// True while the drill page is open; `key` is kept, but the phrase is on the other page.
     private(set) var drilling = false
+    /// Whether the drill page's last entrance or exit slides. Back and "Back to the phrase" slide;
+    /// going online, leaving the app and Clear all take the page away at once, with no exit
+    /// animation keeping it, and what it shows, on screen a moment longer.
+    private(set) var drillSlides = true
     /// What the user types on the drill page, from memory. Separate from `email` and `secret`, which
     /// stay as they were; both start empty.
     var drillEmail = "" {
@@ -142,7 +146,7 @@ final class KeyperModel {
 
     init() {
         monitor = OfflineMonitor()
-        makeDerivation = { Derivation() }
+        makeDerivation = Self.launchDerivation
         pasteboard = UIPasteboard.general
         clipboardLifetime = Self.launchClipboardLifetime
         monitor.onChange = { [weak self] radios in self?.radiosChanged(radios) }
@@ -157,6 +161,12 @@ final class KeyperModel {
         guard let i = arguments.firstIndex(of: "-KeyperClipboardSeconds"), i + 1 < arguments.count,
               let seconds = TimeInterval(arguments[i + 1]), seconds > 0 else { return clipboardSeconds }
         return seconds
+    }
+
+    /// UI tests: `-KeyperFakeDerivation` puts an instant stand-in in place of the minute-long
+    /// derivation (InstantDerivation), for every test but the one that checks the real phrase.
+    private static var launchDerivation: () -> any KeyDerivation {
+        ProcessInfo.processInfo.arguments.contains(InstantDerivation.argument) ? { InstantDerivation() } : { Derivation() }
     }
 
     /// Unit tests only: a monitor fed by a fake probe (checked now, then only when the test asks), a
@@ -176,6 +186,7 @@ final class KeyperModel {
     }
     #else
     private static var launchClipboardLifetime: TimeInterval { clipboardSeconds }
+    private static var launchDerivation: () -> any KeyDerivation { { Derivation() } }
     #endif
 
     // MARK: Typing
@@ -316,7 +327,7 @@ final class KeyperModel {
         key = nil
         if inputs != nil { SecureZero.array(&inputs!) } // keyed with K and wiped with it
         inputs = nil
-        closeDrill() // the drill checks against this phrase's inputs: no result of it may outlive them
+        closeDrill(animated: false) // the drill checks against this phrase's inputs: no result of it may outlive them
         weakWarning = nil
         showingQr = false
         showingCopyWarning = false
@@ -331,6 +342,7 @@ final class KeyperModel {
         showingQr = false
         showingCopyWarning = false
         resetDrill()
+        drillSlides = true
         drilling = true
         focus(.drillEmail)
     }
@@ -355,11 +367,13 @@ final class KeyperModel {
     }
 
     /// Back, or "Back to the phrase": the main page again, with the phrase as it was (the key is
-    /// kept; nothing is derived again). The drill page's fields and result are forgotten.
-    func closeDrill() {
+    /// kept; nothing is derived again). The drill page's fields and result are forgotten. Not
+    /// `animated` when the phrase is discarded (going online, leaving the app, Clear all).
+    func closeDrill(animated: Bool = true) {
         guard drilling else { return }
         resetDrill()
         if focus == .drillEmail || focus == .drillSecret { focus = nil }
+        drillSlides = animated
         drilling = false
         if key != nil { scrollTarget = .result }
     }
