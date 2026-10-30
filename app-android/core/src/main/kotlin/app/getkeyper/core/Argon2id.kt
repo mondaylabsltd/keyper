@@ -24,7 +24,8 @@ object Argon2id {
     internal const val THREAD_NAME = "argon2id-lane"
 
     /**
-     * [memory] needs at least [memoryKiB] KiB from position 0; its contents are overwritten.
+     * [memory] needs at least [memoryKiB] KiB from position 0; its contents are overwritten, and
+     * zeroed again before this returns or throws, since its blocks lead to the tag.
      * [progress] is called on the calling thread after each of the iterations × 4 slices.
      */
     fun hash(
@@ -59,47 +60,61 @@ object Argon2id {
         val m = Memory(memory, parallelism, segmentLength = memoryKiB / (SLICES * parallelism), iterations)
         val cursor = m.Cursor()
         val block = LongArray(WORDS)
-        for (lane in 0 until parallelism) {
-            for (i in 0..1) {
-                val bytes = hPrime(h0 + le32(i) + le32(lane), 1024)
-                for (k in 0 until WORDS) block[k] = bytes.readLongLE(8 * k)
-                cursor.write(lane, i, block)
-            }
-        }
-
-        val pool = Executors.newFixedThreadPool(minOf(parallelism, Runtime.getRuntime().availableProcessors())) { task ->
-            Thread(task, THREAD_NAME).apply { isDaemon = true }
-        }
         try {
-            for (pass in 0 until iterations) {
-                for (slice in 0 until SLICES) {
-                    if (Thread.interrupted()) throw InterruptedException()
-                    val segments = (0 until parallelism).map { lane -> Callable { m.fillSegment(pass, slice, lane) } }
-                    pool.invokeAll(segments).forEach { it.get() } // also publishes the lanes' writes
-                    progress?.invoke(pass * SLICES + slice + 1, iterations * SLICES)
+            for (lane in 0 until parallelism) {
+                for (i in 0..1) {
+                    val bytes = hPrime(h0 + le32(i) + le32(lane), 1024)
+                    for (k in 0 until WORDS) block[k] = bytes.readLongLE(8 * k)
+                    Wipe.bytes(bytes)
+                    cursor.write(lane, i, block)
                 }
+            }
+
+            val pool = Executors.newFixedThreadPool(minOf(parallelism, Runtime.getRuntime().availableProcessors())) { task ->
+                Thread(task, THREAD_NAME).apply { isDaemon = true }
+            }
+            try {
+                for (pass in 0 until iterations) {
+                    for (slice in 0 until SLICES) {
+                        if (Thread.interrupted()) throw InterruptedException()
+                        val segments = (0 until parallelism).map { lane -> Callable { m.fillSegment(pass, slice, lane) } }
+                        pool.invokeAll(segments).forEach { it.get() } // also publishes the lanes' writes
+                        progress?.invoke(pass * SLICES + slice + 1, iterations * SLICES)
+                    }
+                }
+            } finally {
+                pool.shutdownNow()
+                // Segments already running keep writing into [memory], which the caller may unmap as
+                // soon as we return (or throw): wait for them, however often we are interrupted.
+                var interrupted = false
+                while (true) {
+                    try {
+                        if (pool.awaitTermination(1, TimeUnit.MINUTES)) break
+                    } catch (_: InterruptedException) {
+                        interrupted = true
+                    }
+                }
+                if (interrupted) Thread.currentThread().interrupt()
+            }
+
+            val last = LongArray(WORDS)
+            for (lane in 0 until parallelism) {
+                cursor.read(lane, m.laneLength - 1, block)
+                for (k in 0 until WORDS) last[k] = last[k] xor block[k]
+            }
+            val bytes = ByteArray(1024) { (last[it / 8] ushr (8 * (it % 8))).toByte() }
+            Wipe.longs(last)
+            try {
+                return hPrime(bytes, tagLength)
+            } finally {
+                Wipe.bytes(bytes)
             }
         } finally {
-            pool.shutdownNow()
-            // Segments already running keep writing into [memory], which the caller may unmap as
-            // soon as we return (or throw): wait for them, however often we are interrupted.
-            var interrupted = false
-            while (true) {
-                try {
-                    if (pool.awaitTermination(1, TimeUnit.MINUTES)) break
-                } catch (_: InterruptedException) {
-                    interrupted = true
-                }
-            }
-            if (interrupted) Thread.currentThread().interrupt()
+            // Every block leads to the tag; the lanes have stopped writing by now (see above).
+            Wipe.longs(block)
+            Wipe.bytes(h0)
+            Wipe.buffer(memory, memoryKiB * 1024)
         }
-
-        val last = LongArray(WORDS)
-        for (lane in 0 until parallelism) {
-            cursor.read(lane, m.laneLength - 1, block)
-            for (k in 0 until WORDS) last[k] = last[k] xor block[k]
-        }
-        return hPrime(ByteArray(1024) { (last[it / 8] ushr (8 * (it % 8))).toByte() }, tagLength)
     }
 
     /** H' from RFC 9106 section 3.3: BLAKE2b stretched to any output length. */
@@ -184,6 +199,7 @@ object Argon2id {
                 prev = next.also { next = prev }
                 current++
             }
+            for (a in arrayOf(prev, next, ref, r, z, input, addresses)) Wipe.longs(a)
         }
 
         /** Maps a 32-bit random value onto the blocks a new block may reference (RFC 9106 section 3.4.1.2). */

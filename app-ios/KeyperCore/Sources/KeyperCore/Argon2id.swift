@@ -14,7 +14,8 @@ public enum Argon2id {
 
     public struct Cancelled: Error {}
 
-    /// [memory] needs at least [memoryKiB] KiB; its contents are overwritten.
+    /// [memory] needs at least [memoryKiB] KiB; its contents are overwritten, and zeroed again
+    /// before this returns or throws, since its blocks lead to the tag.
     /// [progress] is called on the calling thread after each of the iterations × 4 slices.
     public static func hash(
         password: [UInt8],
@@ -36,7 +37,7 @@ public enum Argon2id {
         precondition(tagLength >= 4, "tag must be at least 4 bytes")
         precondition(salt.count >= 8, "salt must be at least 8 bytes")
 
-        let h0 = Blake2b(64)
+        var h0 = Blake2b(64)
             .update(UInt32(parallelism)).update(UInt32(tagLength)).update(UInt32(memoryKiB)).update(UInt32(iterations))
             .update(version).update(type)
             .update(UInt32(password.count)).update(password)
@@ -55,14 +56,20 @@ public enum Argon2id {
         } else {
             words = .allocate(capacity: blockCount * Self.words)
         }
-        defer { if memory == nil { words.deallocate() } }
+        defer {
+            // Every block leads to the tag; concurrentPerform has returned, so no lane still writes.
+            SecureZero.bytes(words, count: blockCount * Self.words * 8)
+            SecureZero.array(&h0)
+            if memory == nil { words.deallocate() }
+        }
         let m = Memory(words: words, parallelism: parallelism, segmentLength: segmentLength, iterations: iterations)
 
         for lane in 0..<parallelism {
             for i in 0..<2 {
-                let bytes = hPrime(h0 + le32(UInt32(i)) + le32(UInt32(lane)), 1024)
+                var bytes = hPrime(h0 + le32(UInt32(i)) + le32(UInt32(lane)), 1024)
                 let block = m.block(lane, i)
                 for k in 0..<Self.words { block[k] = readLE64(bytes, 8 * k) }
+                SecureZero.array(&bytes)
             }
         }
 
@@ -81,7 +88,9 @@ public enum Argon2id {
             let block = m.block(lane, laneLength - 1)
             for k in 0..<Self.words { last[k] ^= block[k] }
         }
-        let bytes = (0..<1024).map { UInt8(truncatingIfNeeded: last[$0 / 8] >> (8 * UInt64($0 % 8))) }
+        var bytes = (0..<1024).map { UInt8(truncatingIfNeeded: last[$0 / 8] >> (8 * UInt64($0 % 8))) }
+        SecureZero.array(&last)
+        defer { SecureZero.array(&bytes) }
         return hPrime(bytes, tagLength)
     }
 
@@ -117,7 +126,10 @@ public enum Argon2id {
         func fillSegment(pass: Int, slice: Int, lane: Int) {
             // Scratch blocks of this thread: two for the compression, three for address generation.
             let scratch = UnsafeMutablePointer<UInt64>.allocate(capacity: 5 * Argon2id.words)
-            defer { scratch.deallocate() }
+            defer {
+                SecureZero.bytes(scratch, count: 5 * Argon2id.words * 8)
+                scratch.deallocate()
+            }
             scratch.initialize(repeating: 0, count: 5 * Argon2id.words)
             let r = scratch
             let z = scratch + Argon2id.words

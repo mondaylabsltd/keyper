@@ -26,6 +26,33 @@ struct Argon2idTests {
         #expect(tag.hex == "0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659")
     }
 
+    /// The working memory leads to the tag: it must be all zeros again once hash returns or throws.
+    @Test func workingMemoryIsZeroedAfterwards() throws {
+        let memory = UnsafeMutableRawBufferPointer.allocate(byteCount: 32 * 1024, alignment: 16)
+        defer { memory.deallocate() }
+        let tag = try Argon2id.hash(
+            password: [UInt8](repeating: 1, count: 32), salt: [UInt8](repeating: 2, count: 16),
+            iterations: 3, memoryKiB: 32, parallelism: 4, tagLength: 32,
+            secret: [UInt8](repeating: 3, count: 8), associatedData: [UInt8](repeating: 4, count: 12), memory: memory
+        )
+        #expect(tag.hex == "0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659")
+        #expect(memory.allSatisfy { $0 == 0 })
+    }
+
+    @Test func workingMemoryIsZeroedWhenCancelled() {
+        let memory = UnsafeMutableRawBufferPointer.allocate(byteCount: 4096 * 1024, alignment: 16)
+        defer { memory.deallocate() }
+        var slices = 0
+        #expect(throws: Argon2id.Cancelled.self) {
+            try Argon2id.hash(
+                password: [UInt8](repeating: 1, count: 32), salt: [UInt8](repeating: 0, count: 16),
+                iterations: 1000, memoryKiB: 4096, parallelism: 4, tagLength: 32, memory: memory,
+                progress: { done, _ in slices = done }, isCancelled: { slices >= 4 }
+            )
+        }
+        #expect(memory.allSatisfy { $0 == 0 })
+    }
+
     /// Cancelling stops at the next slice, and hash returns only once every lane is done.
     @Test func cancelStopsAtTheNextSlice() {
         var slices = 0

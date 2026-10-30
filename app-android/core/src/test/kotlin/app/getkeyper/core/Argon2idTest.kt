@@ -44,6 +44,32 @@ class Argon2idTest {
         assertEquals("0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659", tag.hex())
     }
 
+    /** The working memory leads to the tag: it must be all zeros again once hash() is done. */
+    @Test
+    fun workingMemoryIsZeroedAfterwards() {
+        val memory = ByteBuffer.allocateDirect(32 * 1024)
+        val tag = Argon2id.hash(ByteArray(32) { 1 }, ByteArray(16) { 2 }, 3, 32, 4, 32, ByteArray(8) { 3 }, ByteArray(12) { 4 }, memory)
+        assertEquals("0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659", tag.hex())
+        for (i in 0 until memory.capacity()) assertEquals("byte $i", 0.toByte(), memory.get(i))
+    }
+
+    /** Also when the computation is interrupted. */
+    @Test
+    fun workingMemoryIsZeroedWhenInterrupted() {
+        val memory = ByteBuffer.allocateDirect(8 * 1024 * 1024)
+        val worker = Thread {
+            runCatching {
+                Argon2id.hash(ByteArray(32) { 1 }, ByteArray(16), 1000, 8 * 1024, 4, 32, memory = memory) { done, _ ->
+                    if (done == 4) Thread.currentThread().interrupt()
+                }
+            }
+        }
+        worker.start()
+        worker.join(30_000)
+        assertTrue("still running", !worker.isAlive)
+        for (i in 0 until memory.capacity() step 8) assertEquals("word at $i", 0L, memory.getLong(i))
+    }
+
     /**
      * Interrupting must stop the computation and return only once no thread can still write
      * to the memory, which the app unmaps right after: a late write is a native crash there.

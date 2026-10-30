@@ -26,7 +26,12 @@ ITERATIONS = 128
 MEMORY_KIB = 1024 * 1024
 PARALLELISM = 4
 MIN_SECRET_LENGTH = 12  # characters of the normalized secret
-MIN_EMAIL_LENGTH = 6  # ASCII letters and digits of the email
+# The email (SPEC §2): every character counts except ASCII case and surrounding spaces.
+MAX_EMAIL_LENGTH = 254
+MAX_LOCAL_LENGTH = 64
+MAX_LABEL_LENGTH = 63
+LOCAL_CHARS = set(string.ascii_lowercase + string.digits + "._+-")
+LABEL_CHARS = set(string.ascii_lowercase + string.digits + "-")
 SECRET_CHARS = set(string.ascii_letters + string.digits + "!@#$%^&*().,?-_+=/")
 SALT_PREFIX = "keyper/v1:"
 
@@ -36,15 +41,37 @@ def normalize_secret(s: str) -> str:
     return re.sub(" +", " ", s.strip(" "))
 
 
-def normalize_email(s: str) -> str:
-    """NFKC, then only ASCII letters and digits, lowercased."""
-    return "".join(c for c in unicodedata.normalize("NFKC", s) if c in string.ascii_letters + string.digits).lower()
+def normalize_email(s: str) -> str | None:
+    """NFKC, leading and trailing spaces dropped, A-Z mapped to a-z; None unless that is a valid address."""
+    e = unicodedata.normalize("NFKC", s).strip(" ")
+    e = "".join(chr(ord(c) + 32) if "A" <= c <= "Z" else c for c in e)  # ASCII only, unlike str.lower()
+    return e if valid_email(e) else None
+
+
+def valid_email(e: str) -> bool:
+    """SPEC §2: one @; a dot-atom local part of a-z 0-9 . _ + -; a domain of two or more hostname labels."""
+    if len(e) > MAX_EMAIL_LENGTH or e.count("@") != 1:
+        return False
+    local, domain = e.split("@")
+    if not 1 <= len(local) <= MAX_LOCAL_LENGTH or not set(local) <= LOCAL_CHARS:
+        return False
+    if local[0] == "." or local[-1] == "." or ".." in local:
+        return False
+    labels = domain.split(".")
+    if len(labels) < 2:
+        return False
+    for label in labels:
+        if not 1 <= len(label) <= MAX_LABEL_LENGTH or not set(label) <= LABEL_CHARS:
+            return False
+        if label[0] == "-" or label[-1] == "-":
+            return False
+    return any(c in string.ascii_lowercase for c in labels[-1])
 
 
 def derive_key(email: str, secret: str, domain: bytes) -> bytes:
     e, s = normalize_email(email), normalize_secret(secret)
-    if len(e) < MIN_EMAIL_LENGTH:
-        raise ValueError(f"the email needs at least {MIN_EMAIL_LENGTH} ASCII letters or digits")
+    if e is None:
+        raise ValueError("not a valid email address (SPEC §2)")
     if not set(s) <= SECRET_CHARS | {" "} or len(s) < MIN_SECRET_LENGTH:
         raise ValueError(f"the secret needs at least {MIN_SECRET_LENGTH} of: ASCII letters, digits, !@#$%^&*().,?-_+=/ (and spaces)")
     if len(domain) != 32:
@@ -73,11 +100,11 @@ OFFICIAL_DOMAIN_ID = "A248-7EAB"
 TEST_DOMAIN = bytes(range(32))
 VECTORS = [
     ("alice@example.com", "correct horse battery staple"),
-    # Same as the first: the email's case, dots and spaces drop out; extra spaces in the secret count as one.
+    # Same as the first: the email's case and surrounding spaces drop out; extra spaces in the secret count as one.
     ("  Alice@Example.COM ", "correct horse  battery staple "),
     ("alice@example.com", "Correct horse battery staple"),  # case counts in the secret
     ("bob@example.com", "correct horse battery staple"),
-    ("+86 138-0000-0000", "Wo de di yi zhi mao jiao MiMi!"),
+    ("a.lice+keyper@example.com", "Wo de di yi zhi mao jiao MiMi!"),  # dots and + tags count
     ("\uff21\uff22\uff23.def@MAIL.com", "In 2009 (summer) Grandma Li & me @ 7am #42 $5 50%*^"),
     ("carol@example.org", "Pi is 3.14, right? x+y=z / a-b_c"),  # the other eight symbols
 ]
@@ -97,20 +124,20 @@ def self_test(expected) -> bool:
 
 
 EXPECTED = [  # (12 words, 24 words) for each of VECTORS
-    ("anchor amount there travel play salmon require soon crawl jelly index toddler",
-     "hair pattern foam equip ethics gather margin trouble cheese lobster void employ mammal city apple lawn duck upgrade permit almost hurry list tortoise already"),
-    ("anchor amount there travel play salmon require soon crawl jelly index toddler",
-     "hair pattern foam equip ethics gather margin trouble cheese lobster void employ mammal city apple lawn duck upgrade permit almost hurry list tortoise already"),
-    ("catalog soft salon best lock toy pool spend cool goat cradle vault",
-     "trust spawn idle adult genius spider inner desert dignity weird chimney busy pledge become way dice water track teach machine vast potato burst swear"),
-    ("spirit intact corn food lumber enrich bunker surface loan fatal eye mobile",
-     "robot push razor sad father usage blind roof tennis tomato amazing blossom faculty spoon finger math claw hub hold diary knock merge base track"),
-    ("buddy piano cluster cupboard crime luggage fall twenty olive choice nest crash",
-     "essay game shove common length fatal window vote gesture east enemy direct biology equip exercise route return uncle target exercise firm style fly afford"),
-    ("sunset ginger poverty wage chef ritual craft donkey solid list safe heavy",
-     "elder cost screen manage question message siren setup express decrease spin brass woman curve stamp ecology large pyramid brother spray blur poem rocket state"),
-    ("regret bench ticket bitter enforce dress skull aunt shiver maple friend spend",
-     "canvas two army sugar pact dry design typical rib million supply baby merge siren shell beyond rack shallow sample salon melt orient box close"),
+    ("bright blood connect stomach they proof cover armor usual adult clip hen",
+     "evoke tiger live cycle donkey appear struggle gaze surround solid industry source brush hover daughter rib mobile tissue dwarf example unfold seven cook fiscal"),
+    ("bright blood connect stomach they proof cover armor usual adult clip hen",
+     "evoke tiger live cycle donkey appear struggle gaze surround solid industry source brush hover daughter rib mobile tissue dwarf example unfold seven cook fiscal"),
+    ("purpose sight afford hill tourist trap whale join error fog exhaust whip",
+     "arrange anger swing glide armor hip master tourist science view panic fork thought police unique control crack panic stem finger advice govern little fire"),
+    ("expose ripple enjoy test buddy fine cheap like minute swing egg donkey",
+     "eyebrow mule item news various message ladder maple trim census magnet endorse sudden young road blossom hybrid judge hammer tell address defense moral question"),
+    ("differ talent quantum quiz coil alone cost unhappy enhance pave solution square",
+     "best better ostrich report walnut this blade quiz torch army state shaft debate try legend merit minor lyrics donkey eyebrow quiz require quick pottery"),
+    ("park buddy sibling drip possible acoustic sniff unknown faith open drama abuse",
+     "will awesome face pink bullet distance control plunge other basket frog wood duck ivory base vintage broken broken across solution race cheap later grocery"),
+    ("stairs bone hamster universe fury salmon million opera cliff mask supply damage",
+     "burger rather afraid robot luggage amateur people frame clog review clump bacon heavy giraffe someone armed soap shaft town virus crouch about window able"),
 ]
 
 

@@ -20,45 +20,45 @@ class KeyperTest {
     fun vectors() {
         check(
             "alice@example.com", "correct horse battery staple",
-            "127ed582829bb66d20e2a075c691722dbd582ec8cd4dc7c783cdff609f636a2d",
-            "anchor amount there travel play salmon require soon crawl jelly index toddler",
-            "hair pattern foam equip ethics gather margin trouble cheese lobster void employ mammal city apple lawn duck upgrade permit almost hurry list tortoise already",
+            "a635fff88c3d798c504edad2ec95c5d9f276d9d05bd193d840778d1993dcdfcb",
+            "bright blood connect stomach they proof cover armor usual adult clip hen",
+            "evoke tiger live cycle donkey appear struggle gaze surround solid industry source brush hover daughter rib mobile tissue dwarf example unfold seven cook fiscal",
         )
-        check( // the email's case, dots and spaces drop out; extra spaces in the secret count as one
+        check( // the email's case and surrounding spaces drop out; extra spaces in the secret count as one
             "  Alice@Example.COM ", "correct horse  battery staple ",
-            "127ed582829bb66d20e2a075c691722dbd582ec8cd4dc7c783cdff609f636a2d",
-            "anchor amount there travel play salmon require soon crawl jelly index toddler",
-            "hair pattern foam equip ethics gather margin trouble cheese lobster void employ mammal city apple lawn duck upgrade permit almost hurry list tortoise already",
+            "a635fff88c3d798c504edad2ec95c5d9f276d9d05bd193d840778d1993dcdfcb",
+            "bright blood connect stomach they proof cover armor usual adult clip hen",
+            "evoke tiger live cycle donkey appear struggle gaze surround solid industry source brush hover daughter rib mobile tissue dwarf example unfold seven cook fiscal",
         )
         check(
             "alice@example.com", "Correct horse battery staple",
-            "fb5495320579be258b82bde05db61f3717695e6643a6f130b954b61f58413b5e",
-            "catalog soft salon best lock toy pool spend cool goat cradle vault",
-            "trust spawn idle adult genius spider inner desert dignity weird chimney busy pledge become way dice water track teach machine vast potato burst swear",
+            "b31450fc7df5731d49e358014def9866672a0d3f510ae729fb8e25aa6800dd47",
+            "purpose sight afford hill tourist trap whale join error fog exhaust whip",
+            "arrange anger swing glide armor hip master tourist science view panic fork thought police unique control crack panic stem finger advice govern little fire",
         )
         check(
             "bob@example.com", "correct horse battery staple",
-            "ddd3a82317283ac110a07874b1e26751f7879e0cd242a6d57f92cff47bb49434",
-            "spirit intact corn food lumber enrich bunker surface loan fatal eye mobile",
-            "robot push razor sad father usage blind roof tennis tomato amazing blossom faculty spoon finger math claw hub hold diary knock merge base track",
+            "f423d8b47d734f59d3f91e9bdfcb02ceb7494f8355acabc3c93d0d18f0c34368",
+            "expose ripple enjoy test buddy fine cheap like minute swing egg donkey",
+            "eyebrow mule item news various message ladder maple trim census magnet endorse sudden young road blossom hybrid judge hammer tell address defense moral question",
         )
         check(
-            "+86 138-0000-0000", "Wo de di yi zhi mao jiao MiMi!",
-            "61e3a82980320163e34008fb705a0670ca7ecc3cb42641a2a42f828fb345ab50",
-            "buddy piano cluster cupboard crime luggage fall twenty olive choice nest crash",
-            "essay game shove common length fatal window vote gesture east enemy direct biology equip exercise route return uncle target exercise firm style fly afford",
+            "a.lice+keyper@example.com", "Wo de di yi zhi mao jiao MiMi!",
+            "2a089c83e6b0e9199992a853177cfb2024715c00674bbe3998dedeadf6283ab7",
+            "differ talent quantum quiz coil alone cost unhappy enhance pave solution square",
+            "best better ostrich report walnut this blade quiz torch army state shaft debate try legend merit minor lyrics donkey eyebrow quiz require quick pottery",
         )
         check(
             "\uff21\uff22\uff23.def@MAIL.com", "In 2009 (summer) Grandma Li & me @ 7am #42 \$5 50%*^",
-            "51d25d0e0f665370dd965c15bd8db5a8767b501419365801de1fc72fbb42bcbe",
-            "sunset ginger poverty wage chef ritual craft donkey solid list safe heavy",
-            "elder cost screen manage question message siren setup express decrease spin brass woman curve stamp ecology large pyramid brother spray blur poem rocket state",
+            "1cb9e296dd2c02b44a48e31adb72af2a4ef08691bd85806652d2f812435b8540",
+            "park buddy sibling drip possible acoustic sniff unknown faith open drama abuse",
+            "will awesome face pink bullet distance control plunge other basket frog wood duck ivory base vintage broken broken across solution race cheap later grocery",
         )
         check(
             "carol@example.org", "Pi is 3.14, right? x+y=z / a-b_c",
-            "8fb415ba4c2a4940ff140d0ce5955f1280e5acf910d7a7c11f43198bbb532366",
-            "regret bench ticket bitter enforce dress skull aunt shiver maple friend spend",
-            "canvas two army sugar pact dry design typical rib million supply baby merge siren shell beyond rack shallow sample salon melt orient box close",
+            "937e3afe0e3066aade6b8896faab4ae7fe5c0ce84657776372b53ad622bb1529",
+            "stairs bone hamster universe fury salmon million opera cliff mask supply damage",
+            "burger rather afraid robot luggage amateur people frame clog review clump bacon heavy giraffe someone armed soap shaft town virus crouch about window able",
         )
     }
 
@@ -71,19 +71,32 @@ class KeyperTest {
         for (c in "'\"`|\\:;~<>[]{} \t\u3002\u00e9\u6211") assertTrue("'$c' must not be a secret character", !Keyper.isSecretChar(c))
     }
 
+    /** test-vectors/email.tsv, from reference/make_email_vectors.py: the same answer for every edge case. */
     @Test
-    fun emailKeepsOnlyAsciiLettersAndDigitsLowercased() {
-        assertEquals("aliceexamplecom", Keyper.normalizeEmail("  Alice@Example.COM "))
-        assertEquals("8613800000000", Keyper.normalizeEmail("+86 138-0000-0000"))
-        assertEquals("abcdefmailcom", Keyper.normalizeEmail("\uff21\uff22\uff23.def@MAIL.com")) // full-width folds first
-        assertEquals("abxgmailcom", Keyper.normalizeEmail("a.b+x@gmail.com"))
-        assertEquals("", Keyper.normalizeEmail("\u5c0f\u660e@\u4f8b\u5b50.\u4e2d\u56fd"))
+    fun emailRuleMatchesTheSharedVectors() {
+        val rows = fixture("email.tsv")
+        assertTrue(rows.size >= 50)
+        for ((hex, expected, note) in rows) {
+            val raw = String(hex.unhex(), Charsets.UTF_8)
+            val e = Keyper.normalizeEmail(raw)
+            assertEquals(note, expected, if (Keyper.isValidEmail(e)) e else "-")
+        }
+    }
+
+    @Test
+    fun emailKeepsEveryCharacterButCase() {
+        assertEquals("alice@example.com", Keyper.normalizeEmail("  Alice@Example.COM "))
+        assertEquals("abc.def@mail.com", Keyper.normalizeEmail("\uff21\uff22\uff23.def@MAIL.com")) // full-width folds first
+        assertTrue(Keyper.normalizeEmail("a.b@gmail.com") != Keyper.normalizeEmail("ab@gmail.com"))
+        assertTrue(Keyper.normalizeEmail("ab@c.de") != Keyper.normalizeEmail("a@bc.de"))
+        assertEquals("\u00c9ric@example.com", Keyper.normalizeEmail("\u00c9ric@example.com")) // only ASCII is folded
     }
 
     @Test
     fun rejectsInvalidInputsAndBadDomains() {
         val good = "Correct horse battery staple"
-        assertThrows(IllegalArgumentException::class.java) { Keyper.deriveKey("a@b.c", good, domain) } // 3 letters
+        assertThrows(IllegalArgumentException::class.java) { Keyper.deriveKey("alice@example", good, domain) } // one label
+        assertThrows(IllegalArgumentException::class.java) { Keyper.deriveKey("+86 138-0000-0000", good, domain) } // not an email
         assertThrows(IllegalArgumentException::class.java) { Keyper.deriveKey("alice@example.com", "eleven char", domain) } // 11
         assertThrows(IllegalArgumentException::class.java) { Keyper.deriveKey("alice@example.com", "$good;", domain) } // ';'
         assertThrows(IllegalArgumentException::class.java) { Keyper.deriveKey("alice@example.com", "\u6211\u7684\u7b2c\u4e00\u53ea\u732b\u53eb\u54aa\u54aa\u5b83\u662f\u6a58", domain) }
@@ -108,8 +121,51 @@ class KeyperTest {
         assertEquals(frozen, 4, Keyper.PARALLELISM)
         assertEquals(frozen, 32, Keyper.DOMAIN_BYTES)
         assertEquals(frozen, 12, Keyper.MIN_SECRET_LENGTH)
-        assertEquals(frozen, 6, Keyper.MIN_EMAIL_LENGTH)
+        assertEquals(frozen, 254, Keyper.MAX_EMAIL_LENGTH)
+        assertEquals(frozen, 64, Keyper.MAX_LOCAL_LENGTH)
+        assertEquals(frozen, 63, Keyper.MAX_LABEL_LENGTH)
+        assertEquals(frozen, "._+-", Keyper.EMAIL_LOCAL_SYMBOLS)
         assertEquals(frozen, "!@#\$%^&*().,?-_+=/", Keyper.SECRET_SYMBOLS)
+    }
+
+    /** The same vector as the Swift core's test (computed with Python's hmac). */
+    @Test
+    fun drillFingerprintIsKeyedWithK() {
+        val k = ByteArray(32) { it.toByte() }
+        assertEquals("b059efdcb01df79ad229dfbe5647554140d0c59825c738faf9d69742080471cd",
+            Keyper.drillFingerprint(k, "alice@example.com", "correct horse battery staple").hex())
+        // The inputs are normalised first, as for the phrase.
+        assertEquals(Keyper.drillFingerprint(k, "alice@example.com", "correct horse battery staple").hex(),
+            Keyper.drillFingerprint(k, " Alice@Example.COM ", "correct horse  battery staple ").hex())
+        // Another K, another fingerprint: without K it says nothing about the inputs.
+        assertEquals("aa281a7df8a582a3b52a2438509b9ff44f905b68f285df1a65821d8de1adac51",
+            Keyper.drillFingerprint(ByteArray(32), "alice@example.com", "correct horse battery staple").hex())
+        // Not the plain hash the drill used to keep.
+        val plain = java.security.MessageDigest.getInstance("SHA-256").digest("alice@example.com\ncorrect horse battery staple".toByteArray())
+        assertTrue(!plain.contentEquals(Keyper.drillFingerprint(k, "alice@example.com", "correct horse battery staple")))
+    }
+
+    /** Length prefixes: pairs whose plain concatenation is the same string still differ. */
+    @Test
+    fun drillFingerprintEncodingIsUnambiguous() {
+        val k = ByteArray(32) { it.toByte() }
+        assertEquals("f5c831ede2a4a714c632f6365e30566b6dc951659edda438c198b7e486a02906",
+            Keyper.drillFingerprint(k, "ab@c.de", "fcorrect horse battery").hex())
+        assertEquals("87a42fce9027bbdc30f1c32a09409012ad0d6cfcc066d02548ad57f0036881cf",
+            Keyper.drillFingerprint(k, "ab@c.def", "correct horse battery").hex())
+    }
+
+    @Test
+    fun wipeZeroesEveryKindOfBuffer() {
+        val bytes = ByteArray(100) { 7 }
+        val longs = LongArray(100) { -1 }
+        val buffer = java.nio.ByteBuffer.allocateDirect(1 shl 20).apply { while (hasRemaining()) put(9) }
+        Wipe.bytes(bytes)
+        Wipe.longs(longs)
+        Wipe.buffer(buffer, buffer.capacity())
+        assertTrue(bytes.all { it == 0.toByte() })
+        assertTrue(longs.all { it == 0L })
+        for (i in 0 until buffer.capacity()) assertEquals(0.toByte(), buffer.get(i))
     }
 
     @Test
