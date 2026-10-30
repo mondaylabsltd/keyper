@@ -14,7 +14,7 @@ private func fixture(_ name: String) throws -> [[String]] {
 
 struct L10nTests {
     /// ICU's own output (libicucore, skeleton "compact-long"), which Android's CompactDecimalFormat produces.
-    @Test func compactMatchesICU() throws {
+    @Test(.enabled(if: canReadTheMacsFiles, "reads test-vectors/ from the Mac")) func compactMatchesICU() throws {
         let rows = try fixture("compact.tsv")
         #expect(rows.count > 40)
         for row in rows {
@@ -53,7 +53,7 @@ struct L10nTests {
     }
 
     /// Both apps must derive the same phrases, so they must carry the same domain constant.
-    @Test func domainMatchesTheAndroidApp() throws {
+    @Test(.enabled(if: canReadTheMacsFiles, "reads the Android sources from the Mac")) func domainMatchesTheAndroidApp() throws {
         let kotlin = try String(contentsOf: repository.appendingPathComponent("app-android/app/src/main/kotlin/app/getkeyper/Domain.kt"), encoding: .utf8)
         #expect(kotlin.contains("\"\(domainHex)\""), "Domain.swift and Domain.kt differ")
         #expect(Keyper.domainId(domainHex.unhex) == "A248-7EAB", "The domain constant changed: every user's phrase would change (SPEC.md)")

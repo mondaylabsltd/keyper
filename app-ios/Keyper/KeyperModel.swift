@@ -1,8 +1,18 @@
-import CryptoKit
 import KeyperCore
 import Observation
 import UIKit
 import UniformTypeIdentifiers
+
+/// The pasteboard as the model uses it: UIPasteboard.general in the app; unit tests wrap it to see
+/// the options a copy is made with.
+@MainActor
+protocol PhrasePasteboard: AnyObject {
+    var items: [[String: Any]] { get set }
+    func setItems(_ items: [[String: Any]], options: [UIPasteboard.OptionsKey: Any])
+    func contains(pasteboardTypes: [String]) -> Bool
+}
+
+extension UIPasteboard: PhrasePasteboard {}
 
 /// A field the keyboard types into: it edits at its own cursor, then reports the new text.
 @MainActor
@@ -12,12 +22,17 @@ protocol TextTarget: AnyObject {
 }
 
 /// The screen's state and rules, the same as the Android app's MainActivity: what is typed, the
-/// offline gate, the derivation, the phrase and the recovery drill. Nothing is stored: leaving the
-/// app or going online forgets the secret and the phrase, and keeps only the email.
+/// offline gate, the derivation, the phrase and the recovery drill, a page of its own with fields
+/// of its own. Nothing is stored: leaving the app or going online forgets the secret, the phrase and
+/// whatever the drill holds, and keeps only the email.
 @MainActor
 @Observable
 final class KeyperModel {
-    enum Field: Hashable { case email, secret }
+    /// The main page's two fields, and the drill page's own two.
+    enum Field: Hashable {
+        case email, secret, drillEmail, drillSecret
+        var isEmail: Bool { self == .email || self == .drillEmail }
+    }
     enum ScrollTarget: Hashable { case top, field(Field), result }
 
     // MARK: Language
@@ -34,7 +49,7 @@ final class KeyperModel {
 
     private(set) var radios = OfflineMonitor.Radios(cellular: true)
     var offline: Bool { radios.offline }
-    @ObservationIgnored private let monitor = OfflineMonitor()
+    @ObservationIgnored private let monitor: OfflineMonitor
 
     // MARK: Inputs
 
@@ -42,14 +57,14 @@ final class KeyperModel {
         didSet {
             guard email != oldValue else { return }
             emailError = nil
-            if !drilling { discardResult() }
+            discardResult()
         }
     }
     var secret = "" {
         didSet {
             guard secret != oldValue else { return }
             secretError = nil
-            if !drilling { discardResult() }
+            discardResult()
         }
     }
     var revealed = false
@@ -61,6 +76,8 @@ final class KeyperModel {
     var focus: Field?
     @ObservationIgnored weak var emailTarget: TextTarget?
     @ObservationIgnored weak var secretTarget: TextTarget?
+    @ObservationIgnored weak var drillEmailTarget: TextTarget?
+    @ObservationIgnored weak var drillSecretTarget: TextTarget?
 
     // MARK: Derivation and result
 
@@ -68,24 +85,53 @@ final class KeyperModel {
     private(set) var progress = (done: 0, total: 1, elapsed: TimeInterval(0))
     /// Bumped to discard the result of a derivation that is still running.
     @ObservationIgnored private var generation = 0
-    @ObservationIgnored private var derivation: Derivation?
+    @ObservationIgnored private var derivation: (any KeyDerivation)?
+    @ObservationIgnored private let makeDerivation: () -> any KeyDerivation
     /// The key K derived from the current inputs; both phrase lengths are read from it.
     private var key: [UInt8]?
-    /// Fingerprint of the normalised inputs that produced `key`, for the recovery drill.
+    /// `Keyper.drillFingerprint` of the inputs that produced `key`, keyed with it and wiped with it.
     @ObservationIgnored private var inputs: [UInt8]?
-    /// True while the user re-enters the inputs from memory; `key` is kept, but hidden.
+
+    // MARK: Recovery drill
+
+    enum DrillResult { case mismatch, passed }
+    /// True while the drill page is open; `key` is kept, but the phrase is on the other page.
     private(set) var drilling = false
+    /// What the user types on the drill page, from memory. Separate from `email` and `secret`, which
+    /// stay as they were; both start empty.
+    var drillEmail = "" {
+        didSet { if drillEmail != oldValue && drillResult == .mismatch { drillResult = nil } }
+    }
+    var drillSecret = "" {
+        didSet { if drillSecret != oldValue && drillResult == .mismatch { drillResult = nil } }
+    }
+    var drillRevealed = false
+    /// The last Check on the drill page; nil until then, and again after any edit of a mismatch.
+    private(set) var drillResult: DrillResult?
 
     // MARK: Presentation
 
     var weakWarning: Strength?
     var errorMessage: String?
     var showingQr = false
+    /// The warning before the first copy, shown inside the screen shield.
+    private(set) var showingCopyWarning = false
+    /// Whether the user has seen the warning and chosen to copy, in this process only: never stored,
+    /// so each launch warns again.
+    @ObservationIgnored private var copyWarningAccepted = false
     private(set) var toast: String?
     @ObservationIgnored private var toastGeneration = 0
-    /// The pasteboard's change count just after Keyper copied the phrase: while it is unchanged, the
-    /// pasteboard still holds that copy, and Keyper may clear it without reading anything.
-    @ObservationIgnored private var copiedChangeCount: Int?
+    /// Whether Keyper copied the phrase in this session and has not cleared it since.
+    @ObservationIgnored private var copied = false
+    /// A type Keyper's copy carries beside the text. While the pasteboard has it, it still holds
+    /// Keyper's copy (anything copied since replaces it), and asking for a type reads nothing and
+    /// raises no paste prompt. The change count cannot tell: on iOS 26 it moves when a text field
+    /// takes the focus, with nothing copied.
+    static let copyMarker = "app.getkeyper.copied-phrase"
+    @ObservationIgnored private let pasteboard: any PhrasePasteboard
+    /// How long a copied phrase stays on the pasteboard before iOS removes it.
+    static let clipboardSeconds: TimeInterval = 60
+    @ObservationIgnored private let clipboardLifetime: TimeInterval
     /// Where the screen should scroll next; the view clears it once done.
     var scrollTarget: ScrollTarget?
 
@@ -95,16 +141,52 @@ final class KeyperModel {
     var isTestBuild: Bool { domain == (0..<32).map { UInt8($0) } }
 
     init() {
+        monitor = OfflineMonitor()
+        makeDerivation = { Derivation() }
+        pasteboard = UIPasteboard.general
+        clipboardLifetime = Self.launchClipboardLifetime
         monitor.onChange = { [weak self] radios in self?.radiosChanged(radios) }
         monitor.start()
     }
 
+    #if DEBUG
+    /// UI tests: `-KeyperClipboardSeconds 5` shortens a copy's lifetime. copyPhrase uses it exactly as
+    /// it uses the real 60 seconds, as the expiration date of the same setItems call.
+    private static var launchClipboardLifetime: TimeInterval {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let i = arguments.firstIndex(of: "-KeyperClipboardSeconds"), i + 1 < arguments.count,
+              let seconds = TimeInterval(arguments[i + 1]), seconds > 0 else { return clipboardSeconds }
+        return seconds
+    }
+
+    /// Unit tests only: a monitor fed by a fake probe (checked now, then only when the test asks), a
+    /// fake derivation, a wrapped pasteboard and a shorter clipboard lifetime.
+    init(
+        monitor: OfflineMonitor,
+        derivation: @escaping () -> any KeyDerivation = { Derivation() },
+        pasteboard: any PhrasePasteboard = UIPasteboard.general,
+        clipboardLifetime: TimeInterval = KeyperModel.clipboardSeconds
+    ) {
+        self.monitor = monitor
+        makeDerivation = derivation
+        self.pasteboard = pasteboard
+        self.clipboardLifetime = clipboardLifetime
+        monitor.onChange = { [weak self] radios in self?.radiosChanged(radios) }
+        monitor.check()
+    }
+    #else
+    private static var launchClipboardLifetime: TimeInterval { clipboardSeconds }
+    #endif
+
     // MARK: Typing
 
+    /// The sentence takes no keys while online, whatever holds the focus.
     private var target: TextTarget? {
         switch focus {
         case .email: emailTarget
-        case .secret: secretTarget
+        case .secret: offline ? secretTarget : nil
+        case .drillEmail: drillEmailTarget
+        case .drillSecret: offline ? drillSecretTarget : nil
         case nil: nil
         }
     }
@@ -116,18 +198,20 @@ final class KeyperModel {
 
     func deleteBackward() { target?.keyperDelete() }
 
-    /// "Next" on the email moves to the secret; "done" on the secret closes the keyboard.
+    /// "Next" on the email moves to the secret, if it may be typed; "done" on the secret closes the
+    /// keyboard, as does "Next" while online.
     func done() {
-        if focus == .email {
-            focus = .secret
-            scrollTarget = .field(.secret)
+        if focus?.isEmail == true && offline && !busy {
+            let next: Field = focus == .email ? .secret : .drillSecret
+            focus = next
+            scrollTarget = .field(next)
         } else {
             focus = nil
         }
     }
 
     func focus(_ field: Field) {
-        guard field == .email ? !busy : offline && !busy else { return }
+        guard field.isEmail ? !busy : offline && !busy else { return }
         focus = field
         scrollTarget = .field(field)
     }
@@ -143,13 +227,9 @@ final class KeyperModel {
     var showsResult: Bool { phrase != nil && !drilling }
 
     func generate() {
-        guard offline, !busy else { return }
-        if drilling {
-            if fingerprint(email, secret) == inputs { endDrill(passed: true) } else { secretError = strings["drill_mismatch"] }
-            return
-        }
-        guard Keyper.normalizeEmail(email).count >= Keyper.minEmailLength else {
-            emailError = strings.format("error_email_short", Keyper.minEmailLength)
+        guard offline, !busy, !drilling else { return }
+        guard Keyper.isValidEmail(Keyper.normalizeEmail(email)) else {
+            emailError = strings["error_email_invalid"]
             return
         }
         guard secretLength >= Keyper.minSecretLength else {
@@ -179,7 +259,7 @@ final class KeyperModel {
         focus = nil
         progress = (0, 1, 0)
         UIApplication.shared.isIdleTimerDisabled = true // a minute of work must outlast the screen timeout
-        let run = Derivation()
+        let run = makeDerivation()
         derivation = run
         run.start(
             email: email, secret: secret, domain: domain,
@@ -208,7 +288,7 @@ final class KeyperModel {
         switch result {
         case .success(let k):
             key = k
-            inputs = fingerprint(email, secret)
+            inputs = Keyper.drillFingerprint(key: k, email: email, secret: secret)
             scrollTarget = .result
         case .failure(Derivation.Failure.memory):
             errorMessage = strings["error_memory"]
@@ -232,63 +312,121 @@ final class KeyperModel {
     /// Forgets the phrase; one that was copied leaves the pasteboard with it, unless `keepClipboard`.
     private func discardResult(keepClipboard: Bool = false) {
         if key != nil && !keepClipboard { clearCopiedPhrase() }
-        if key != nil { for i in key!.indices { key![i] = 0 } } // overwritten in place before letting go
+        if key != nil { SecureZero.array(&key!) } // overwritten in place before letting go
         key = nil
+        if inputs != nil { SecureZero.array(&inputs!) } // keyed with K and wiped with it
         inputs = nil
-        drilling = false
+        closeDrill() // the drill checks against this phrase's inputs: no result of it may outlive them
         weakWarning = nil
         showingQr = false
+        showingCopyWarning = false
     }
 
     // MARK: Recovery drill
 
-    /// Hide the phrase and clear both fields; the user re-enters them from memory, and the
-    /// normalised inputs are compared at once, without a second minute-long derivation.
+    /// Opens the drill page with both of its fields empty; the user types the email and the sentence
+    /// again from memory. The phrase stays behind on the main page, with the inputs that made it.
     func startDrill() {
+        guard phrase != nil, offline, !busy, !drilling else { return }
+        showingQr = false
+        showingCopyWarning = false
+        resetDrill()
         drilling = true
-        email = ""
-        secret = ""
-        scrollTarget = .top
-        focus(.email)
+        focus(.drillEmail)
     }
 
-    func endDrill(passed: Bool) {
-        drilling = false
-        if passed {
+    /// Check: the normalised inputs are compared with the fingerprint of those that made the phrase,
+    /// at once, without a second minute-long derivation. A match forgets what was typed here.
+    func checkDrill() {
+        guard drilling, offline, !busy else { return }
+        guard let k = key, let first = inputs else { return }
+        var typed = Keyper.drillFingerprint(key: k, email: drillEmail, secret: drillSecret)
+        let match = typed.count == first.count && zip(typed, first).reduce(0) { $0 | ($1.0 ^ $1.1) } == 0 // constant time
+        SecureZero.array(&typed)
+        if match {
             focus = nil
-            scrollTarget = .result
-            show(toast: strings["drill_ok"], seconds: 3.5)
+            drillEmail = ""
+            drillSecret = ""
+            drillRevealed = false
+            drillResult = .passed
         } else {
-            discardResult()
+            drillResult = .mismatch
         }
     }
 
-    private func fingerprint(_ email: String, _ secret: String) -> [UInt8] {
-        let text = Keyper.normalizeEmail(email) + "\n" + Keyper.normalizeSecret(secret)
-        return Array(SHA256.hash(data: Array(text.utf8)))
+    /// Back, or "Back to the phrase": the main page again, with the phrase as it was (the key is
+    /// kept; nothing is derived again). The drill page's fields and result are forgotten.
+    func closeDrill() {
+        guard drilling else { return }
+        resetDrill()
+        if focus == .drillEmail || focus == .drillSecret { focus = nil }
+        drilling = false
+        if key != nil { scrollTarget = .result }
+    }
+
+    private func resetDrill() {
+        drillEmail = ""
+        drillSecret = ""
+        drillRevealed = false
+        drillResult = nil
     }
 
     // MARK: Phrase actions
+
+    /// The Copy button: the first time in this session, a warning that offers the QR code instead;
+    /// after the user has chosen to copy once, a copy at once.
+    func requestCopy() {
+        guard phrase != nil else { return }
+        if copyWarningAccepted { copyPhrase() } else { showingCopyWarning = true }
+    }
+
+    /// The warning's "Copy": later copies in this session skip the warning.
+    func acceptCopyWarning() {
+        showingCopyWarning = false
+        copyWarningAccepted = true
+        copyPhrase()
+    }
+
+    /// The warning's "Show QR code": the phrase never touches the pasteboard.
+    func chooseQrInstead() {
+        showingCopyWarning = false
+        showingQr = true
+    }
+
+    func dismissCopyWarning() { showingCopyWarning = false }
 
     /// Copied for 60 seconds and for this device only: iOS clears it, and it never reaches
     /// Universal Clipboard.
     func copyPhrase() {
         guard let phrase else { return }
-        UIPasteboard.general.setItems(
-            [[UTType.utf8PlainText.identifier: phrase.joined(separator: " ")]],
-            options: [.localOnly: true, .expirationDate: Date(timeIntervalSinceNow: 60)]
+        pasteboard.setItems(
+            [[UTType.utf8PlainText.identifier: phrase.joined(separator: " "), Self.copyMarker: Data([1])]],
+            options: [.localOnly: true, .expirationDate: Date(timeIntervalSinceNow: clipboardLifetime)]
         )
-        copiedChangeCount = UIPasteboard.general.changeCount
+        copied = true
         show(toast: strings["copied"], seconds: 2)
     }
 
-    func clearSecret() { secret = "" }
+    /// "Clear all": abandons everything at once. The phrase and its key, the drill and its result,
+    /// both inputs (the email too, unlike leaving or going online), and Keyper's copy on the
+    /// pasteboard while the marker shows it is still Keyper's.
+    func clearAll() {
+        focus = nil
+        discardResult() // with the key still there: takes Keyper's copy with it
+        clearCopiedPhrase() // and a copy whose phrase was already gone
+        email = ""
+        secret = ""
+        revealed = false
+        emailError = nil
+        secretError = nil
+        scrollTarget = .top
+    }
 
     /// Clears the pasteboard only while it still holds Keyper's copy: anything copied since is not ours.
     private func clearCopiedPhrase() {
-        guard let count = copiedChangeCount else { return }
-        copiedChangeCount = nil
-        if UIPasteboard.general.changeCount == count { UIPasteboard.general.items = [] }
+        guard copied else { return }
+        copied = false
+        if pasteboard.contains(pasteboardTypes: [Self.copyMarker]) { pasteboard.items = [] }
     }
 
     func show(toast text: String, seconds: Double) {
@@ -307,7 +445,6 @@ final class KeyperModel {
     /// before the secret is cleared, whose own discard would otherwise take the pasteboard with it.
     func leave() {
         stopDerivation()
-        drilling = false
         focus = nil
         discardResult(keepClipboard: true)
         secret = ""
@@ -320,7 +457,6 @@ final class KeyperModel {
         radios = now
         guard !now.offline else { return }
         stopDerivation()
-        drilling = false
         focus = nil
         secret = ""
         revealed = false

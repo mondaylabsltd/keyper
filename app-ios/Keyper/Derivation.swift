@@ -3,9 +3,23 @@ import KeyperCore
 import os
 import UIKit
 
+/// What the model needs of a derivation: start it once, cancel it. Unit tests stand in a fake for
+/// the minute-long run; the app only ever uses Derivation.
+protocol KeyDerivation: AnyObject {
+    /// [progress] and [completion] are called on the main queue.
+    func start(
+        email: String,
+        secret: String,
+        domain: [UInt8],
+        progress: @escaping @Sendable (_ done: Int, _ total: Int, _ elapsed: TimeInterval) -> Void,
+        completion: @escaping @Sendable (Result<[UInt8], Error>) -> Void
+    )
+    func cancel()
+}
+
 /// One run of the minute-long derivation, on a thread of its own, with Argon2's 1 GiB in an
 /// anonymous mapping that exists only while it runs.
-final class Derivation: @unchecked Sendable {
+final class Derivation: KeyDerivation, @unchecked Sendable {
     enum Failure: Error { case memory }
 
     private let lock = NSLock()

@@ -162,25 +162,30 @@ private struct FieldBox: ViewModifier {
     }
 }
 
+/// The email field of either page: `.email` on the main page, `.drillEmail` on the drill page.
 struct EmailField: UIViewRepresentable {
     @Bindable var model: KeyperModel
+    var field = KeyperModel.Field.email
 
     func makeUIView(context: Context) -> KeyperTextField {
-        let field = KeyperTextField()
-        field.accessibilityIdentifier = "email"
-        field.onChange = { model.email = $0 }
-        field.onFocus = { [weak field] focused in
-            if focused { model.focus(.email) } else { releaseFocus(field, .email, model) }
+        let view = KeyperTextField()
+        let (model, field) = (model, field)
+        view.accessibilityIdentifier = field == .email ? "email" : "drill_email"
+        view.onChange = { if field == .email { model.email = $0 } else { model.drillEmail = $0 } }
+        view.onFocus = { [weak view] focused in
+            if focused { model.focus(field) } else { releaseFocus(view, field, model) }
         }
-        model.emailTarget = field
-        return field
+        if field == .email { model.emailTarget = view } else { model.drillEmailTarget = view }
+        return view
     }
 
-    func updateUIView(_ field: KeyperTextField, context: Context) {
-        if field.text != model.email { field.text = model.email }
-        field.setPlaceholder(model.strings["email_hint"])
-        field.isEnabled = !model.busy
-        syncFocus(field) { model.focus == .email }
+    func updateUIView(_ view: KeyperTextField, context: Context) {
+        let text = field == .email ? model.email : model.drillEmail
+        if view.text != text { view.text = text }
+        view.setPlaceholder(model.strings["email_hint"])
+        view.isEnabled = !model.busy
+        let (model, field) = (model, field)
+        syncFocus(view) { model.focus == field }
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: KeyperTextField, context: Context) -> CGSize? {
@@ -188,29 +193,33 @@ struct EmailField: UIViewRepresentable {
     }
 }
 
+/// The sentence field of either page: `.secret` on the main page, `.drillSecret` on the drill page.
 struct SecretField: UIViewRepresentable {
     @Bindable var model: KeyperModel
+    var field = KeyperModel.Field.secret
 
     func makeUIView(context: Context) -> KeyperTextView {
         let view = KeyperTextView()
-        view.accessibilityIdentifier = "secret"
-        view.onChange = { model.secret = $0 }
+        let (model, field) = (model, field)
+        view.accessibilityIdentifier = field == .secret ? "secret" : "drill_secret"
+        view.onChange = { if field == .secret { model.secret = $0 } else { model.drillSecret = $0 } }
         view.onFocus = { [weak view] focused in
-            if focused { model.focus(.secret) } else { releaseFocus(view, .secret, model) }
+            if focused { model.focus(field) } else { releaseFocus(view, field, model) }
         }
-        model.secretTarget = view
+        if field == .secret { model.secretTarget = view } else { model.drillSecretTarget = view }
         return view
     }
 
     func updateUIView(_ view: KeyperTextView, context: Context) {
         let strings = model.strings
         view.hiddenValue = { strings.format("secret_hidden_value", $0) }
-        view.setSecret(model.secret)
-        view.masked = !model.revealed
+        view.setSecret(field == .secret ? model.secret : model.drillSecret)
+        view.masked = !(field == .secret ? model.revealed : model.drillRevealed)
         let enabled = model.offline && !model.busy
         view.isEditable = enabled
         view.isSelectable = enabled
-        syncFocus(view) { model.focus == .secret }
+        let (model, field) = (model, field)
+        syncFocus(view) { model.focus == field }
     }
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: KeyperTextView, context: Context) -> CGSize? {

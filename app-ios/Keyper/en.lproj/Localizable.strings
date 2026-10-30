@@ -14,7 +14,8 @@
 "secret_label" = "Secret sentence";
 "secret_hint" = "A sentence only you know";
 "secret_hint_offline" = "Available once offline";
-"secret_rule" = "Capitals, symbols and the spaces between words all count here. The email ignores them.";
+"secret_rule" = "Capitals, symbols and the spaces between words all count here.";
+"email_rule" = "Must be a valid address. Capitals don’t matter; every other character does.";
 "show" = "Show";
 "secret_hidden_value" = "%d characters, hidden";
 "hide" = "Hide";
@@ -39,14 +40,20 @@
 "result_title" = "Recovery phrase";
 "copy" = "Copy";
 "qr" = "QR code";
-"clear" = "Clear";
-"copied" = "Copied; cleared in 60 seconds";
+"clear" = "Clear all";
+"copy_warning_title" = "Copy to the clipboard?";
+"copy_warning_message" = "Keyboards and clipboard history may keep their own copy, which Keyper cannot erase. The QR code avoids the clipboard.";
+"copy_warning_copy" = "Copy";
+"copy_warning_qr" = "Show QR code";
+"copied" = "Copied. It expires in 60 seconds.";
 "drill_start" = "First time? Do a recovery drill  ›";
-"drill_banner" = "Recovery drill: type the email and the sentence again, from memory";
+"drill_title" = "Recovery drill";
+"drill_back" = "‹ Back";
+"drill_intro" = "Type both again from memory.";
 "drill_check" = "Check";
-"drill_exit" = "Exit";
-"drill_ok" = "They match: this phrase can be recovered";
-"drill_mismatch" = "Not the same as before";
+"drill_mismatch" = "These don’t match what you entered first.";
+"drill_passed" = "Verification passed. Your inputs match.";
+"drill_return" = "Back to the phrase";
 "qr_caption" = "Tap to close";
 
 "weak_title" = "Easy to crack";
@@ -54,7 +61,7 @@
 "weak_edit" = "Edit";
 "weak_continue" = "Generate anyway";
 
-"error_email_short" = "At least %1$d English letters or digits";
+"error_email_invalid" = "Not a valid email address";
 "key_space" = "space";
 "key_done" = "Done";
 "key_next" = "Next";

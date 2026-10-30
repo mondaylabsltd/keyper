@@ -582,7 +582,7 @@ struct KeyboardBar: UIViewRepresentable {
     func updateUIView(_ keyboard: KeyperKeyboardView, context: Context) {
         let s = model.strings
         keyboard.labels = .init(space: s["key_space"], done: s["key_done"], next: s["key_next"], shift: s["key_shift"], delete: s["key_delete"])
-        keyboard.mode = model.focus == .email ? .email : .secret
+        keyboard.mode = model.focus?.isEmail == true ? .email : .secret
         if model.focus != context.coordinator.lastFocus {
             context.coordinator.lastFocus = model.focus
             keyboard.reset()

@@ -13,7 +13,8 @@
 "secret_label" = "记忆文本";
 "secret_hint" = "只有你知道的一句话，可用英文或拼音";
 "secret_hint_offline" = "断网后可输入";
-"secret_rule" = "这里大小写、符号和词之间的空格都算数；邮箱则忽略这些。";
+"secret_rule" = "这里大小写、符号和词之间的空格都算数。";
+"email_rule" = "须是有效的邮箱地址。不分大小写，其他字符都算数。";
 "show" = "显示";
 "secret_hidden_value" = "%d 个字符，已隐藏";
 "hide" = "隐藏";
@@ -38,14 +39,20 @@
 "result_title" = "助记词";
 "copy" = "复制";
 "qr" = "二维码";
-"clear" = "清除";
-"copied" = "已复制，60 秒后清空";
+"clear" = "全部清除";
+"copy_warning_title" = "复制到剪贴板？";
+"copy_warning_message" = "输入法和剪贴板历史可能另存一份，Keyper 无法清除。用二维码可以完全不经过剪贴板。";
+"copy_warning_copy" = "复制";
+"copy_warning_qr" = "显示二维码";
+"copied" = "已复制，60 秒后失效。";
 "drill_start" = "首次使用？做一次恢复演练  ›";
-"drill_banner" = "恢复演练：请凭记忆重新输入邮箱和记忆文本";
+"drill_title" = "恢复演练";
+"drill_back" = "‹ 返回";
+"drill_intro" = "凭记忆再输一遍。";
 "drill_check" = "核对";
-"drill_exit" = "退出";
-"drill_ok" = "一致：这组助记词可以恢复";
-"drill_mismatch" = "和刚才的输入不一致";
+"drill_mismatch" = "与第一次输入的不一致。";
+"drill_passed" = "验证通过，两次输入一致。";
+"drill_return" = "返回助记词";
 "qr_caption" = "轻触关闭";
 
 "weak_title" = "这句话容易被破解";
@@ -53,7 +60,7 @@
 "weak_edit" = "修改";
 "weak_continue" = "仍然生成";
 
-"error_email_short" = "至少需要 %1$d 个英文字母或数字";
+"error_email_invalid" = "不是有效的邮箱地址";
 "key_space" = "空格";
 "key_done" = "完成";
 "key_next" = "下一项";

@@ -280,3 +280,55 @@ struct GoldProgress: View {
         .frame(height: 8)
     }
 }
+
+/// A field's label, and the label of the phrase.
+struct FieldLabel: View {
+    let text: String
+
+    var body: some View { Text(text).keyperFont(14, .medium).foregroundStyle(Color(Palette.text)) }
+}
+
+/// A red line under a field.
+struct ErrorText: View {
+    let text: String
+
+    var body: some View { Text(text).keyperFont(12).foregroundStyle(Color(Palette.danger)).padding(.top, 6) }
+}
+
+/// The sentence's label, with its Show / Hide link at the trailing edge.
+struct SecretLabel: View {
+    let title: String
+    let reveal: String
+    let id: String
+    let toggle: () -> Void
+
+    var body: some View {
+        HStack {
+            FieldLabel(text: title)
+            Spacer()
+            TextLink(title: reveal, action: toggle)
+                .frame(minHeight: 32)
+                .padding(.horizontal, 8)
+                .accessibilityIdentifier(id)
+        }
+    }
+}
+
+/// The sentence field in its box, with its hint while empty.
+struct SecretInput: View {
+    @Bindable var model: KeyperModel
+    let field: KeyperModel.Field
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            SecretField(model: model, field: field)
+            if (field == .secret ? model.secret : model.drillSecret).isEmpty {
+                Text(model.strings[model.offline ? "secret_hint" : "secret_hint_offline"])
+                    .keyperFont(16, design: .monospaced)
+                    .foregroundStyle(Color(Palette.textTertiary))
+                    .allowsHitTesting(false)
+            }
+        }
+        .fieldBox(focused: model.focus == field)
+    }
+}

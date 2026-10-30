@@ -23,6 +23,39 @@ final class OfflineMonitor {
     private var timer: Timer?
     private var last: Radios?
 
+    init() {}
+
+    #if DEBUG
+    /// Unit tests: the radios come from `probe` instead of the system, and nothing polls unless
+    /// `start()` is called; `stop()` ends the polling.
+    private var probe: (@MainActor () -> Radios)?
+
+    init(probe: @escaping @MainActor () -> Radios) { self.probe = probe }
+
+    func stop() {
+        timer?.invalidate()
+        timer = nil
+    }
+
+    /// UI tests, with `-KeyperSimulateOffline`: the test runner posts these Darwin notifications to
+    /// switch the simulated Wi-Fi on (going online) and off again.
+    nonisolated static let simulateWifiOn = "app.getkeyper.debug.wifi-on"
+    nonisolated static let simulateWifiOff = "app.getkeyper.debug.wifi-off"
+    nonisolated(unsafe) private static var simulatedWifi = false
+    private static var listening = false
+
+    private static func listenForSimulatedWifi() {
+        guard !listening else { return }
+        listening = true
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+        for name in [simulateWifiOn, simulateWifiOff] {
+            CFNotificationCenterAddObserver(center, nil, { _, _, name, _, _ in
+                OfflineMonitor.simulatedWifi = name?.rawValue as String? == OfflineMonitor.simulateWifiOn
+            }, name as CFString, nil, .deliverImmediately)
+        }
+    }
+    #endif
+
     func start() {
         // Polled, as on Android: neither source announces its changes. In the common modes, so the
         // gate keeps watching while the page scrolls (the default mode alone pauses during tracking).
@@ -36,9 +69,15 @@ final class OfflineMonitor {
 
     func check() {
         #if DEBUG
-        // Simulators always share the Mac's network: UI tests can ask for the offline state.
+        if let probe {
+            report(probe())
+            return
+        }
+        // Simulators always share the Mac's network: UI tests can ask for the offline state, and
+        // then switch the simulated Wi-Fi on and off again with a Darwin notification.
         if ProcessInfo.processInfo.arguments.contains("-KeyperSimulateOffline") {
-            report(Radios())
+            Self.listenForSimulatedWifi()
+            report(Self.simulatedWifi ? Radios(wifi: true) : Radios())
             return
         }
         #endif
