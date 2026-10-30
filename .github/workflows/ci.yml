@@ -33,17 +33,55 @@ jobs:
           name: reports
           path: app-android/*/build/reports/
 
+  android-device:
+    name: Android app on an emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Instrumented tests (the website's protections, the clipboard in the background, one real 1 GiB derivation)
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          # API 33 or later: the radio tests use cmd bluetooth_manager.
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          ram-size: 4096M
+          working-directory: app-android
+          script: ./gradlew :app:connectedDebugAndroidTest
+      - name: Upload reports
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: device-reports
+          path: |
+            app-android/app/build/reports/androidTests/
+            app-android/backgroundtest/build/reports/
+
   ios:
     name: iOS core and app tests
     # Xcode 26, as the README requires.
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Core tests, including SPEC's 1 GiB vectors
         working-directory: app-ios/KeyperCore
         run: swift test -c release
-      - name: App unit tests on a simulator
+      - name: Release build (memset_s linked, no test hooks)
+        working-directory: app-ios
+        run: scripts/check-release.sh
+      - name: App unit and UI tests on a simulator
         working-directory: app-ios
         run: |
           simulator=$(xcrun simctl list devices available --json | python3 -c '
@@ -51,7 +89,7 @@ jobs:
           devices = json.load(sys.stdin)["devices"]
           print(next(d["udid"] for runtime, ds in sorted(devices.items(), reverse=True) if "iOS" in runtime for d in ds if d["name"].startswith("iPhone")))')
           xcodebuild -project Keyper.xcodeproj -scheme Keyper -destination "platform=iOS Simulator,id=$simulator" \
-            -only-testing:KeyperTests CODE_SIGNING_ALLOWED=NO test
+            -only-testing:KeyperTests -only-testing:KeyperUITests CODE_SIGNING_ALLOWED=NO test
 
   reference:
     name: Python reference self-test

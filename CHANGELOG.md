@@ -14,10 +14,12 @@ First release, with protocol v1.
 - Email and a remembered sentence → standard BIP39 phrase of 12 or 24 words.
 - Sentence: 80 ASCII characters (letters, digits, `!@#$%^&*().,?-_+=/`) and spaces; runs of
   spaces count as one, spaces at either end are dropped; at least 12 characters.
-- Email: NFKC, then only ASCII letters and digits, lowercased, as the salt; at least 6 characters.
+- Email: must be a valid address (SPEC.md §2); NFKC, spaces at either end dropped and A–Z
+  lowercased, every other character kept, as the salt.
 - HMAC-SHA256 with the deployment's 32-byte domain constant, then Argon2id with 1 GiB, 128
   passes and 4 lanes; independent HMAC-derived entropy for 12 and 24 words.
-- Seven test vectors, reproduced by the app's core and by the independent Python reference.
+- Seven test vectors and 55 email cases (`test-vectors/email.tsv`), reproduced by both cores and
+  by the independent Python reference.
 
 ### Android app
 

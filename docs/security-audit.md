@@ -11,6 +11,10 @@ reproduced it on emulators and a real phone, fixed it and added tests. The crypt
 (Argon2id, HMAC, BIP39, the salt, the cost model) showed no problems. The findings concern two
 things: whether users can still recover exactly years later, and leaks while typing.
 
+> **Later change (2026-10-30, before any release):** the email rule in findings 1 and 3 was replaced.
+> The email must now be a valid address, and every character counts except case, so different
+> addresses no longer share a salt. See SPEC.md §2 and §3.
+
 ## 1. Conclusions
 
 1. **With a sentence that is hard enough to guess, guessing the phrase does not pay.** Every
@@ -39,7 +43,7 @@ things: whether users can still recover exactly years later, and leaks while typ
 | 8 | Screen-reading accessibility services could read the phrase | medium · app | The secret field, the phrase and the keyboard are marked as sensitive data (Android 14+) |
 | 9 | Third-party keyboards learning, syncing to the cloud, keeping clipboard history | medium · app | Keyper's own keyboard for both fields: the fields give the system keyboard no connection at all; paste, drag-and-drop, hardware keys and injected key events are blocked (adb injection verified blocked) |
 | 10 | Counterfeit packages, release signing | medium · distribution | README: install only from official channels; configure your own signing key before distributing and publish the certificate fingerprint |
-| 11 | Clipboard | medium · app | Marked sensitive, cleared after 60 seconds; README recommends the QR code |
+| 11 | Clipboard | medium · app | Marked sensitive and cleared after 60 seconds where the system allows it (later made precise: see the README's clipboard section); README recommends the QR code |
 | 12 | Reading the Bluetooth state needs a permission on Android 8.1–11 | low | Re-checked: reading works without a permission on API 30 |
 
 Also found and fixed during development: a native crash when cancelling, caused by worker threads

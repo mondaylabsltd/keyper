@@ -129,7 +129,7 @@ export const en: Content = {
 	},
 	security: {
 		title: 'Security',
-		lead: 'Every guess costs one full Argon2id run. Assuming 1000 data-centre GPUs, each at 20 guesses a second and 40 J per guess, and electricity at US$0.05 per kWh, searching half the space takes:',
+		lead: 'Every guess costs one full Argon2id run. Assuming 1000 data-centre GPUs, each at 20 guesses a second and 40 J per guess, and electricity at US$0.05 per kWh. On average an attacker must search half the space:',
 		head: ['Entropy', 'Time', 'Electricity'],
 		rows: [
 			['30 bits', '7.5 hours', 'US$300'],
@@ -140,7 +140,7 @@ export const en: Content = {
 		note: 'Hardware not included. Keyper estimates the entropy as you type and warns below US$100 million.',
 		model: { label: 'How these figures are derived', path: 'SPEC.md#4-security-model' },
 		warning:
-			'Length doesn’t make a sentence hard to guess: famous lines, lyrics and “my cat is called…” fall for a few dollars, and the estimate can’t recognise them. Use details only you know.',
+			'Length doesn’t make a sentence hard to guess: famous lines, lyrics and “my cat is called…” are tried first and cost a few dollars or less to find, and the estimate can’t recognise them. Use details only you know.',
 		items: [
 			{
 				title: 'Its own keyboard',
@@ -148,11 +148,11 @@ export const en: Content = {
 			},
 			{
 				title: 'Offline gate',
-				text: 'Going online wipes the sentence, the phrase and the clipboard.'
+				text: 'Going online wipes the sentence and the phrase at once.'
 			},
 			{
 				title: 'Nothing stored',
-				text: 'Nothing is written to storage. Leaving the app wipes the sentence and the phrase.'
+				text: 'Nothing you type is written to storage. Leaving the app wipes the sentence and the phrase.'
 			},
 			{
 				title: 'No screenshots',
@@ -160,11 +160,11 @@ export const en: Content = {
 			},
 			{
 				title: 'Recovery drill',
-				text: 'Re-type both inputs from memory and check they give the same phrase.'
+				text: 'Type both inputs again from memory and check that they match.'
 			},
 			{
-				title: 'Clipboard cleared',
-				text: 'A copied phrase is cleared after 60 seconds. The QR code avoids the clipboard.'
+				title: 'QR code first',
+				text: 'A copied phrase expires after 60 seconds on iPhone; Android lets Keyper clear it only while open. The QR code avoids the clipboard.'
 			}
 		]
 	},
@@ -197,10 +197,7 @@ export const en: Content = {
 			name: 'Build it yourself',
 			price: 'Free',
 			per: 'forever',
-			points: [
-				'Needs Android Studio, or Xcode on a Mac',
-				'On iPhone, a free Apple account means reinstalling every 7 days'
-			],
+			points: ['Needs Android Studio, or Xcode on a Mac'],
 			action: 'How to build',
 			guide: 'README.md#building-and-maintaining'
 		},
@@ -212,7 +209,7 @@ export const en: Content = {
 			googlePlay: 'Google Play',
 			appStore: 'App Store'
 		},
-		note: 'One price worldwide. Android and iPhone are bought separately.'
+		note: 'Android and iPhone are bought separately.'
 	},
 	faq: {
 		title: 'Questions',
@@ -227,7 +224,7 @@ export const en: Content = {
 			},
 			{
 				q: 'Why does it need my email?',
-				a: 'So the same sentence gives different phrases for different people, and an attacker has to guess one person at a time. Only its letters and digits count, so Alice@Example.com and alice@example.com are the same. A phone number works too.'
+				a: 'So the same sentence gives different phrases for different people, and an attacker has to guess one person at a time. It must be a valid address, and every character counts except capitals: Alice@Example.com and alice@example.com are the same, a.b@gmail.com and ab@gmail.com are not.'
 			},
 			{
 				q: 'What if someone learns my email?',
@@ -304,7 +301,7 @@ export const zh: Content = {
 	},
 	security: {
 		title: '安全',
-		lead: '每猜一次都要完整跑一遍 Argon2id。假设攻击者有 1000 张数据中心级显卡，每张每秒猜 20 次、每次耗电 40 焦耳，电价每度 0.05 美元，平均搜完一半空间需要：',
+		lead: '每猜一次都要完整跑一遍 Argon2id。假设攻击者有 1000 张数据中心级显卡，每张每秒猜 20 次、每次耗电 40 焦耳，电价每度 0.05 美元。平均要搜索一半空间：',
 		head: ['熵', '时间', '电费'],
 		rows: [
 			['30 位', '7.5 小时', '300 美元'],
@@ -315,16 +312,19 @@ export const zh: Content = {
 		note: '不含硬件成本。你输入时 Keyper 会估算熵，低于 1 亿美元会提醒。',
 		model: { label: '这些数字怎么算的', path: 'SPEC.md#4-security-model' },
 		warning:
-			'字多不等于难猜：名句、歌词、“我的猫叫某某”，几块钱电费就能猜中，而且估算认不出它们。要用只有你知道的细节。',
+			'字多不等于难猜：名句、歌词、“我的猫叫某某”这类句子攻击者最先试，几美元甚至更少的电费就能猜中，而且估算认不出它们。要用只有你知道的细节。',
 		items: [
 			{ title: '自带键盘', text: '输入框从不连接系统输入法，任何输入法都无法记录或同步。' },
-			{ title: '断网门禁', text: '一联网，那句话、助记词和剪贴板立即清除。' },
-			{ title: '什么都不保存', text: '不写入任何存储。离开 App，那句话和助记词立即清除。' },
-			{ title: '防截屏', text: '截屏、录屏和多任务界面都看不到内容。' },
-			{ title: '恢复演练', text: '凭记忆再输一遍，核对结果是否一致。' },
+			{ title: '断网门禁', text: '一联网，那句话和助记词立即清除。' },
 			{
-				title: '剪贴板自动清除',
-				text: '复制的助记词 60 秒后清除。用二维码则完全不经过剪贴板。'
+				title: '什么都不保存',
+				text: '你输入的内容不写入任何存储。离开 App，那句话和助记词立即清除。'
+			},
+			{ title: '防截屏', text: '截屏、录屏和多任务界面都看不到内容。' },
+			{ title: '恢复演练', text: '凭记忆再输一遍，核对两次输入是否一致。' },
+			{
+				title: '二维码优先',
+				text: '复制的助记词在 iPhone 上 60 秒后失效；Android 只允许 Keyper 在打开时清除。用二维码则完全不经过剪贴板。'
 			}
 		]
 	},
@@ -354,10 +354,7 @@ export const zh: Content = {
 			name: '自己编译',
 			price: '免费',
 			per: '永久',
-			points: [
-				'需要 Android Studio，或 Mac 上的 Xcode',
-				'iPhone 上用免费 Apple 账户签名，每 7 天要重装一次'
-			],
+			points: ['需要 Android Studio，或 Mac 上的 Xcode'],
 			action: '怎样编译',
 			guide: 'README-zh.md#构建与维护'
 		},
@@ -369,7 +366,7 @@ export const zh: Content = {
 			googlePlay: 'Google Play',
 			appStore: 'App Store'
 		},
-		note: '全球统一价。Android 和 iPhone 需要分别购买。'
+		note: 'Android 和 iPhone 需要分别购买。'
 	},
 	faq: {
 		title: '常见问题',
@@ -384,7 +381,7 @@ export const zh: Content = {
 			},
 			{
 				q: '为什么要填邮箱？',
-				a: '让同一句话在不同人那里得到不同的助记词，攻击者只能一个人一个人地猜。只取邮箱里的字母和数字，不分大小写，所以 Alice@Example.com 和 alice@example.com 是同一个。也可以用手机号。'
+				a: '让同一句话在不同人那里得到不同的助记词，攻击者只能一个人一个人地猜。邮箱须是有效地址，除大小写外每个字符都算数：Alice@Example.com 和 alice@example.com 是同一个，a.b@gmail.com 和 ab@gmail.com 不是。'
 			},
 			{
 				q: '别人知道了我的邮箱怎么办？',

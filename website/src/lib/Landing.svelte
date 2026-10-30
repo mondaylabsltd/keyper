@@ -95,7 +95,8 @@
 			<div class="chip slow"><strong>{c.how.flow.slow}</strong><small>≈ 1 min</small></div>
 			<div class="arrow" aria-hidden="true"></div>
 			<div class="chip">
-				<span class="mono">patch essay tiny fix …</span><small>{c.how.flow.words}</small>
+				<span class="mono">image ripple naive snake …</span><small>{c.how.flow.words}</small
+				>
 			</div>
 		</div>
 		<ol class="steps">

@@ -29,7 +29,7 @@ repository is free and gives the same app.
   never connects, so it cannot learn, sync or upload what you type.
 - **Offline gate.** You can only type and generate with airplane mode on and Wi-Fi and
   Bluetooth off (iOS lets apps check only the network, so there Bluetooth is a reminder). Going
-  back online wipes everything at once, the clipboard included.
+  back online wipes the sentence and the phrase at once.
 - **No permissions.** Neither app asks for a permission or uses the network, and neither bundles
   a library beyond the system's own (and, on Android, the Kotlin standard library). The Android APK is about 95 KB, the iOS app well under 1 MB.
 - **Recovery drill.** Re-type both inputs from memory and check on the spot that they give the
@@ -43,7 +43,7 @@ Chinese.
 ## How it works
 
 ```
-email ──── keep ASCII letters and digits, lowercase ──────────────┐ salt
+email ──── must be a valid address; lowercase A–Z ───────────────┐ salt
 sentence ─ collapse extra spaces ─ HMAC-SHA256(domain) ─ Argon2id(1 GiB × 128) ─── K ─┬─ HMAC ─ 12 words
                                                                                       └─ HMAC ─ 24 words
 ```
@@ -53,9 +53,9 @@ sentence ─ collapse extra spaces ─ HMAC-SHA256(domain) ─ Argon2id(1 GiB ×
   extra spaces (runs of spaces, spaces at either end) do not. There are no quotes, `|`, `\`,
   `:` or `;`, which are easy to mistype or misread. Write other languages in Latin
   letters, for example Chinese in pinyin: `Wo de di yi zhi mao jiao MiMi!`
-- **The email is only a salt, and unlike the sentence it forgives.** Only its ASCII letters and
-  digits count, regardless of case, so `Alice@Example.com` and `alice@example.com`, or
-  `138-0000-0000` and `13800000000`, are the same. A phone number works as well.
+- **The email must be a valid address, and every character counts except case**:
+  `Alice@Example.com` and `alice@example.com` are the same; `a.b@gmail.com` and `ab@gmail.com`
+  are not. Phone numbers are not accepted. The exact rule is in [SPEC.md §2](SPEC.md#2-algorithm).
 - **12 and 24 words are independent.** Knowing one tells nothing about the other.
 - **The domain constant** is 32 random bytes in
   [`Domain.kt`](app-android/app/src/main/kotlin/app/getkeyper/Domain.kt) and
@@ -120,8 +120,8 @@ The code and the domain constant are public: assume every attacker has them.
 3. **If the domain constant is lost or changed, no phrase can ever be regenerated.** See
    [Building and maintaining](#building-and-maintaining).
 
-Other protections: leaving the app wipes the sentence and the phrase, a copied phrase leaves the
-clipboard after 60 seconds, and autofill is excluded.
+Other protections: leaving the app wipes the sentence and the phrase, and autofill is excluded.
+The QR code is the main way out; copying asks once per session whether to use it instead.
 
 - **Android:** screenshots and screen recording are blocked (the QR code screen too), the app is
   blank in Recents, and on Android 14+ the sentence, the phrase and the keyboard are hidden from
@@ -146,6 +146,52 @@ permission:
   permission, so it only reminds you to turn Bluetooth off. iOS lets no app open those settings,
   so the steps are instructions.
 
+### The clipboard
+
+A copied phrase is meant to leave the clipboard after 60 seconds. Keyper never clears anything
+but its own copy: a newer clip from another app always survives.
+
+| | iPhone | Android 10+ |
+|---|---|---|
+| Keyper open | cleared at 60 s by iOS | cleared at 60 s by Keyper |
+| Keyper in the background | cleared at 60 s by iOS | cleared when you next open Keyper |
+| Keyper closed, killed or force-stopped | cleared at 60 s by iOS | cleared when you next open Keyper |
+
+On iPhone the copy carries a 60-second expiry that iOS enforces whatever Keyper does, and it
+never reaches your other devices. On Android 10 and later an app in the background cannot see the
+clipboard, so Keyper cannot tell its copy from a newer one and does not touch it until it is in
+front again; if you never reopen Keyper, Android 13+ clears the clipboard after about an hour.
+Android 8 and 9 still allow the check, so Keyper clears on time there. Tests:
+`app-android/backgroundtest` and `app-ios/KeyperTests/ClipboardTests.swift`.
+
+### What is wiped
+
+Going online and leaving the app end everything derived from the sentence and keep only the email;
+Clear all removes the email too. What that means in memory:
+
+| Value | When | iPhone | Android |
+|---|---|---|---|
+| Key K, the drill fingerprint | going online, leaving, Clear all, a new derivation | overwritten with `memset_s` | overwritten through `Wipe` |
+| P = HMAC(domain, sentence), the phrase's entropy, Argon2's scratch blocks | at the end of every derivation, also when cancelled | overwritten with `memset_s` | overwritten through `Wipe` |
+| Argon2's 1 GiB working memory | the same | overwritten with `memset_s`, then unmapped | overwritten through `Wipe`, then unmapped |
+| The sentence and the words as text | going online, leaving, Clear all | dropped, not overwritten | dropped, not overwritten |
+
+- **iPhone:** `memset_s` is defined (C11 Annex K) so that the compiler must perform it even when
+  the memory is never read again; CI checks that the optimised Release binary links it
+  (`app-ios/scripts/check-release.sh`). It overwrites the buffer it is given: each sensitive array
+  is kept uniquely owned so that no copy-on-write copy is left elsewhere.
+- **Android:** `Wipe` writes the zeros and reads them back into a volatile field so the stores are
+  observable, but neither the JVM nor ART formally guarantees they survive every optimisation, and
+  ART's moving garbage collector may already have copied a heap array where no code can reach it.
+  The working memory is off-heap, so the collector never moves it, yet that alone does not make
+  its erasure certain. On Android, wiping is best-effort.
+- **Both:** Kotlin and Swift strings cannot be overwritten in place. The system reclaims them later.
+
+The drill keeps no fast hash of the sentence: its fingerprint is HMAC-SHA256 keyed with K, over a
+label and the length-prefixed normalised email and sentence, so it is useless without K, and lives
+and dies with K. Tests: `Argon2idTest`/`Argon2idTests` (working memory zeroed on completion and on
+cancellation), `KeyperTest`/`KeyperTests` (the fingerprint's vectors, keying and encoding).
+
 The pre-freeze audit of the protocol and the Android app, with the attack scenarios, is in
 [docs/security-audit.md](docs/security-audit.md).
 To report a vulnerability, see [SECURITY.md](SECURITY.md).
@@ -156,8 +202,8 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
 2. Type your email on Keyper's keyboard, tap Next, then type your sentence. Tap Show to check it.
 3. Choose 12 or 24 words and tap Generate. It takes about a minute.
 4. The first time you use a sentence, do the recovery drill.
-5. **Copy** the phrase into a wallet app on the same phone (the clipboard clears after 60
-   seconds), or show the **QR code** to another device.
+5. Show the **QR code** to the wallet, or **Copy** the phrase into a wallet app on the same phone
+   (see [the clipboard](#the-clipboard)).
 6. The footer shows the build's domain ID (`A248-7EAB` for this repository). The same ID means
    the same phrases. If it ever changes, **stop** and find out why before using the phrase. The
    ID does not prove a build is genuine, since a tampered build can show it too. For that,
@@ -246,6 +292,7 @@ the sentence twice and never shows it. `--self-test` checks the script against S
 | BIP39 | SHA-256 of the wordlist; Trezor's 24 official vectors | all equal |
 | QR codes | module-by-module against segno for 40 versions × 8 masks; zxing-cpp decodes 42 real phrases and app screenshots | all equal, all decoded |
 | Protocol | Kotlin against the Python reference (argon2-cffi + Trezor's mnemonic) on SPEC's 7 vectors; the app (emulator) against the Python reference with the real domain constant | equal |
+| Email rule | 55 edge cases (`test-vectors/email.tsv`) in Kotlin, Swift and the Python reference | all equal |
 | Freeze guards | protocol constants and the domain ID are pinned by tests | pass |
 | The tests themselves | deliberately broken Argon2, QR masking and thread shutdown on cancel | each caught |
 | Language switch | English and Chinese, after typing both inputs and generating | no restart; everything kept |
@@ -279,10 +326,9 @@ above.
 - The strength estimate is a heuristic. It does not recognise famous lines or public facts.
 - Spelling must stay consistent over the years (capitals, symbols, pinyin such as `zh`/`z` or
   `ü` as `v`/`u`). The drill catches mistakes today; it cannot catch memory drifting later.
-- On Android the 60-second clipboard clear needs the app process alive; if the app is swiped
-  away, Android 13+ clears the clipboard after about an hour and older versions keep it. (iOS
-  expires the phrase itself.) Keyboard apps and vendor clipboard histories may keep a copy:
-  prefer the QR code, or copy the words by hand.
+- Clearing the clipboard is best-effort on Android: see [the clipboard](#the-clipboard). Keyboard
+  apps and vendor clipboard histories may keep their own copy, which no app can erase: prefer the
+  QR code.
 - The offline gate prevents mistakes; it is not isolation. On Android it checks airplane mode,
   Wi-Fi and Bluetooth, not USB tethering, Ethernet adapters or NFC. On iOS it sees network
   interfaces and the cellular radio, not Wi-Fi that is on but joined to no network, and not
@@ -291,8 +337,8 @@ above.
   Should a later iOS change it, the app keeps working, only without the shield.
 - Hiding content from accessibility services needs Android 14+. On older systems the offline
   phone itself must be clean.
-- Kotlin and Swift strings cannot be reliably wiped; the 1 GiB working memory goes back to the
-  kernel after each run. Memory forensics is outside the threat model.
+- Wiping memory is best-effort on Android and cannot reach strings on either platform: see
+  [what is wiped](#what-is-wiped). Memory forensics is outside the threat model.
 - 4 GB of RAM or more is needed. Not tested on 32-bit or low-end phones; phones slower than a
   K40 may take several minutes.
 - targetSdk 36; behaviour changes in Android 17 (API 37) have not been evaluated yet.
