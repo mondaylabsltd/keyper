@@ -56,6 +56,8 @@ jobs:
           api-level: 34
           arch: x86_64
           target: google_apis
+          # A phone-sized screen: the default 320x640 AVD crashes SystemUI's clipboard overlay.
+          profile: pixel_6
           ram-size: 4096M
           working-directory: app-android
           script: ./gradlew :app:connectedDebugAndroidTest
@@ -72,7 +74,8 @@ jobs:
     name: iOS core and app tests
     # Xcode 26, as the README requires.
     runs-on: macos-26
-    timeout-minutes: 75
+    # The clipboard UI tests wait out real expiries after real derivations: about an hour in all.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Core tests, including SPEC's 1 GiB vectors
