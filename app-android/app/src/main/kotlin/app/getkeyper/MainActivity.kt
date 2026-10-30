@@ -9,7 +9,6 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.ActivityNotFoundException
 import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
@@ -44,6 +43,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowManager
+import android.view.animation.DecelerateInterpolator
 import android.widget.Button
 import android.widget.EditText
 import android.widget.GridLayout
@@ -58,14 +58,19 @@ import android.window.OnBackInvokedDispatcher
 import app.getkeyper.core.Keyper
 import app.getkeyper.core.QrCode
 import app.getkeyper.core.Strength
+import app.getkeyper.core.Wipe
 import java.security.MessageDigest
 import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
+/** How long a copied phrase stays on the clipboard. Internal, not private: ClipboardTimeoutTest pins it. */
+internal const val CLIPBOARD_MS = 60_000L
+
 /**
- * Keyper's single screen: the offline gate, both inputs on [KeyperKeyboard], the strength
- * estimate, the minute-long derivation on a worker thread, the phrase with copy and QR code,
- * and the recovery drill. Nothing is stored: leaving the screen or going online forgets it all.
+ * Keyper's screen: the offline gate, both inputs on [KeyperKeyboard], the strength estimate, the
+ * minute-long derivation on a worker thread, the phrase with copy and QR code; and the recovery
+ * drill, a page of its own that slides in over it in the same secure window. Nothing is stored:
+ * leaving the screen or going online forgets it all.
  */
 class MainActivity : Activity() {
     private val domain = DOMAIN_HEX.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
@@ -95,16 +100,26 @@ class MainActivity : Activity() {
     private lateinit var stepBluetoothHint: View
     private lateinit var strengthBlock: View
     private lateinit var strengthTip: View
-    private lateinit var drillBanner: View
+    private lateinit var drill: View
+    private lateinit var drillForm: View
+    private lateinit var drillEmail: EditText
+    private lateinit var drillSecret: EditText
+    private lateinit var drillReveal: TextView
+    private lateinit var drillCheck: Button
+    private lateinit var drillMismatch: View
+    private lateinit var drillPassed: View
     // Built once per language: building an ICU formatter on every keystroke made typing feel sluggish.
     private lateinit var compact: CompactDecimalFormat
     private var uiLocales: LocaleList? = null
 
     /** The key K derived from the current inputs; both phrase lengths are read from it. */
     private var key: ByteArray? = null
-    /** Fingerprint of the normalised inputs that produced [key], for the recovery drill. */
+    /** [Keyper.drillFingerprint] of the inputs that produced [key], keyed with it and wiped with it. */
     private var inputs: ByteArray? = null
-    /** True while the user re-enters the inputs from memory; [key] is kept, but hidden. */
+    /**
+     * True while the recovery drill's page is open: the user types both inputs again from memory.
+     * [key] is kept for the phrase to be shown again, but the main page with it is gone meanwhile.
+     */
     private var drilling = false
     /** Bumped to discard the result of a derivation that is still running. */
     private var generation = 0
@@ -143,6 +158,7 @@ class MainActivity : Activity() {
         super.onConfigurationChanged(newConfig)
         if (newConfig.locales == uiLocales) return
         val snapshot = Snapshot(email.text.toString(), secret.text.toString(), secret.transformationMethod == null, wordCount.checkedRadioButtonId)
+        closeDrill(animate = false) // its fields are wiped, not carried over
         hideKeyboard()
         dialog?.dismiss()
         dialog = null
@@ -178,9 +194,18 @@ class MainActivity : Activity() {
         stepAirplane.setOnClickListener { openSettings(Settings.ACTION_AIRPLANE_MODE_SETTINGS) }
         stepWifi.setOnClickListener { openSettings(Settings.ACTION_WIFI_SETTINGS) }
         stepBluetooth.setOnClickListener { openSettings(Settings.ACTION_BLUETOOTH_SETTINGS) }
-        drillBanner = findViewById(R.id.drill_banner)
-        findViewById<View>(R.id.drill_start).setOnClickListener { startDrill() }
-        findViewById<View>(R.id.drill_exit).setOnClickListener { endDrill(passed = false) }
+        drill = findViewById(R.id.drill)
+        drillForm = findViewById(R.id.drill_form)
+        drillEmail = findViewById(R.id.drill_email)
+        drillSecret = findViewById(R.id.drill_secret)
+        drillReveal = findViewById(R.id.drill_reveal)
+        drillCheck = findViewById(R.id.drill_check)
+        drillMismatch = findViewById(R.id.drill_mismatch)
+        drillPassed = findViewById(R.id.drill_passed)
+        findViewById<View>(R.id.drill_start).setOnClickListener { openDrill() }
+        findViewById<View>(R.id.drill_back).setOnClickListener { closeDrill() }
+        findViewById<View>(R.id.drill_return).setOnClickListener { closeDrill() }
+        drillCheck.setOnClickListener { checkDrill() }
         strengthBlock = findViewById(R.id.strength_block)
         strengthTip = findViewById(R.id.strength_tip)
 
@@ -192,22 +217,28 @@ class MainActivity : Activity() {
         if (restore != null) { // before the listeners, so that restoring discards nothing
             email.setText(restore.email)
             secret.setText(restore.secret)
-            if (restore.revealed) toggleReveal()
+            if (restore.revealed) toggleReveal(secret, reveal)
             wordCount.check(restore.words)
         }
-        reveal.setOnClickListener { toggleReveal() }
-        email.afterTextChanged { if (!drilling) discardResult() }
+        reveal.setOnClickListener { toggleReveal(secret, reveal) }
+        drillReveal.setOnClickListener { toggleReveal(drillSecret, drillReveal) }
+        // Any edit of the first inputs discards the phrase, and with it any drill result.
+        email.afterTextChanged { discardResult() }
         secret.afterTextChanged {
-            if (!drilling) discardResult()
+            discardResult()
             showStrength()
         }
+        drillEmail.afterTextChanged { drillMismatch.shown = false }
+        drillSecret.afterTextChanged { drillMismatch.shown = false }
         wordCount.setOnCheckedChangeListener { _, _ -> showPhrase() }
         generate.setOnClickListener { onGenerate() }
         findViewById<View>(R.id.copy).setOnClickListener { copyPhrase() }
         findViewById<View>(R.id.qr).setOnClickListener { showQr() }
+        // "Clear all": both inputs, the phrase, any drill result, and Keyper's own copy on the clipboard.
         findViewById<View>(R.id.clear).setOnClickListener {
+            email.text.clear()
             secret.text.clear()
-            discardResult() // also when the sentence was empty already, which changes no text
+            discardResult() // also when both were empty already, which changes no text
         }
         if (Build.VERSION.SDK_INT >= 33) {
             // The system stores the per-app language, so Keyper itself still stores nothing.
@@ -222,10 +253,6 @@ class MainActivity : Activity() {
         if (restore != null) {
             showStrength()
             showPhrase()
-            if (drilling) {
-                drillBanner.shown = true
-                generate.setText(R.string.drill_check)
-            }
             setBusy(busy)
             radios = null
             checkOffline()
@@ -234,11 +261,18 @@ class MainActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
-        // The timer runs on a clock that stops in deep sleep, so a phrase copied before the phone
-        // slept may have outlived its minute.
-        if (Copied.expired) Copied.clear(clipboard())
         radios = null
         handler.post(pollRadios)
+    }
+
+    /**
+     * In front with window focus, the one place where Keyper can tell its own clip from a newer one:
+     * a copied phrase whose time is up (the timer's clock stops in deep sleep, and a frozen or killed
+     * process misses it) or whose clear could not be verified out of sight leaves the clipboard now.
+     */
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) Copied.onFocus(this)
     }
 
     /**
@@ -250,7 +284,11 @@ class MainActivity : Activity() {
     private fun setUpFields() {
         keyboard = KeyperKeyboard(this, onKey = ::type, onDelete = ::delete, onDone = ::done)
         (keyboardSlot as ViewGroup).addView(keyboard)
-        for ((field, mode) in listOf(email to KeyperKeyboard.Mode.EMAIL, secret to KeyperKeyboard.Mode.SECRET)) {
+        val modes = listOf(
+            email to KeyperKeyboard.Mode.EMAIL, secret to KeyperKeyboard.Mode.SECRET,
+            drillEmail to KeyperKeyboard.Mode.EMAIL, drillSecret to KeyperKeyboard.Mode.SECRET,
+        )
+        for ((field, mode) in modes) {
             field.inputType = InputType.TYPE_NULL
             field.showSoftInputOnFocus = false
             field.filters = arrayOf(InputFilter { source, start, end, _, _, _ ->
@@ -263,17 +301,21 @@ class MainActivity : Activity() {
             field.setOnDragListener { _, _ -> true }
             // Hardware and injected key events never type into it either: only navigation keys pass.
             field.setOnKeyListener { _, keyCode, _ -> keyCode !in NAVIGATION_KEYS }
-            field.setOnFocusChangeListener { _, focused -> if (focused) showKeyboard(field, mode) else if (!email.hasFocus() && !secret.hasFocus()) hideKeyboard() }
+            field.setOnFocusChangeListener { _, focused -> if (focused) showKeyboard(field, mode) else if (fields.none { it.hasFocus() }) hideKeyboard() }
             field.setOnClickListener { showKeyboard(field, mode) }
         }
-        secret.isSingleLine = false // after the input type, which forces a single line
-        secret.minLines = 3
-        secret.setHorizontallyScrolling(false)
-        secret.transformationMethod = PasswordTransformationMethod.getInstance()
+        for (field in listOf(secret, drillSecret)) {
+            field.isSingleLine = false // after the input type, which forces a single line
+            field.minLines = 3
+            field.setHorizontallyScrolling(false)
+            field.transformationMethod = PasswordTransformationMethod.getInstance()
+        }
     }
 
+    private val fields get() = listOf(email, secret, drillEmail, drillSecret)
+
     /** The field the keyboard types into: whichever has focus. */
-    private val target get() = if (email.hasFocus()) email else secret
+    private val target get() = fields.firstOrNull { it.hasFocus() } ?: if (drilling) drillSecret else secret
 
     private fun type(c: Char) {
         val field = target
@@ -289,7 +331,11 @@ class MainActivity : Activity() {
 
     /** "Next" on the email moves to the secret; "done" on the secret closes the keyboard. */
     private fun done() {
-        if (email.hasFocus()) secret.requestFocus() else hideKeyboard()
+        when {
+            email.hasFocus() -> secret.requestFocus()
+            drillEmail.hasFocus() -> drillSecret.requestFocus()
+            else -> hideKeyboard()
+        }
     }
 
     private fun showKeyboard(field: EditText, mode: KeyperKeyboard.Mode) {
@@ -314,12 +360,19 @@ class MainActivity : Activity() {
     /** Back closes the keyboard first (Android 13+; older versions use [onBackPressed]). */
     private val backCloses by lazy { OnBackInvokedCallback { hideKeyboard() } }
 
+    /** Then leaves the drill's page; registered while it is open, under [backCloses]. */
+    private val backLeavesDrill by lazy { OnBackInvokedCallback { closeDrill() } }
+
     // Only Android 12 and older call this: the manifest opts in to OnBackInvokedCallback, which
     // Android 13+ uses instead (backCloses), so no gesture is left unhandled.
     @SuppressLint("GestureBackNavigation")
     @Deprecated("Android 12 and older only; newer versions route Back through backCloses")
     override fun onBackPressed() {
-        if (keyboardSlot.shown) hideKeyboard() else @Suppress("DEPRECATION") super.onBackPressed()
+        when {
+            keyboardSlot.shown -> hideKeyboard()
+            drilling -> closeDrill()
+            else -> @Suppress("DEPRECATION") super.onBackPressed()
+        }
     }
 
     override fun onStop() {
@@ -328,21 +381,16 @@ class MainActivity : Activity() {
         // Leaving the app forgets the secret and the phrase, and stops any derivation in flight. A
         // copied phrase stays on the clipboard until its minute is up: the wallet is where it goes.
         stopDerivation()
-        drilling = false
-        discardResult(keepClipboard = true)
+        discardResult(keepClipboard = true) // closes the drill's page and wipes its fields too
         secret.text.clear()
     }
 
     private fun onGenerate() {
-        if (!offline) return
+        if (!offline || drilling) return // the drill's page covers Generate; a queued click does nothing
         val e = email.text.toString()
         val s = secret.text.toString()
-        if (drilling) {
-            if (fingerprint(e, s).contentEquals(inputs)) endDrill(passed = true) else secret.error = getString(R.string.drill_mismatch)
-            return
-        }
-        if (Keyper.normalizeEmail(e).length < Keyper.MIN_EMAIL_LENGTH) {
-            email.error = getString(R.string.error_email_short, Keyper.MIN_EMAIL_LENGTH)
+        if (!Keyper.isValidEmail(Keyper.normalizeEmail(e))) {
+            email.error = getString(R.string.error_email_invalid)
             return
         }
         val length = Keyper.normalizeSecret(s).length
@@ -375,6 +423,7 @@ class MainActivity : Activity() {
         showProgress(done = 0, total = 1, elapsedMs = 0)
         worker = thread(name = "keyper-derive") {
             val outcome = runCatching {
+                TestHooks.derive?.let { return@runCatching it(email, secret) } // always null in release builds
                 // One derivation per process, even across activity instances: two 1 GiB mappings never coexist.
                 synchronized(DERIVATION) {
                     val start = SystemClock.elapsedRealtime()
@@ -388,13 +437,13 @@ class MainActivity : Activity() {
                 setBusy(false)
                 checkOffline() // going online meanwhile bumps the generation
                 if (id != generation || !offline) {
-                    outcome.getOrNull()?.fill(0)
+                    Wipe.bytes(outcome.getOrNull())
                     return@post
                 }
                 outcome
                     .onSuccess {
                         key = it
-                        inputs = fingerprint(email, secret)
+                        inputs = Keyper.drillFingerprint(it, email, secret)
                         showPhrase()
                         scroll.post { scroll.smoothScrollTo(0, result.top) }
                     }
@@ -465,14 +514,13 @@ class MainActivity : Activity() {
         if (busy) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         generate.isEnabled = offline && !busy
-        secret.isEnabled = offline && !busy
-        email.isEnabled = offline && !busy
+        drillCheck.isEnabled = offline && !busy
+        for (field in fields) field.isEnabled = offline && !busy
         progress.shown = busy
         if (busy || !offline) {
             hideKeyboard()
             // A disabled field keeps its focus and cursor otherwise; the user picks a field again.
-            email.clearFocus()
-            secret.clearFocus()
+            for (field in fields) field.clearFocus()
         }
     }
 
@@ -482,20 +530,19 @@ class MainActivity : Activity() {
      */
     private fun checkOffline() {
         fun global(name: String) = Settings.Global.getInt(contentResolver, name, 0)
-        val airplane = global(Settings.Global.AIRPLANE_MODE_ON) == 1
-        val wifi = global(Settings.Global.WIFI_ON) !in WIFI_OFF_VALUES
-        val bluetooth = bluetoothOn()
-        val now = listOf(airplane, wifi, bluetooth)
+        val now = TestHooks.radios?.invoke() // always null in release builds
+            ?: listOf(global(Settings.Global.AIRPLANE_MODE_ON) == 1, global(Settings.Global.WIFI_ON) !in WIFI_OFF_VALUES, bluetoothOn())
+        val (airplane, wifi, bluetooth) = now
         if (now == radios) return
         radios = now
         offline = airplane && !wifi && !bluetooth
         if (!offline) {
             stopDerivation()
-            drilling = false
+            closeDrill(animate = false) // back on the main page, which shows how to go offline
             hideKeyboard()
             secret.text.clear()
             discardResult()
-            Copied.clear(clipboard()) // even if the phrase on screen was already discarded
+            Copied.clear(this, hasWindowFocus()) // even if the phrase on screen was already discarded
         }
         offlineCard.shown = !offline
         stepAirplane.shown = !airplane
@@ -506,15 +553,18 @@ class MainActivity : Activity() {
         updateControls()
     }
 
-    /** Forgets the phrase; one that was copied leaves the clipboard with it, unless [keepClipboard]. */
+    /**
+     * Forgets the phrase; one that was copied leaves the clipboard with it, unless [keepClipboard].
+     * Nothing is left to drill against either: the drill's page closes, and a result it showed goes.
+     */
     private fun discardResult(keepClipboard: Boolean = false) {
-        if (key != null && !keepClipboard) Copied.clear(clipboard())
-        key?.fill(0)
+        if (key != null && !keepClipboard) Copied.clear(this, hasWindowFocus())
+        Wipe.bytes(key)
         key = null
-        inputs?.fill(0)
+        Wipe.bytes(inputs)
         inputs = null
-        drillBanner.shown = false
-        generate.setText(R.string.generate)
+        closeDrill(animate = false)
+        resetDrill()
         result.shown = false
         words.removeAllViews()
         dialog?.dismiss()
@@ -522,36 +572,103 @@ class MainActivity : Activity() {
     }
 
     /**
-     * Recovery drill: hide the phrase and clear both fields; the user re-enters them from memory,
-     * and the normalised inputs are compared at once, without a second minute-long derivation.
+     * Recovery drill, a page of its own over the main one: both inputs typed again from memory into
+     * fields of its own, which start empty, and compared with the first ones through [inputs] at
+     * once, without a second minute-long derivation. The main page and its phrase stay as they were,
+     * out of sight until the drill's page closes.
      */
-    private fun startDrill() {
+    private fun openDrill() {
+        if (drilling || key == null || !offline || busy) return
         drilling = true
-        result.shown = false
-        email.text.clear()
-        secret.text.clear()
-        drillBanner.shown = true
-        generate.setText(R.string.drill_check)
-        scroll.post { scroll.smoothScrollTo(0, 0) }
-        email.requestFocus()
+        hideKeyboard()
+        email.clearFocus()
+        secret.clearFocus()
+        dialog?.dismiss()
+        dialog = null
+        resetDrill()
+        if (Build.VERSION.SDK_INT >= 33) onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, backLeavesDrill)
+        slide(enter = true, animate = true)
     }
 
-    private fun endDrill(passed: Boolean) {
+    /** Back to the main page, its phrase as it was; whatever was typed in the drill is wiped. */
+    private fun closeDrill(animate: Boolean = true) {
+        if (!drilling) return
         drilling = false
-        drillBanner.shown = false
-        generate.setText(R.string.generate)
-        if (passed) {
-            hideKeyboard()
-            showPhrase()
-            scroll.post { scroll.smoothScrollTo(0, result.top) }
-            Toast.makeText(this, R.string.drill_ok, Toast.LENGTH_LONG).show()
-        } else {
-            discardResult()
-        }
+        hideKeyboard()
+        drillEmail.clearFocus()
+        drillSecret.clearFocus()
+        drillEmail.text.clear()
+        drillSecret.text.clear()
+        if (Build.VERSION.SDK_INT >= 33) onBackInvokedDispatcher.unregisterOnBackInvokedCallback(backLeavesDrill)
+        slide(enter = false, animate = animate)
+        if (!animate) resetDrill()
     }
 
-    private fun fingerprint(email: String, secret: String): ByteArray =
-        MessageDigest.getInstance("SHA-256").digest((Keyper.normalizeEmail(email) + "\n" + Keyper.normalizeSecret(secret)).toByteArray(Charsets.UTF_8))
+    /** The drill's page as it opens: empty fields, the sentence masked, no result. */
+    private fun resetDrill() {
+        drillEmail.text.clear()
+        drillSecret.text.clear()
+        if (drillSecret.transformationMethod !is PasswordTransformationMethod) toggleReveal(drillSecret, drillReveal)
+        drillForm.shown = true
+        drillMismatch.shown = false
+        drillPassed.shown = false
+        drill.findViewById<ScrollView>(R.id.drill_scroll).scrollTo(0, 0)
+    }
+
+    private fun checkDrill() {
+        checkOffline() // the radios afresh: going online closes the drill
+        if (!offline || !drilling) return
+        val first = inputs ?: return
+        val k = key ?: return
+        val typed = Keyper.drillFingerprint(k, drillEmail.text.toString(), drillSecret.text.toString())
+        val match = MessageDigest.isEqual(typed, first) // in constant time
+        Wipe.bytes(typed)
+        if (!match) {
+            drillMismatch.shown = true
+            return
+        }
+        hideKeyboard()
+        drillEmail.clearFocus()
+        drillSecret.clearFocus()
+        drillEmail.text.clear()
+        drillSecret.text.clear()
+        drillForm.shown = false
+        drillPassed.shown = true
+    }
+
+    /** The drill's page slides in from the end over the main page, which moves aside a little, and back out. */
+    private fun slide(enter: Boolean, animate: Boolean) {
+        scroll.animate().cancel()
+        drill.animate().cancel()
+        if (!animate) {
+            scroll.translationX = 0f
+            drill.translationX = 0f
+            scroll.shown = !enter
+            drill.shown = enter
+            return
+        }
+        val width = (drill.parent as View).width.toFloat()
+        val toEnd = if (drill.layoutDirection == View.LAYOUT_DIRECTION_RTL) -width else width
+        if (enter) {
+            if (!drill.shown) drill.translationX = toEnd
+            drill.shown = true
+        } else {
+            if (!scroll.shown) scroll.translationX = -toEnd / 4
+            scroll.shown = true
+        }
+        val interpolator = DecelerateInterpolator(1.5f)
+        scroll.animate().translationX(if (enter) -toEnd / 4 else 0f).setDuration(SLIDE_MS).setInterpolator(interpolator).start()
+        drill.animate().translationX(if (enter) 0f else toEnd).setDuration(SLIDE_MS).setInterpolator(interpolator).withEndAction {
+            // Only one page at a time afterwards, so that nothing on the other one can be reached.
+            if (enter) {
+                scroll.shown = false
+                drillEmail.requestFocus()
+            } else {
+                drill.shown = false
+                resetDrill()
+            }
+        }.start()
+    }
 
     private fun wordsWanted() = if (wordCount.checkedRadioButtonId == R.id.words24) 24 else 12
 
@@ -559,7 +676,6 @@ class MainActivity : Activity() {
     private fun phrase(): List<String>? = key?.let { Keyper.mnemonic(it, wordsWanted()) }
 
     private fun showPhrase() {
-        if (drilling) return // the phrase stays hidden until the drill passes, whatever is toggled meanwhile
         val list = phrase() ?: return
         words.removeAllViews()
         val cells = list.mapIndexed { i, word -> wordCell(i + 1, word).also(words::addView) }
@@ -594,61 +710,34 @@ class MainActivity : Activity() {
         }
     }
 
+    /**
+     * The first copy in each session (this process's lifetime; nothing is stored) first warns that
+     * keyboards and clipboard history may keep a copy Keyper cannot erase, and offers the QR code.
+     * Only an actual copy counts: after choosing the QR code instead, the next Copy warns again.
+     */
     private fun copyPhrase() {
         checkOffline() // the radios afresh, not as last polled: the phrase leaves Keyper only offline
+        if (!offline || phrase() == null) return
+        if (Copied.warned) return copyNow()
+        dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.copy_warning_title)
+            .setMessage(R.string.copy_warning_message)
+            .setPositiveButton(R.string.copy_warning_copy) { _, _ -> copyNow() }
+            .setNegativeButton(R.string.copy_warning_qr) { _, _ -> showQr() }
+            .create()
+            .showSecure()
+    }
+
+    private fun copyNow() {
+        checkOffline() // the warning may have stayed open while the radios changed
         if (!offline) return
         val words = phrase() ?: return
         val clip = ClipData.newPlainText(getString(R.string.result_title), words.joinToString(" "))
         // Keeps the phrase out of clipboard previews on Android 13+.
         clip.description.extras = PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE", true) }
-        Copied.copy(clipboard(), clip)
+        Copied.copy(this, clip)
+        Copied.warned = true
         Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()
-    }
-
-    /** The application-scoped clipboard, so that the timer clearing it may outlive the activity. */
-    private fun clipboard() = applicationContext.getSystemService(ClipboardManager::class.java)
-
-    /**
-     * The phrase Keyper last copied, while it may still be on the clipboard. It is cleared after a
-     * minute, when the phone goes online and when the phrase is discarded, but not when the user
-     * leaves Keyper: they copy, then switch to the wallet to paste. Process-wide, like the timer,
-     * so that a new instance of the screen still knows about it. Main thread only.
-     */
-    private object Copied {
-        private val handler = Handler(Looper.getMainLooper())
-        private var label: CharSequence? = null
-        /** The clip's own timestamp, read back once set: tells this copy from a later one with the same label. */
-        private var stamp = 0L
-        /** SystemClock.elapsedRealtime(), which keeps counting in deep sleep; the timer's clock does not. */
-        private var at = 0L
-        private var timer: Runnable? = null
-
-        val expired get() = label != null && SystemClock.elapsedRealtime() - at >= CLIPBOARD_MS
-
-        fun copy(clipboard: ClipboardManager, clip: ClipData) {
-            clipboard.setPrimaryClip(clip)
-            label = clip.description.label
-            stamp = clipboard.primaryClipDescription?.timestamp ?: 0
-            at = SystemClock.elapsedRealtime()
-            timer?.let(handler::removeCallbacks)
-            timer = Runnable { clear(clipboard) }.also { handler.postDelayed(it, CLIPBOARD_MS) }
-        }
-
-        /**
-         * Clears the clipboard unless it demonstrably holds something else. Only the description
-         * is read: reading another app's clip would make Android 12+ announce that Keyper pasted
-         * from it. Since Android 10 only the app in front may read even that; out of sight
-         * Keyper cannot tell, and clears to be safe, as the timer always has.
-         */
-        fun clear(clipboard: ClipboardManager) {
-            val ours = label ?: return
-            timer?.let(handler::removeCallbacks)
-            timer = null
-            label = null
-            val now = clipboard.primaryClipDescription
-            if (now != null && (now.label?.toString() != ours.toString() || (stamp != 0L && now.timestamp != stamp))) return
-            if (Build.VERSION.SDK_INT >= 28) clipboard.clearPrimaryClip() else clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
-        }
     }
 
     private fun showQr() {
@@ -722,11 +811,11 @@ class MainActivity : Activity() {
         else -> getString(R.string.money, compact.format(dollars))
     }
 
-    private fun toggleReveal() {
-        val hidden = secret.transformationMethod is PasswordTransformationMethod
-        secret.transformationMethod = if (hidden) null else PasswordTransformationMethod.getInstance()
-        secret.setSelection(secret.text.length)
-        reveal.setText(if (hidden) R.string.hide else R.string.show)
+    private fun toggleReveal(field: EditText, button: TextView) {
+        val hidden = field.transformationMethod is PasswordTransformationMethod
+        field.transformationMethod = if (hidden) null else PasswordTransformationMethod.getInstance()
+        field.setSelection(field.text.length)
+        button.setText(if (hidden) R.string.hide else R.string.show)
     }
 
     private fun showError(error: Throwable) {
@@ -777,7 +866,7 @@ class MainActivity : Activity() {
         val TEST_DOMAIN = ByteArray(32) { it.toByte() }
         val DERIVATION = Any()
         const val CELL_MARGIN_DP = 3
-        const val CLIPBOARD_MS = 60_000L
+        const val SLIDE_MS = 280L
         val NO_MENU = object : ActionMode.Callback {
             override fun onCreateActionMode(mode: ActionMode, menu: Menu) = false
             override fun onPrepareActionMode(mode: ActionMode, menu: Menu) = false

@@ -17,7 +17,8 @@
     <string name="secret_label">Secret sentence</string>
     <string name="secret_hint">A sentence only you know</string>
     <string name="secret_hint_offline">Available once offline</string>
-    <string name="secret_rule">Capitals, symbols and the spaces between words all count here. The email ignores them.</string>
+    <string name="secret_rule">Capitals, symbols and the spaces between words all count here.</string>
+    <string name="email_rule">Must be a valid address. Capitals don’t matter; every other character does.</string>
     <string name="show">Show</string>
     <string name="hide">Hide</string>
 
@@ -41,14 +42,20 @@
     <string name="result_title">Recovery phrase</string>
     <string name="copy">Copy</string>
     <string name="qr">QR code</string>
-    <string name="clear">Clear</string>
-    <string name="copied">Copied; cleared in 60 seconds</string>
+    <string name="copy_warning_title">Copy to the clipboard?</string>
+    <string name="copy_warning_message">Keyboards and clipboard history may keep their own copy, which Keyper cannot erase. The QR code avoids the clipboard.</string>
+    <string name="copy_warning_copy">Copy</string>
+    <string name="copy_warning_qr">Show QR code</string>
+    <string name="clear">Clear all</string>
+    <string name="copied">Copied. Keyper clears it after 60 seconds while open.</string>
     <string name="drill_start">First time? Do a recovery drill  ›</string>
-    <string name="drill_banner">Recovery drill: type the email and the sentence again, from memory</string>
+    <string name="drill_title">Recovery drill</string>
+    <string name="drill_back">Back</string>
+    <string name="drill_subtitle">Type both again from memory.</string>
     <string name="drill_check">Check</string>
-    <string name="drill_exit">Exit</string>
-    <string name="drill_ok">They match: this phrase can be recovered</string>
-    <string name="drill_mismatch">Not the same as before</string>
+    <string name="drill_ok">Verification passed. Your inputs match.</string>
+    <string name="drill_mismatch">These don’t match what you entered first.</string>
+    <string name="drill_return">Back to the phrase</string>
     <string name="qr_caption">Tap to close</string>
 
     <string name="weak_title">Easy to crack</string>
@@ -56,7 +63,7 @@
     <string name="weak_edit">Edit</string>
     <string name="weak_continue">Generate anyway</string>
 
-    <string name="error_email_short" tools:ignore="PluralsCandidate">At least %1$d English letters or digits</string>
+    <string name="error_email_invalid">Not a valid email address</string>
     <string name="key_space">space</string>
     <string name="key_done">Done</string>
     <string name="key_next">Next</string>

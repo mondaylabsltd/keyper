@@ -26,6 +26,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Android 8 and 9 only, see Copied: a clipboard clear scheduled with the system. Only the
+             system may bind it; a job adds no uses-permission. -->
+        <service
+            android:name=".ClearJob"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 
 </manifest>

@@ -20,6 +20,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -49,4 +50,17 @@ android {
 dependencies {
     implementation(project(":core"))
     testImplementation(libs.junit)
+    // The instrumented tests that back the website's claims (src/androidTest). Test APK only:
+    // the app itself still depends on nothing but :core.
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.espresso.core)
+}
+
+// The clipboard tests that need Keyper's process frozen and killed live in :backgroundtest, whose
+// instrumentation runs beside Keyper rather than inside it; they run with this task, so that one
+// command (and CI) covers both.
+tasks.matching { it.name == "connectedDebugAndroidTest" }.configureEach {
+    finalizedBy(":backgroundtest:connectedDebugAndroidTest")
 }

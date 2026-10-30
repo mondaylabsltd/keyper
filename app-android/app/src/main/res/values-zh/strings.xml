@@ -15,7 +15,8 @@
     <string name="secret_label">记忆文本</string>
     <string name="secret_hint">只有你知道的一句话，可用英文或拼音</string>
     <string name="secret_hint_offline">断网后可输入</string>
-    <string name="secret_rule">这里大小写、符号和词之间的空格都算数；邮箱则忽略这些。</string>
+    <string name="secret_rule">这里大小写、符号和词之间的空格都算数。</string>
+    <string name="email_rule">须是有效的邮箱地址。不分大小写，其他字符都算数。</string>
     <string name="show">显示</string>
     <string name="hide">隐藏</string>
 
@@ -39,14 +40,20 @@
     <string name="result_title">助记词</string>
     <string name="copy">复制</string>
     <string name="qr">二维码</string>
-    <string name="clear">清除</string>
-    <string name="copied">已复制，60 秒后清空</string>
+    <string name="copy_warning_title">复制到剪贴板？</string>
+    <string name="copy_warning_message">输入法和剪贴板历史可能另存一份，Keyper 无法清除。用二维码可以完全不经过剪贴板。</string>
+    <string name="copy_warning_copy">复制</string>
+    <string name="copy_warning_qr">显示二维码</string>
+    <string name="clear">全部清除</string>
+    <string name="copied">已复制。Keyper 打开时会在 60 秒后清除。</string>
     <string name="drill_start">首次使用？做一次恢复演练  ›</string>
-    <string name="drill_banner">恢复演练：请凭记忆重新输入邮箱和记忆文本</string>
+    <string name="drill_title">恢复演练</string>
+    <string name="drill_back">返回</string>
+    <string name="drill_subtitle">凭记忆再输一遍。</string>
     <string name="drill_check">核对</string>
-    <string name="drill_exit">退出</string>
-    <string name="drill_ok">一致：这组助记词可以恢复</string>
-    <string name="drill_mismatch">和刚才的输入不一致</string>
+    <string name="drill_ok">验证通过，两次输入一致。</string>
+    <string name="drill_mismatch">与第一次输入的不一致。</string>
+    <string name="drill_return">返回助记词</string>
     <string name="qr_caption">轻触关闭</string>
 
     <string name="weak_title">这句话容易被破解</string>
@@ -54,7 +61,7 @@
     <string name="weak_edit">修改</string>
     <string name="weak_continue">仍然生成</string>
 
-    <string name="error_email_short" tools:ignore="PluralsCandidate">至少需要 %1$d 个英文字母或数字</string>
+    <string name="error_email_invalid">不是有效的邮箱地址</string>
     <string name="key_space">空格</string>
     <string name="key_done">完成</string>
     <string name="key_next">下一项</string>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Keyper's strings, read to find its keys (package visibility, Android 11+). -->
+    <queries>
+        <package android:name="app.getkeyper.private" />
+    </queries>
+
+    <application android:label="Keyper background tests">
+        <!-- The window the tests bring to the front to read the clipboard, which since Android 10
+             only the focused app may do: never Keyper, whose return to the front would clear. -->
+        <activity android:name=".ClipReader" android:exported="false" />
+    </application>
+</manifest>

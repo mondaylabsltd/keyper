@@ -23,4 +23,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Keyper"
-include(":core", ":app")
+include(":core", ":app", ":backgroundtest")

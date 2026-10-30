@@ -61,6 +61,12 @@
         <item name="android:stateListAnimator">@null</item>
     </style>
 
+    <!-- TonalButton's size and type, in the primary colours: the one action a row recommends. -->
+    <style name="PrimaryButton" parent="TonalButton">
+        <item name="android:background">@drawable/bg_button_primary</item>
+        <item name="android:textColor">@color/button_primary_text</item>
+    </style>
+
     <style name="Segment">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">match_parent</item>
