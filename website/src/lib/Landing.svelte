@@ -6,17 +6,12 @@
 
 	let { c }: { c: Content } = $props();
 
-	const spec = repoFile('SPEC.md');
-	const security = repoFile('SECURITY.md');
-
-	// 24-pixel line icons for the six protections, in the order of c.features.items, as path data.
+	// Line icons for the four risk boundaries, in the order of c.security.items.
 	const icons = [
-		'M4.5 6h15a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zM6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7.5 14h9',
-		'M2 8.8a15 15 0 0 1 4.2-2.6M9.5 5.2A15 15 0 0 1 22 8.8M5 12.5a10 10 0 0 1 3.5-2M12.5 9.6a10 10 0 0 1 6.5 2.9M8.5 16a5 5 0 0 1 7 0M12 19.5h.01M3 3l18 18',
 		'M5 5.5a7 2.5 0 1 0 14 0a7 2.5 0 1 0-14 0M5 5.5v13c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-13M5 12c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5M3 3l18 18',
-		'M3 3l18 18M10.6 6.1A10 10 0 0 1 12 6c5 0 9 4.5 10 6a17 17 0 0 1-3 3.6M6.6 6.6C4.4 8 2.8 10.3 2 12c1 1.5 5 6 10 6a9.5 9.5 0 0 0 4.4-1.1M9.9 9.9a3 3 0 0 0 4.2 4.2',
-		'M17 2l3 3-3 3M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3M20 13v2a4 4 0 0 1-4 4H4',
-		'M9 4.5H7a2 2 0 0 0-2 2V19a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6.5a2 2 0 0 0-2-2h-2M9 3h6v3H9zM12 11v3l2 2'
+		'M12 3L2 21h20L12 3zM12 9v5M12 17h.01',
+		'M2 8.8a15 15 0 0 1 4.2-2.6M9.5 5.2A15 15 0 0 1 22 8.8M5 12.5a10 10 0 0 1 3.5-2M12.5 9.6a10 10 0 0 1 6.5 2.9M8.5 16a5 5 0 0 1 7 0M12 19.5h.01M3 3l18 18',
+		'M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3zM9 9l6 6M15 9l-6 6'
 	];
 </script>
 
@@ -32,7 +27,6 @@
 			<a href="#how">{c.nav.how}</a>
 			<a href="#security">{c.nav.security}</a>
 			<a href="#pricing">{c.nav.pricing}</a>
-			<a href="#faq">{c.nav.faq}</a>
 			{#if site.repository}<a href={site.repository} rel="external">{c.nav.source}</a>{/if}
 			<a
 				class="pill"
@@ -47,14 +41,12 @@
 <main id="main">
 	<section class="hero wrap">
 		<div class="hero-text">
-			<p class="eyebrow">{c.hero.eyebrow}</p>
 			<h1>{c.hero.title}</h1>
 			<p class="lead">{c.hero.lead}</p>
 			<div class="actions">
 				<a class="button primary" href="#pricing">{c.hero.primary}</a>
 				<a class="button tonal" href="#how">{c.hero.secondary}</a>
 			</div>
-			<p class="note">{c.hero.note}</p>
 		</div>
 		<div class="hero-phones">
 			{#each c.shots as shot, i (shot.src)}
@@ -69,10 +61,6 @@
 			{/each}
 		</div>
 	</section>
-
-	<ul class="facts wrap" aria-label="Keyper">
-		{#each c.facts as fact (fact)}<li>{fact}</li>{/each}
-	</ul>
 
 	<section id="how" class="section wrap">
 		<h2>{c.how.title}</h2>
@@ -139,7 +127,6 @@
 					>{/if}
 			</p>
 		</div>
-		<p class="warning">{c.security.warning}</p>
 		<ul class="features">
 			{#each c.security.items as item, i (item.title)}
 				<li>
@@ -151,33 +138,6 @@
 				</li>
 			{/each}
 		</ul>
-	</section>
-
-	<section class="section wrap">
-		<h2>{c.open.title}</h2>
-		<ul class="open">
-			{#each c.open.items as item (item.title)}
-				<li>
-					<h3>{item.title}</h3>
-					<p>{item.text}</p>
-					{#if item.link && repoFile(item.link.path)}
-						<a class="more" href={repoFile(item.link.path)} rel="external"
-							>{item.link.label} →</a
-						>
-					{/if}
-				</li>
-			{/each}
-		</ul>
-		<p class="caption">{c.open.requirements}</p>
-		{#if site.repository}
-			<div class="actions">
-				{#if spec}<a class="button tonal" href={spec} rel="external">{c.open.spec}</a>{/if}
-				{#if security}<a class="button tonal" href={security} rel="external"
-						>{c.open.security}</a
-					>{/if}
-				<a class="button tonal" href={site.repository} rel="external">{c.open.source}</a>
-			</div>
-		{/if}
 	</section>
 
 	<section id="pricing" class="section wrap">
@@ -337,14 +297,6 @@
 		padding-block: 72px 40px;
 	}
 
-	.eyebrow {
-		color: var(--accent);
-		font-weight: 600;
-		font-size: 14px;
-		letter-spacing: 0.02em;
-		margin-bottom: 16px;
-	}
-
 	h1 {
 		text-wrap: balance;
 		font-size: clamp(38px, 5.6vw, 64px);
@@ -397,12 +349,6 @@
 		color: var(--accent);
 	}
 
-	.note {
-		margin-top: 16px;
-		font-size: 14px;
-		color: var(--text-tertiary);
-	}
-
 	.hero-phones {
 		position: relative;
 		display: grid;
@@ -452,27 +398,6 @@
 		.hero-phones::before {
 			inset: 10% 0 0;
 		}
-	}
-
-	/* Facts */
-	.facts {
-		list-style: none;
-		padding: 0;
-		margin-block: 24px 0;
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 10px;
-	}
-
-	.facts li {
-		background: var(--surface);
-		border: 1px solid var(--outline);
-		border-radius: 999px;
-		padding: 6px 16px;
-		font-size: 14px;
-		font-weight: 500;
-		color: var(--text-secondary);
 	}
 
 	/* Sections */
@@ -687,16 +612,6 @@
 		font-size: 15px;
 	}
 
-	.warning {
-		margin-top: 20px;
-		background: var(--danger-soft);
-		color: var(--text);
-		border-radius: 14px;
-		padding: 18px 20px;
-		font-size: 16px;
-		border-left: 4px solid var(--danger);
-	}
-
 	@media (max-width: 560px) {
 		th,
 		td {
@@ -715,7 +630,7 @@
 		padding: 0;
 		margin: 64px 0 0;
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(2, 1fr);
 		gap: 40px 48px;
 	}
 
@@ -766,45 +681,6 @@
 		margin-top: 16px;
 		color: var(--text-tertiary);
 		font-size: 15px;
-	}
-
-	/* Open */
-	.open {
-		list-style: none;
-		padding: 0;
-		margin: 40px 0 0;
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 32px 40px;
-	}
-
-	.open li {
-		display: grid;
-		align-content: start;
-		gap: 8px;
-		padding-left: 18px;
-		border-left: 3px solid var(--gold-end);
-	}
-
-	.open p {
-		color: var(--text-secondary);
-		font-size: 16px;
-	}
-
-	.more {
-		font-size: 15px;
-		font-weight: 600;
-		text-decoration: none;
-	}
-
-	.more:hover {
-		text-decoration: underline;
-	}
-
-	@media (max-width: 860px) {
-		.open {
-			grid-template-columns: 1fr;
-		}
 	}
 
 	/* Pricing */

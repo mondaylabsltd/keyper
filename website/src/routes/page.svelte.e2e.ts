@@ -8,8 +8,8 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const [path, lang, heading] of [
-	['/', 'en', 'A recovery phrase you keep in your head.'],
-	['/zh', 'zh-Hans', '记在脑子里的助记词。']
+	['/', 'en', 'Recovery doesn’t have to depend on paper.'],
+	['/zh', 'zh-Hans', '助记词，不必只靠一张纸。']
 ] as const) {
 	test(`${path} renders in ${lang} and loads nothing else from elsewhere`, async ({
 		page,
@@ -28,7 +28,7 @@ for (const [path, lang, heading] of [
 		await expect(page.locator('html')).toHaveAttribute('lang', lang);
 		await expect(page.locator('h1')).toHaveText(heading);
 		await expect(page.locator('#how')).toBeVisible();
-		await expect(page.locator('#faq details')).toHaveCount(7);
+		await expect(page.locator('#faq details')).toHaveCount(4);
 		await expect(page.locator(`script[src^="${analytics}"]`)).toHaveCount(1);
 		expect(elsewhere).toEqual([]);
 		expect(blocked).toEqual([]);
