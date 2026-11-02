@@ -27,6 +27,9 @@ for (const [path, lang, heading] of [
 		await page.goto(path, { waitUntil: 'networkidle' });
 		await expect(page.locator('html')).toHaveAttribute('lang', lang);
 		await expect(page.locator('h1')).toHaveText(heading);
+		await expect(page.locator('main > section').nth(1)).toHaveAttribute('id', 'why');
+		await expect(page.locator('#why .origin-reasons article')).toHaveCount(2);
+		await expect(page.locator('#why .origin-tension')).toBeVisible();
 		await expect(page.locator('#how')).toBeVisible();
 		await expect(page.locator('#faq details')).toHaveCount(4);
 		await expect(page.locator(`script[src^="${analytics}"]`)).toHaveCount(1);

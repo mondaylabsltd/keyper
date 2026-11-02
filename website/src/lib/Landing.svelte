@@ -62,6 +62,31 @@
 		</div>
 	</section>
 
+	<section id="why" class="section wrap origin" aria-labelledby="why-title">
+		<h2 id="why-title">{c.origin.title}</h2>
+		<div class="origin-reasons">
+			{#each c.origin.reasons as reason (reason.title)}
+				<article>
+					<h3>{reason.title}</h3>
+					<p>{reason.text}</p>
+					{#if reason.link}<a href={reason.link.url} rel="external"
+							>{reason.link.label} ↗</a
+						>{/if}
+				</article>
+			{/each}
+		</div>
+		<aside class="origin-tension" aria-labelledby="tension-title">
+			<h3 id="tension-title">{c.origin.tension.title}</h3>
+			<p>{c.origin.tension.text}</p>
+			<p class="history">
+				{c.origin.tension.history}
+				<a href={c.origin.tension.link.url} rel="external"
+					>{c.origin.tension.link.label} ↗</a
+				>
+			</p>
+		</aside>
+	</section>
+
 	<section id="how" class="section wrap">
 		<h2>{c.how.title}</h2>
 		<div
@@ -432,6 +457,64 @@
 
 	.mono {
 		font-family: var(--mono);
+	}
+
+	.origin-reasons {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 40px 48px;
+		margin-top: 36px;
+	}
+	.origin-reasons p,
+	.origin-tension p {
+		margin-top: 12px;
+		color: var(--text-secondary);
+		font-size: 16px;
+		line-height: 1.8;
+	}
+	.origin-reasons a,
+	.origin-tension a {
+		font-size: 14px;
+		text-underline-offset: 3px;
+	}
+	.origin-reasons a {
+		display: inline-block;
+		margin-top: 12px;
+	}
+	.origin-tension {
+		margin-top: 32px;
+		padding: 24px 28px;
+		background: var(--surface);
+		border: 1px solid var(--outline);
+		border-left: 4px solid var(--gold-end);
+		border-radius: var(--radius);
+	}
+	.origin-tension h3 {
+		font-size: 22px;
+	}
+	.origin-tension .history {
+		font-size: 14px;
+	}
+	@media (max-width: 700px) {
+		.origin-reasons {
+			grid-template-columns: 1fr;
+			gap: 24px;
+			margin-top: 28px;
+		}
+		.origin-tension {
+			padding: 20px;
+			margin-top: 28px;
+		}
+		.origin-tension h3 {
+			font-size: 20px;
+		}
+		.origin-reasons p,
+		.origin-tension p {
+			font-size: 15px;
+		}
+		.origin-tension .history {
+			font-size: 13px;
+		}
 	}
 
 	/* Flow */

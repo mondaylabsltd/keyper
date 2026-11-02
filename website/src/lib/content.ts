@@ -19,6 +19,16 @@ export interface Content {
 		secondary: string;
 	};
 	shots: { src: string; alt: string }[];
+	origin: {
+		title: string;
+		reasons: { title: string; text: string; link?: { label: string; url: string } }[];
+		tension: {
+			title: string;
+			text: string;
+			history: string;
+			link: { label: string; url: string };
+		};
+	};
 	how: {
 		title: string;
 		steps: { title: string; text: string }[];
@@ -93,6 +103,33 @@ export const en: Content = {
 			alt: 'Public example recovery words in Keyper; never use them to hold assets'
 		}
 	],
+	origin: {
+		title: 'Why build Keyper?',
+		reasons: [
+			{
+				title: 'A recovery phrase backup still needs safekeeping.',
+				text: 'Paper and steel backups can be lost or stolen. Even if the original is still there, it can be hard to tell whether someone has copied it.'
+			},
+			{
+				title: 'Device random-number generation can fail.',
+				text: 'A firmware defect caused Coldcard to generate weakened seeds. Keyper derives recovery words from user inputs rather than fresh device-generated randomness for each wallet. You can check the result with a separate implementation, but that does not prove the inputs are hard to guess.',
+				link: {
+					label: 'Coldcard’s official incident advisory',
+					url: 'https://blog.coinkite.com/coldcard-mk3-seed-generation-warning/'
+				}
+			}
+		],
+		tension: {
+			title: 'Human-chosen sentences can still be guessed.',
+			text: 'Keyper remains a brainwallet. Email salt and Argon2id increase guessing costs, but length and a strength score cannot establish the actual strength of a sentence you choose.',
+			history:
+				'Researchers identified 884 brainwallets, of which 863 were drained, some within minutes of funding. These historical samples cannot be used to estimate Keyper’s theft rate.',
+			link: {
+				label: 'Read the original study',
+				url: 'https://discovery.ucl.ac.uk/id/eprint/10154816/'
+			}
+		}
+	},
 	how: {
 		title: 'Recover without finding that piece of paper.',
 		steps: [
@@ -228,6 +265,33 @@ export const zh: Content = {
 		},
 		{ src: '/screens/zh-result.png', alt: 'Keyper 生成的公开示例助记词，请勿用于存放资产' }
 	],
+	origin: {
+		title: '为什么做 Keyper？',
+		reasons: [
+			{
+				title: '备份助记词，还得考虑怎么保存。',
+				text: '纸条和钢板都有丢失、被盗的可能。即使原件还在，也不容易确认是否被人复制过。'
+			},
+			{
+				title: '设备的随机数生成也可能出错。',
+				text: 'Coldcard 曾因固件缺陷生成强度不足的种子。Keyper 根据用户输入推导助记词，不依赖设备为每个钱包生成新的随机数。你可以用独立实现核对结果，但这不能证明输入足够难猜。',
+				link: {
+					label: 'Coldcard 官方事故公告',
+					url: 'https://blog.coinkite.com/coldcard-mk3-seed-generation-warning/'
+				}
+			}
+		],
+		tension: {
+			title: '自选句子仍有被猜中的风险。',
+			text: 'Keyper 仍属于脑钱包。邮箱盐和 Argon2id 增加了猜测成本，但自选句子的实际强度无法靠长度或评分确定。',
+			history:
+				'研究人员曾识别出 884 个脑钱包，其中 863 个被清空，有些在入金后几分钟就被转走。这些历史样本不能用来估计 Keyper 的被盗率。',
+			link: {
+				label: '阅读原始研究',
+				url: 'https://discovery.ucl.ac.uk/id/eprint/10154816/'
+			}
+		}
+	},
 	how: {
 		title: '恢复时，不必翻找那张纸。',
 		steps: [
