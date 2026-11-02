@@ -29,7 +29,7 @@ android {
         applicationId = "app.getkeyper.private"
         minSdk = 27 // android.os.SharedMemory
         targetSdk = 36
-        versionCode = 2
+        versionCode = 3
         versionName = "1.0.1"
         buildConfigField("String", "BUILD_REVISION", "\"$buildRevision\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
