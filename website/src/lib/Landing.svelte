@@ -84,6 +84,10 @@
 					>{c.origin.tension.link.label} ↗</a
 				>
 			</p>
+			<div class="origin-fit">
+				<h3>{c.origin.fit.title}</h3>
+				<p>{c.origin.fit.text}</p>
+			</div>
 		</aside>
 	</section>
 
@@ -492,6 +496,12 @@
 	.origin-tension h3 {
 		font-size: 22px;
 	}
+	.origin-fit {
+		margin-top: 20px;
+		padding-top: 20px;
+		border-top: 1px solid var(--outline);
+	}
+
 	.origin-tension .history {
 		font-size: 14px;
 	}

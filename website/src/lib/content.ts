@@ -28,6 +28,7 @@ export interface Content {
 			history: string;
 			link: { label: string; url: string };
 		};
+		fit: { title: string; text: string };
 	};
 	how: {
 		title: string;
@@ -79,120 +80,124 @@ export const en: Content = {
 	meta: {
 		title: 'Keyper · Recovery doesn’t have to depend on paper.',
 		description:
-			'Generate BIP39 recovery words from your email and a secret sentence on an offline phone. Same inputs, same words. See how Keyper changes backup and recovery, and the responsibility that comes with remembering. Open source, for Android and iPhone.'
+			'Create a BIP39 recovery phrase from your email address and a secret sentence, on an offline phone. The same email and sentence give you the same phrase. Open source, for Android and iPhone.'
 	},
 	nav: {
-		how: 'How to use',
+		how: 'How to use it',
 		security: 'Security & risks',
 		pricing: 'Get Keyper',
 		source: 'View source ↗'
 	},
 	hero: {
 		title: 'Recovery doesn’t have to depend on paper.',
-		lead: 'Generate recovery words from your email and a sentence you remember on an offline device. Enter the same inputs later to get the same words again.',
+		lead: 'Create a wallet recovery phrase from your email address and a secret sentence, on an offline phone. Use the same email and sentence later to get the same phrase again.',
 		primary: 'Get Keyper',
 		secondary: 'See how recovery works'
 	},
 	shots: [
 		{
 			src: '/screens/en-input.png',
-			alt: 'Keyper email and sentence fields with public demo data; strength and cost are model estimates'
+			alt: 'Keyper email and secret sentence fields. Public example; strength and cost numbers are estimates.'
 		},
 		{
 			src: '/screens/en-result.png',
-			alt: 'Public example recovery words in Keyper; never use them to hold assets'
+			alt: 'A public example of a 12-word recovery phrase in Keyper. Do not use these words for funds.'
 		}
 	],
 	origin: {
 		title: 'Why build Keyper?',
 		reasons: [
 			{
-				title: 'A recovery phrase backup still needs safekeeping.',
-				text: 'Paper and steel backups can be lost or stolen. Even if the original is still there, it can be hard to tell whether someone has copied it.'
+				title: 'You still need to keep your backup safe.',
+				text: 'A paper or steel backup can be lost or stolen. You may not know if someone has copied it, even if you still have the original.'
 			},
 			{
-				title: 'Device random-number generation can fail.',
-				text: 'A firmware defect caused Coldcard to generate weakened seeds. Keyper derives recovery words from user inputs rather than fresh device-generated randomness for each wallet. You can check the result with a separate implementation, but that does not prove the inputs are hard to guess.',
+				title: 'Random number generation can go wrong.',
+				text: 'A software bug caused Coldcard to create recovery phrases that were easier to guess. Keyper uses your email and secret sentence instead of new random numbers for each wallet. Another program can check that it gives you the same phrase. That does not prove your sentence is hard to guess.',
 				link: {
-					label: 'Coldcard’s official incident advisory',
+					label: 'Read Coldcard’s official security notice',
 					url: 'https://blog.coinkite.com/coldcard-mk3-seed-generation-warning/'
 				}
 			}
 		],
 		tension: {
-			title: 'Human-chosen sentences can still be guessed.',
-			text: 'Keyper remains a brainwallet. Email salt and Argon2id increase guessing costs, but length and a strength score cannot establish the actual strength of a sentence you choose.',
+			title: 'Someone may still guess the sentence you choose.',
+			text: 'Keyper is still a brainwallet: it creates a recovery phrase from a secret you remember. Your email helps separate your result from other people’s. Argon2id makes each guess more costly to run. A long sentence or a high app score does not prove that your sentence is hard to guess.',
 			history:
-				'Researchers identified 884 brainwallets, of which 863 were drained, some within minutes of funding. These historical samples cannot be used to estimate Keyper’s theft rate.',
+				'In one study, researchers found 884 brainwallets. Of these, 863 were emptied, some within minutes of receiving funds. This study does not show how often theft would happen with Keyper.',
 			link: {
 				label: 'Read the original study',
 				url: 'https://discovery.ucl.ac.uk/id/eprint/10154816/'
 			}
+		},
+		fit: {
+			title: 'Is Keyper right for you?',
+			text: 'You need a secret created using a reliable random process. You also need to remember it exactly for years. If you cannot do both, use a trusted wallet that creates a random recovery phrase, and keep a safe backup.'
 		}
 	},
 	how: {
 		title: 'Recover without finding that piece of paper.',
 		steps: [
 			{
-				title: 'Prepare a trusted offline device',
-				text: 'Enable airplane mode and disable Wi-Fi and Bluetooth in Settings. Another Android phone or iPhone can generate the words again.'
+				title: 'Take a trusted phone offline',
+				text: 'Turn on airplane mode. Turn off Wi-Fi and Bluetooth in Settings. You can use another Android phone or iPhone to create the same recovery phrase.'
 			},
 			{
-				title: 'Enter your original email and sentence',
-				text: 'Use the app’s own keyboard. Keep the email, capitalization, and punctuation exact.'
+				title: 'Enter the same email and secret sentence',
+				text: 'Use Keyper’s own keyboard. Type the email and sentence exactly as before, including capital letters and symbols.'
 			},
 			{
-				title: 'Check first, then import',
-				text: 'Get 12 or 24 BIP39 words. Rehearse recovery on first use, then scan the QR code with a compatible wallet.'
+				title: 'Check recovery before using the phrase',
+				text: 'Create a 12- or 24-word BIP39 recovery phrase. On first use, enter your email and secret sentence again from memory to check that you get the same phrase. Then scan its QR code with a wallet that supports BIP39.'
 			}
 		],
 		flow: {
 			email: 'Your email (example)',
-			sentence: 'Your sentence (example)',
-			slow: 'Regenerate offline',
-			words: '12 or 24 BIP39 words'
+			sentence: 'Your secret sentence (example)',
+			slow: 'Create again offline',
+			words: '12- or 24-word BIP39 recovery phrase'
 		}
 	},
 	security: {
-		title: 'How much difference can a harder-to-guess sentence make?',
-		lead: 'Every guess requires a full Argon2id run. This model assumes 1,000 data-centre GPUs, each making 20 guesses per second at 40 joules per guess, with electricity at US$0.05 per kWh. On average, half the search space is tried:',
-		head: ['Entropy', 'Time', 'Electricity'],
+		title: 'How much does a harder-to-guess sentence change the cost?',
+		lead: 'Each guess must run Argon2id. This example uses 1,000 data-center graphics cards. Each card tries 20 guesses per second and uses 40 joules per guess. Electricity costs US$0.05 per kWh. We assume the attacker tries half of all possible choices, on average:',
+		head: ['Entropy (bits)', 'Time', 'Electricity cost'],
 		rows: [
 			['30 bits', '7.5 hours', 'US$300'],
 			['40 bits', '320 days', 'US$305,000'],
 			['50 bits', '890 years', 'US$313 million'],
 			['60 bits', '910,000 years', 'US$320 billion']
 		],
-		note: 'Entropy values here are assumptions, not measurements of your sentence. Hardware costs are excluded; actual attack costs may differ. The app’s score cannot tell you which row your inputs belong in.',
-		model: { label: 'See the assumptions and calculation', path: 'SPEC.md#4-security-model' },
+		note: 'Entropy is a measure of randomness. The values here are assumptions, not measurements of your sentence. Hardware costs are not included, and real attack costs may differ. The app’s score cannot tell you which row applies to your sentence.',
+		model: { label: 'See how the numbers are calculated', path: 'SPEC.md#4-security-model' },
 		items: [
 			{
-				title: 'Forget the inputs, and no one can help',
-				text: 'Keyper does not store your email or sentence and offers no recovery service. Even one missing punctuation mark can generate a different recovery phrase.'
+				title: 'We cannot recover a secret you forget',
+				text: 'Keyper does not save your email or secret sentence, and we cannot recover them for you. Missing a punctuation mark may produce a different recovery phrase.'
 			},
 			{
-				title: 'Guessable sentences are still dangerous',
-				text: 'Quotations, lyrics, and public personal information are not reliable secrets. Argon2id makes each guess more expensive, but cannot turn a weak sentence into a strong secret.'
+				title: 'A sentence may be easy to guess',
+				text: 'Quotes, song lyrics, and public facts about you are not reliable secrets. Argon2id makes each guess more costly. It does not make an easy-to-guess sentence safe.'
 			},
 			{
-				title: 'Offline does not mean a completely safe device',
-				text: 'Disconnecting reduces the risk of information being sent out, but cannot stop malware already on the device. Use a device you trust.'
+				title: 'An offline phone can still have malware',
+				text: 'Going offline lowers the risk of sending your secret out. It does not stop malware already on the phone. Use a phone you trust.'
 			},
 			{
-				title: 'Keyper is not insurance for your assets',
-				text: 'It only generates recovery words. It does not hold assets or revoke an exposed phrase. Independently verify recovery before transferring assets.'
+				title: 'Keyper only creates the recovery phrase',
+				text: 'Keyper does not hold your funds or undo a leak. Before adding funds, use another recovery program to check that you get the same phrase.'
 			}
 		]
 	},
 	pricing: {
-		title: 'Skip the build. Pay once.',
-		lead: 'The store version saves you build and installation setup and supports maintenance. Source is free; build it yourself for the same features.',
+		title: 'Pay once to skip building it yourself.',
+		lead: 'The store version saves you the work of building and installing the app. Your purchase also supports its maintenance. The source code is free. Build it yourself for the same features.',
 		build: {
 			name: 'Build from source',
 			price: 'Free',
 			per: 'All features',
 			points: [
-				'Android needs a build environment; iPhone needs a Mac, Xcode, and signing setup.'
+				'Android needs the tools to build the app. For iPhone, you need a Mac, Xcode, and a way to sign the app.'
 			],
 			action: 'Read the build instructions',
 			guide: 'README.md#building-and-maintaining'
@@ -200,31 +205,31 @@ export const en: Content = {
 		store: {
 			name: 'Google Play & App Store',
 			price: site.price,
-			per: 'One purchase',
+			per: 'Pay once',
 			status: 'Coming soon',
 			googlePlay: 'Google Play',
 			appStore: 'App Store'
 		},
-		note: 'No subscription. Android and iPhone are separate purchases; final local pricing will appear in the stores.'
+		note: 'No subscription. Buy Android and iPhone versions separately. Each store will show the price in your region.'
 	},
 	faq: {
 		title: 'A few more questions worth asking.',
 		items: [
 			{
 				q: 'Isn’t this a brainwallet?',
-				a: 'Yes. Keyper uses your email as salt and memory-intensive Argon2id to raise guessing costs, addressing some weaknesses of traditional brainwallets. It cannot guarantee that a sentence is unguessable, and strength estimates have limitations.'
+				a: 'Yes. Keyper uses your email as a salt, so the same sentence can give different people different recovery phrases. Argon2id uses a lot of memory to make each guess more costly. These steps address some problems with older brainwallets. They do not guarantee that your sentence is hard to guess. The strength score can also be wrong.'
 			},
 			{
-				q: 'Can Keyper hold or transfer assets directly?',
-				a: 'No. Keyper only generates standard BIP39 recovery words. It is not a wallet. You need compatible wallet software to manage assets.'
+				q: 'Can Keyper hold or send funds?',
+				a: 'No. Keyper only creates a standard BIP39 recovery phrase. It is not a wallet. Use a wallet that supports the phrase to manage your funds.'
 			},
 			{
 				q: 'What if the app is gone years from now?',
-				a: 'The protocol is public, with a separate Python recovery implementation. Before relying on it, personally verify the recovery process on an offline computer and preserve a reliable way to recover.'
+				a: 'The rules for creating the phrase are public. A separate Python program can recreate it on an offline computer. Try that process yourself before relying on Keyper, and keep a copy of the recovery tools and instructions.'
 			},
 			{
-				q: 'Why is an email address needed?',
-				a: 'It distinguishes different users’ derivation inputs. It is not an account and requires no login. The address must be entered accurately: differences such as dots in some addresses change the result.'
+				q: 'Why do I need an email address?',
+				a: 'It helps give different people different results. You do not create an account or log in. Use the same email address each time. Small differences, such as a dot in the address, can change the recovery phrase.'
 			}
 		]
 	},
@@ -290,6 +295,10 @@ export const zh: Content = {
 				label: '阅读原始研究',
 				url: 'https://discovery.ucl.ac.uk/id/eprint/10154816/'
 			}
+		},
+		fit: {
+			title: '为什么不适合你？',
+			text: '如果你无法生成足够随机的输入，或无法长期准确地记住它，Keyper 就不适合你。建议使用传统钱包，由可靠随机源生成助记词，并妥善保管备份。'
 		}
 	},
 	how: {

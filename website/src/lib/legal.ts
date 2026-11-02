@@ -30,96 +30,90 @@ export const legalEn: Legal = {
 	home: '/',
 	paths: enPaths,
 	other: { label: '中文', hreflang: 'zh-Hans', paths: zhPaths },
-	intro: 'Keyper is made by MONDAY LABS LTD (“we”).',
+	intro: 'Keyper is developed by MONDAY LABS LTD, registered in England and Wales, company number 16988118. Registered office: 61 Bridge Street, Kington, HR5 3DJ, United Kingdom.',
 	updatedLabel: 'Last updated',
-	updated: '27 October 2026',
+	updated: '2 November 2026',
 	privacy: {
 		title: 'Privacy Policy',
 		description:
-			'What Keyper and getkeyper.app collect: the app collects nothing; the website counts visits.',
+			'What the offline app does with your secrets, and what this website, app stores, and email services process.',
 		sections: [
 			{
-				heading: 'The app',
+				heading: 'Your secrets stay in the offline app',
 				paragraphs: [
-					'Keyper collects no personal data. It has no account, asks for no permission, contains no analytics, advertising or crash-reporting code, and never connects to the network.',
-					'Your email, your sentence and the phrase exist only in the app’s memory while you use it. They are never written to storage, and they are wiped when you leave the app or the phone goes online.',
-					'The only thing kept between sessions is your choice of language, which the phone’s own per-app language setting remembers.'
+					'Keyper does not connect to the internet. It has no accounts, ads, analytics, or built-in crash reporting. We do not receive your email address, secret sentence, or recovery phrase.',
+					'These are used in local memory, not saved to permanent storage. Leaving the app or failing an offline check clears the secret sentence and recovery result. The email may stay in memory until cleared or the app process ends. Clearing the app does not guarantee erasing every system memory copy. Your language setting is kept by your phone.'
 				]
 			},
 			{
-				heading: 'Buying from Google Play or the App Store',
+				heading: 'Copies you make',
 				paragraphs: [
-					'Google and Apple handle the purchase under their own privacy policies. They send us sales reports, which may include your country or region and the order details, but never anything you type in Keyper.',
-					'If you let your phone share diagnostics with app developers, Google or Apple may send us crash reports. These contain technical details such as the device model, the system version and where the app crashed, not what you typed.'
+					'If you copy a recovery phrase or give it to a wallet, your operating system or another app handles that copy. Clipboard history may keep it. Keyper cannot control or erase those copies.'
 				]
 			},
 			{
-				heading: 'This website',
+				heading: 'The website and app stores are separate',
 				paragraphs: [
-					'getkeyper.app is a set of static pages hosted by Cloudflare. To deliver them and protect them from abuse, Cloudflare processes your IP address and the details of each request.',
-					'We count visits with Rybbit, an open-source analytics tool, hosted at tj.appsdata.org. It records the pages you view and their query parameters, the page that linked you here, the links you follow to other sites, your browser, language, screen size and approximate location (from your IP address), and keeps a random visitor ID in your browser’s local storage. It sets no cookies. The site’s security policy lets the script send data only to that server.'
+					'Cloudflare hosts this website and processes IP addresses and request details. Rybbit at tj.appsdata.org counts visits. It records pages and URL parameters, referring pages, external links, browser and device details, language, screen size, and an approximate location based on the IP address. It stores a random visitor ID in browser local storage, not a cookie. Any consent required by law must be obtained separately; reading this policy is not consent.',
+					'Google or Apple handles purchases under its own privacy policy. We may receive order reports and, if you enable system diagnostics sharing, technical crash reports. This does not give us the secrets entered in the app.'
 				]
 			},
 			{
-				heading: 'Email',
+				heading: 'How other personal data is used and kept',
 				paragraphs: [
-					'If you write to us, we use your address and your message only to reply, and keep them only as long as the conversation needs.'
+					'Website data is used to run and protect the site and understand visits. Email is used to answer your requests. Do not send wallet secrets. Where EU or UK law applies, the legal basis is our legitimate interests, steps needed for a contract, a legal duty, or consent where required, depending on the purpose.',
+					'Hosting, analytics, store, and email providers process this data. Retention depends on the service settings, the request, and legal record-keeping duties. Providers may process data outside your country; any transfer covered by EU or UK law needs a valid transfer basis and safeguards where required. Contact us for the recipients, retention details, and transfer safeguards that apply to your data.'
 				]
 			},
 			{
-				heading: 'Changes',
+				heading: 'Privacy questions',
 				paragraphs: [
-					'If this policy changes, the new version will be posted here with a new date.'
+					'Where the law applies, you may request access, correction, deletion, a copy of your data, or limits on its use. You may object to processing based on legitimate interests or withdraw consent. Contact us below. You may also complain to the UK Information Commissioner’s Office or your local data protection authority. We cannot retrieve secrets from the offline app because we never receive them.',
+					'Changes to this policy will be posted here with a new date. We will give any extra notice or ask for consent where the law requires it.'
 				]
 			}
 		],
-		contact: 'Questions about this policy:'
+		contact: 'Privacy contact:'
 	},
 	terms: {
 		title: 'Terms of Service',
 		description:
-			'The terms for using Keyper and for buying it from Google Play or the App Store.',
+			'Keyper is an open-source offline tool, provided as is. Understand the risks, check recovery, and protect your secrets before use.',
 		sections: [
 			{
-				heading: 'What Keyper is',
+				heading: 'What Keyper provides',
 				paragraphs: [
-					'Keyper turns your email and a sentence you remember into a standard BIP39 recovery phrase. It is not a wallet: it never holds, sends or receives funds, and we never see your inputs or your phrase.'
+					'Keyper is an open-source offline tool that creates BIP39 recovery phrases. The source code uses the MIT License. Keyper is not a wallet: it does not hold or transfer funds, and provides no investment advice, custody, or insurance.'
 				]
 			},
 			{
-				heading: 'What depends on you',
+				heading: 'Your responsibility before use',
 				paragraphs: [
-					'The phrase can be generated again only from the same email and the same sentence, with the sentence typed exactly as before. Nobody, including us, can recover them for you. Do the recovery drill before you use the phrase.',
-					'If others can guess your sentence, they can generate your phrase. Use a clean, offline phone, and install Keyper only from its official store listings or build it from the source.'
+					'Do your own research (DYOR). Understand the method and risks, check the software source and device, and test recovery with a separate program before adding funds. You are responsible for choosing, remembering, and protecting your email, secret sentence, and recovery phrase, and keeping the correct recovery tools offline. We cannot recover forgotten secrets or undo their exposure.'
 				]
 			},
 			{
-				heading: 'Licence and purchase',
+				heading: 'As-is software and limits on responsibility',
 				paragraphs: [
-					'The source code is open under the MIT License. The store version is built from the same code. Buying it is a one-time purchase handled by Google Play or the App Store under their terms, including their refund policies. On the App Store, Apple’s standard Licensed Application End User License Agreement applies.'
+					'Keyper is an open-source offline tool provided “as is”. We do not guarantee that it is free of errors or vulnerabilities, or that today’s cryptographic methods will remain secure as technology advances, including quantum computing. Strength scores and attack costs are estimates, not guarantees.',
+					'To the extent the law allows, we are not responsible for financial or other losses caused by your input, exposed secrets, third-party devices or software, or vulnerabilities, attacks, and changes in technology that we could not reasonably prevent or control.',
+					'These terms do not exclude or limit any responsibility that applicable law expressly prohibits us from excluding or limiting.'
 				]
 			},
 			{
-				heading: 'No warranty',
+				heading: 'Purchases',
 				paragraphs: [
-					'Keyper is provided “as is”, without warranty of any kind. To the extent the law allows, we are not liable for any loss, including lost funds, that results from using Keyper, from forgetting or mistyping your inputs, or from a compromised phone.',
-					'Nothing in these terms limits rights that the law gives you and that cannot be waived.'
+					'The store version is a one-time purchase. Android and iPhone versions are bought separately. Google Play or the App Store handles payments and refunds under its terms and applicable law. Apple’s standard Licensed Application End User License Agreement applies where relevant. These terms do not themselves waive any statutory cancellation right.'
 				]
 			},
 			{
-				heading: 'If the app goes away',
+				heading: 'Applicable law and changes',
 				paragraphs: [
-					'Protocol v1 is frozen, so every version of Keyper gives the same phrases. If the app ever leaves the stores, the open-source recovery script described in the README still derives them on a computer.'
-				]
-			},
-			{
-				heading: 'Changes',
-				paragraphs: [
-					'If these terms change, the new version will be posted here with a new date.'
+					'The laws of England and Wales apply, subject to mandatory protections under applicable law, including those of your country of residence. We will post changes here and update the date. Changes do not retroactively remove rights from an earlier purchase.'
 				]
 			}
 		],
-		contact: 'Questions about these terms:'
+		contact: 'Support and legal contact:'
 	}
 };
 
@@ -128,89 +122,88 @@ export const legalZh: Legal = {
 	home: '/zh',
 	paths: zhPaths,
 	other: { label: 'English', hreflang: 'en', paths: enPaths },
-	intro: 'Keyper 由 MONDAY LABS LTD（下称“我们”）开发。',
+	intro: 'Keyper 由 MONDAY LABS LTD 开发。公司注册于英格兰及威尔士，注册号 16988118。注册地址：61 Bridge Street, Kington, HR5 3DJ, United Kingdom。',
 	updatedLabel: '最后更新',
-	updated: '2026 年 10 月 27 日',
+	updated: '2026 年 11 月 2 日',
 	privacy: {
 		title: '隐私政策',
-		description: 'Keyper 和 getkeyper.app 收集什么：App 什么都不收集，网站统计访问量。',
+		description: '离线 App 如何处理秘密，以及官网、应用商店和邮件服务处理哪些数据。',
 		sections: [
 			{
-				heading: 'App',
+				heading: '秘密只在离线 App 中处理',
 				paragraphs: [
-					'Keyper 不收集任何个人数据。它没有账户，不申请任何权限，不含统计、广告或崩溃上报代码，也从不联网。',
-					'你的邮箱、那句话和助记词只在你使用时存在于 App 的内存里，从不写入存储；离开 App 或手机联网时立即清除。',
-					'两次使用之间唯一保留的是你选的语言，由手机系统的“应用语言”设置记住。'
+					'Keyper 不联网，没有账户、广告、统计或内置崩溃上报。我们不会收到你的邮箱、记忆文本或助记词。',
+					'这些内容只在本机内存中使用，不写入持久存储。离开 App 或离线检查不通过时，记忆文本和结果会被清除；邮箱可能保留到主动清除或进程结束。清除不保证擦除所有系统内存副本。语言设置由手机保存。'
 				]
 			},
 			{
-				heading: '从 Google Play 或 App Store 购买',
+				heading: '你复制或交给其他应用的内容',
 				paragraphs: [
-					'购买由 Google 和 Apple 按各自的隐私政策处理。它们会给我们销售报告，其中可能有你所在的国家或地区和订单信息，但绝不会有你在 Keyper 里输入的内容。',
-					'如果你允许手机与应用开发者共享诊断信息，Google 或 Apple 可能把崩溃报告发给我们。报告里是设备型号、系统版本、崩溃位置这类技术信息，没有你输入的内容。'
+					'复制助记词或交给钱包后，操作系统和接收应用会处理这份副本，剪贴板历史也可能保留它。Keyper 无法控制或删除这些副本。'
 				]
 			},
 			{
-				heading: '本网站',
+				heading: '官网和应用商店另行处理数据',
 				paragraphs: [
-					'getkeyper.app 是托管在 Cloudflare 上的静态网页。为了提供网页、防范滥用，Cloudflare 会处理你的 IP 地址和每次请求的信息。',
-					'我们用开源统计工具 Rybbit 统计访问量，服务托管在 tj.appsdata.org。它记录你浏览的页面及其网址参数、从哪个页面来、你点开的外部链接、浏览器、语言、屏幕尺寸和大致位置（根据 IP 地址推断），并在浏览器的本地存储里保存一个随机的访客 ID。它不使用 Cookie。本站的安全策略只允许这个脚本把数据发往该服务器。'
+					'官网由 Cloudflare 托管，会处理 IP 和请求信息。tj.appsdata.org 上的 Rybbit 用于访问统计，记录页面及网址参数、来源、外部链接、浏览器及设备、语言、屏幕尺寸和 IP 推断的大致地区，并在浏览器本地存储中保存随机访客 ID，不设置 Cookie。法律要求的同意需另行取得，阅读本政策不等于同意。',
+					'Google 或 Apple 按各自隐私政策处理购买。我们可能收到订单报告，以及你允许系统共享的技术崩溃报告。这不会让我们获得 App 中的秘密。'
 				]
 			},
 			{
-				heading: '邮件',
+				heading: '其他个人数据的用途和保存',
 				paragraphs: [
-					'你给我们发邮件时，我们只用你的地址和邮件内容来回复，只在沟通需要的期间保留。'
+					'官网数据用于提供和保护网站、了解访问情况；邮件用于处理你的请求，请勿发送钱包秘密。适用欧盟或英国法律时，根据具体目的，以合法利益、合同需要、法定义务或法律要求的同意作为处理依据。',
+					'托管、统计、商店和邮件服务商会处理相关数据。保存期限取决于服务设置、请求需要及法定记录义务。服务商可能在其他国家处理数据；受欧盟或英国法律约束的传输须有有效依据，并在法律要求时提供保障措施。可联系我们了解适用的接收方、保存期限及跨境保障。'
 				]
 			},
 			{
-				heading: '变更',
-				paragraphs: ['本政策如有变更，新版本会发布在这里，并更新日期。']
+				heading: '隐私问题',
+				paragraphs: [
+					'在法律适用时，你可请求访问、更正、删除或取得数据副本，限制使用，反对基于合法利益的处理，或撤回同意。请通过下方邮箱联系；也可向英国 ICO 或当地数据保护机构投诉。App 的秘密从未发送给我们，因此我们无法找回。',
+					'政策变更会发布在这里并更新日期；法律要求时另行通知或征求同意。'
+				]
 			}
 		],
-		contact: '对本政策有疑问：'
+		contact: '隐私联系邮箱：'
 	},
 	terms: {
 		title: '服务条款',
-		description: '使用 Keyper、以及从 Google Play 或 App Store 购买 Keyper 的条款。',
+		description:
+			'Keyper 是按原样提供的开源离线工具。使用前请自行研究风险、验证恢复并保管秘密。',
 		sections: [
 			{
-				heading: 'Keyper 是什么',
+				heading: '我们提供什么',
 				paragraphs: [
-					'Keyper 用你的邮箱和一句你记得的话，生成标准 BIP39 助记词。它不是钱包：从不持有、发送或接收资产，我们也看不到你的输入和助记词。'
+					'Keyper 是开源的离线 BIP39 助记词生成工具，源码采用 MIT 许可证。它不是钱包，不持有或转移资产，也不提供投资建议、资产托管或保险。'
 				]
 			},
 			{
-				heading: '取决于你的部分',
+				heading: '使用前你需要负责的事',
 				paragraphs: [
-					'只有输入同样的邮箱，并且一字不差地输入同样的那句话，才能再次生成助记词。任何人，包括我们，都没法替你找回。使用助记词之前，先做恢复演练。',
-					'别人猜得到你的那句话，就能算出你的助记词。请在干净的离线手机上使用，并且只从官方商店页面安装 Keyper，或者自己从源码编译。'
+					'请自行研究（DYOR）原理和风险，核查软件来源及设备，并在转入资产前用独立程序验证恢复。你负责选择、记住和保管邮箱、记忆文本及助记词，并离线保存正确的恢复工具。我们无法找回遗忘的秘密，也无法撤销秘密泄露。'
 				]
 			},
 			{
-				heading: '许可与购买',
+				heading: '按原样提供与责任限制',
 				paragraphs: [
-					'源代码以 MIT 许可证开源。商店版由同一份代码构建。购买是一次性的，由 Google Play 或 App Store 按其条款处理，退款也按它们的政策办理。在 App Store 上，适用 Apple 标准的“许可应用最终用户许可协议”。'
+					'Keyper 是按“原样”提供的开源离线工具。我们不保证它没有错误或漏洞，也不保证现有密码学方法能始终抵御未来技术，包括量子计算。强度评分和攻击成本均为估算，不是保证。',
+					'在法律允许的范围内，对于因用户输入、秘密泄露、第三方设备或软件，以及我们无法合理预防或控制的漏洞、攻击或技术变化造成的资金或其他损失，我们不承担赔偿责任。',
+					'本条款不排除或限制适用法律明确禁止排除或限制的责任。'
 				]
 			},
 			{
-				heading: '免责声明',
+				heading: '购买',
 				paragraphs: [
-					'Keyper 按“原样”提供，不附带任何形式的担保。在法律允许的范围内，因使用 Keyper、忘记或输错邮箱和那句话、或手机被入侵造成的任何损失（包括资产损失），我们不承担责任。',
-					'本条款不影响法律赋予你、且不能被排除的权利。'
+					'商店版一次买断，Android 与 iPhone 分别购买。付款及退款由 Google Play 或 App Store 按其条款和适用法律处理；适用时采用 Apple 标准的许可应用最终用户许可协议。本条款本身不构成对法定撤回权的放弃。'
 				]
 			},
 			{
-				heading: '如果 App 下架',
+				heading: '适用法律与变更',
 				paragraphs: [
-					'v1 协议已冻结，Keyper 的每个版本都生成同样的助记词。即使 App 将来从商店下架，README 里介绍的开源恢复脚本仍能在电脑上算出它们。'
+					'本条款适用英格兰及威尔士法律，并受适用的强制性法律保护约束，包括你居住国依法适用的保护。变更会发布在这里并更新日期，不追溯剥夺此前购买产生的权利。'
 				]
-			},
-			{
-				heading: '变更',
-				paragraphs: ['本条款如有变更，新版本会发布在这里，并更新日期。']
 			}
 		],
-		contact: '对本条款有疑问：'
+		contact: '支持与法律联系邮箱：'
 	}
 };
