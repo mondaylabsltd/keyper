@@ -29,13 +29,21 @@ android {
         applicationId = "app.getkeyper.private"
         minSdk = 27 // android.os.SharedMemory
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
         buildConfigField("String", "BUILD_REVISION", "\"$buildRevision\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildFeatures { buildConfig = true }
+
+    // Both languages must be available offline. Play's language splits can omit Chinese
+    // on English devices, leaving the in-app language switch without its resources.
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
 
     signingConfigs {
         if (keystore != null) create("release") {
