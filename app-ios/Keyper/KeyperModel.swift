@@ -238,6 +238,7 @@ final class KeyperModel {
     var showsResult: Bool { phrase != nil && !drilling }
 
     func generate() {
+        monitor.check()
         guard offline, !busy, !drilling else { return }
         guard Keyper.isValidEmail(Keyper.normalizeEmail(email)) else {
             emailError = strings["error_email_invalid"]
@@ -263,6 +264,9 @@ final class KeyperModel {
     }
 
     private func derive() {
+        monitor.check()
+        guard offline, !busy, !drilling else { return }
+        discardResult()
         generation += 1
         let id = generation
         let (email, secret) = (self.email, self.secret)
@@ -338,6 +342,7 @@ final class KeyperModel {
     /// Opens the drill page with both of its fields empty; the user types the email and the sentence
     /// again from memory. The phrase stays behind on the main page, with the inputs that made it.
     func startDrill() {
+        monitor.check()
         guard phrase != nil, offline, !busy, !drilling else { return }
         showingQr = false
         showingCopyWarning = false
@@ -350,6 +355,7 @@ final class KeyperModel {
     /// Check: the normalised inputs are compared with the fingerprint of those that made the phrase,
     /// at once, without a second minute-long derivation. A match forgets what was typed here.
     func checkDrill() {
+        monitor.check()
         guard drilling, offline, !busy else { return }
         guard let k = key, let first = inputs else { return }
         var typed = Keyper.drillFingerprint(key: k, email: drillEmail, secret: drillSecret)
@@ -390,7 +396,8 @@ final class KeyperModel {
     /// The Copy button: the first time in this session, a warning that offers the QR code instead;
     /// after the user has chosen to copy once, a copy at once.
     func requestCopy() {
-        guard phrase != nil else { return }
+        monitor.check()
+        guard offline, phrase != nil else { return }
         if copyWarningAccepted { copyPhrase() } else { showingCopyWarning = true }
     }
 
@@ -404,6 +411,12 @@ final class KeyperModel {
     /// The warning's "Show QR code": the phrase never touches the pasteboard.
     func chooseQrInstead() {
         showingCopyWarning = false
+        requestQr()
+    }
+
+    func requestQr() {
+        monitor.check()
+        guard offline, phrase != nil else { return }
         showingQr = true
     }
 
@@ -412,7 +425,8 @@ final class KeyperModel {
     /// Copied for 60 seconds and for this device only: iOS clears it, and it never reaches
     /// Universal Clipboard.
     func copyPhrase() {
-        guard let phrase else { return }
+        monitor.check()
+        guard offline, let phrase else { return }
         pasteboard.setItems(
             [[UTType.utf8PlainText.identifier: phrase.joined(separator: " "), Self.copyMarker: Data([1])]],
             options: [.localOnly: true, .expirationDate: Date(timeIntervalSinceNow: clipboardLifetime)]

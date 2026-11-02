@@ -65,7 +65,7 @@ phrase        = BIP39 encoding of entropy with the English wordlist
 - **Argon2id** is RFC 9106. **BIP39** is the standard entropy → mnemonic encoding (SHA-256
   checksum, 11 bits per word, wordlist SHA-256 `2f5eed53…3b24dbda`).
 
-The **domain ID** shown in the app is the first four bytes of `SHA-256(domain)` in upper-case
+The **domain ID** printed by the recovery script is the first four bytes of `SHA-256(domain)` in upper-case
 hex, as `XXXX-XXXX`. Two builds with the same ID produce the same phrases.
 
 ## 3. Design decisions
@@ -181,7 +181,8 @@ lengths are enforced.
 
 **The domain constant is a single point of failure for recovery.** Every phrase depends on it.
 Back it up as carefully as a seed phrase (the signed APK contains it too). If a new build uses a
-different domain constant, the domain ID in the footer changes and so does every phrase.
+different domain constant, the domain ID changes and so does every phrase. The app footer shows
+the Git build revision; the domain constant is pinned separately by tests on both platforms.
 
 ## 5. Test vectors
 

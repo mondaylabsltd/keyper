@@ -22,12 +22,13 @@
 
 "level_very_weak" = "Very weak";
 "level_weak" = "Weak";
+"screen_protection_unavailable" = "Screen protection is unavailable on this system. Update Keyper before entering a secret.";
 "level_good" = "Good";
 "level_strong" = "Strong";
 "strength_summary" = "%1$@ · %2$d characters";
 "secret_too_short" = "%1$d characters; at least %2$d needed";
-"crack_time" = "A thousand GPUs: about %1$@ and %2$@ of electricity";
-"strength_tip" = "Make it longer, with details only you know. No famous lines, lyrics or birthdays.";
+"crack_time" = "Model estimate: %1$@ and %2$@ of electricity; not a security guarantee.";
+"strength_tip" = "The score cannot detect quotes, lyrics, reused passwords or public personal facts. Even a “Strong” score can be easy to guess.";
 
 "words_12" = "12 words";
 "words_24" = "24 words";

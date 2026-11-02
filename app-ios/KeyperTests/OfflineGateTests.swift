@@ -134,10 +134,49 @@ extension KeyperClaims {
             h.model.secret = Harness.sentence
             h.model.generate()
             h.model.generateAnyway()
-            #expect(h.derivations.runs.count <= 1)
+            #expect(h.derivations.runs.isEmpty)
             #expect(h.model.phrase == nil)
             h.derivations.runs.first?.finish()
             #expect(h.model.phrase == nil, "a phrase was derived while online")
+        }
+
+        /// No poll has run yet: every sensitive action must probe before it acts.
+        @Test func generateAnywayCannotStartOnline() {
+            let h = Harness(offline: false)
+            h.model.email = Harness.email
+            h.model.secret = Harness.sentence
+            h.model.generateAnyway()
+            #expect(h.derivations.runs.isEmpty)
+            #expect(!h.model.busy)
+        }
+
+        @Test func generateRechecksBetweenPolls() {
+            let h = Harness()
+            h.model.email = Harness.email
+            h.model.secret = Harness.sentence
+            h.radios.now = FakeRadios.online
+            h.model.generate()
+            #expect(h.derivations.runs.isEmpty)
+            #expect(h.model.secret.isEmpty)
+        }
+
+        @Test func copyRechecksBetweenPolls() {
+            let h = Harness()
+            h.generated()
+            h.radios.now = FakeRadios.online
+            h.model.copyPhrase()
+            #expect(h.pasteboard.copies.isEmpty)
+            #expect(h.model.phrase == nil)
+        }
+
+        @Test func qrRechecksBetweenPolls() {
+            let h = Harness()
+            h.generated()
+            h.model.requestCopy()
+            h.radios.now = FakeRadios.online
+            h.model.chooseQrInstead()
+            #expect(!h.model.showingQr)
+            #expect(h.model.phrase == nil)
         }
 
         /// The real monitor polls on its own every half second.

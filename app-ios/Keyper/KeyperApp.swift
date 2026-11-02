@@ -49,8 +49,12 @@ struct ShieldedScreen: UIViewControllerRepresentable {
 
 final class ShieldController: UIViewController {
     private let host: UIHostingController<MainView>
+    private let model: KeyperModel
+    private let makeShield: @MainActor () -> UIView?
 
-    init(model: KeyperModel) {
+    init(model: KeyperModel, makeShield: @escaping @MainActor () -> UIView? = ScreenShield.make) {
+        self.model = model
+        self.makeShield = makeShield
         host = UIHostingController(rootView: MainView(model: model))
         super.init(nibName: nil, bundle: nil)
     }
@@ -61,7 +65,23 @@ final class ShieldController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = Palette.background
-        let shield = ScreenShield.make()
+        guard let shield = makeShield() else {
+            // Never attach the sensitive screen when the system no longer supplies the container.
+            model.clearAll()
+            let message = UILabel()
+            message.text = model.strings["screen_protection_unavailable"]
+            message.textColor = Palette.text
+            message.numberOfLines = 0
+            message.textAlignment = .center
+            message.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(message)
+            NSLayoutConstraint.activate([
+                message.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 24),
+                message.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -24),
+                message.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            ])
+            return
+        }
         shield.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(shield)
         pin(shield, to: view)
@@ -119,17 +139,17 @@ final class PasteboardProbe: UIView {
 
 /// The container iOS draws a secure text field's characters in is left out of every capture of the
 /// screen. Content placed in it is too. iOS offers no public API for this, so if the container is
-/// ever missing the screen still works, only without the protection.
+/// ever missing the caller must keep the sensitive screen detached.
 @MainActor
 enum ScreenShield {
-    static func make() -> UIView {
+    static func make() -> UIView? {
         #if DEBUG
         // UI tests need screenshots of the screen they check.
         if ProcessInfo.processInfo.arguments.contains("-KeyperAllowScreenshots") { return UIView() }
         #endif
         let field = UITextField()
         field.isSecureTextEntry = true
-        guard let container = field.subviews.first else { return UIView() }
+        guard let container = field.subviews.first else { return nil }
         container.subviews.forEach { $0.removeFromSuperview() }
         container.isUserInteractionEnabled = true
         return container

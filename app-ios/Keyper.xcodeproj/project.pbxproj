@@ -83,6 +83,7 @@
 				1ED7919CEF9BD9808604BA69,
 				0BD21962D459A0398F7F6A72,
 				1391E983B936C40B170D879D,
+				F041D99EAB59C43DBA019101 /* Write build revision */,
 			);
 			buildRules = (
 			);
@@ -216,6 +217,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		F041D99EAB59C43DBA019101 /* Write build revision */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = ();
+			inputPaths = ("$(SRCROOT)/scripts/write-build-revision.sh", "$(SRCROOT)/",);
+			name = "Write build revision";
+			outputPaths = ("$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/BuildRevision.txt",);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "sh \"$SRCROOT/scripts/write-build-revision.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1ED7919CEF9BD9808604BA69 = {

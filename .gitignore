@@ -29,6 +29,8 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+# The recovery environment created by the README instructions.
+/keyper-env/
 
 # Local notes
 /draft.md

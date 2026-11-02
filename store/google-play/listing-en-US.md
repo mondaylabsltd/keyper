@@ -14,7 +14,7 @@ Keyper: Recovery Phrase
 Your email and a sentence only you know give the same BIP39 phrase, offline.
 ```
 
-## Full description (2211/4000)
+## Full description (2434/4000)
 
 ```
 Keyper turns your email and a sentence only you know into a standard BIP39 recovery phrase, on an offline phone. The same inputs always give the same phrase, so there is nothing to write down and nothing to lose in a drawer or a fire. Keyper saves nothing you type.
@@ -26,14 +26,14 @@ HOW IT WORKS
 4. Copy the 12 or 24 words into a wallet on the same phone, or show them as a QR code.
 
 EXPENSIVE TO GUESS
-Every guess costs an attacker the same minute of work. With assumptions that favour the attacker, finding a sentence with 50 bits of entropy would cost over US$300 million in electricity alone. Keyper estimates this while you type and warns you about weak sentences. Famous lines, lyrics and birthdays are easy to guess whatever their length: use details only you know.
+Argon2id makes each guess expensive, but an attacker’s hardware may be faster than your phone. The strength score is a rough model, not a measurement of your sentence’s entropy or a security guarantee. Quotes, lyrics, reused passwords and public personal facts can be easy to guess even when the score says Strong.
 
 PROTECTIONS
 - Its own keyboard: the system keyboard never sees what you type, so it cannot learn, sync or upload it.
-- Offline gate: going back online wipes the sentence, the phrase and the clipboard.
+- Offline gate: while Keyper is active, detected radio changes block derivation and clear sensitive screen data. Its current clipboard copy is cleared when Android permits.
 - No permissions, no network access, no account, no analytics.
-- Screenshots and screen recordings show nothing, and the app switcher shows a blank screen.
-- A copied phrase is cleared after 60 seconds.
+- Android’s secure-window flag protects against screenshots, screen recordings and app-switcher previews on supported systems.
+- Copies are marked sensitive and scheduled for clearing after 60 seconds. Android background restrictions can delay removal until Keyper returns to the foreground. Clipboard history may retain copies.
 - Recovery drill: type both inputs again from memory and check that they give the same phrase before you use it.
 
 OPEN AND RECOVERABLE

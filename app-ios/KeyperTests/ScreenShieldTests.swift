@@ -17,11 +17,21 @@ extension KeyperClaims {
     struct ScreenShieldTests {
         /// Fails as soon as an iOS release stops giving secure text fields this container, or stops
         /// excluding it from captures: the app would then run unshielded.
-        @Test func theSecureContainerStillExists() {
-            let shield = ScreenShield.make()
+        @Test func theSecureContainerStillExists() throws {
+            let shield = try #require(ScreenShield.make())
             #expect(type(of: shield) != UIView.self, "iOS no longer offers a secure text field's container: the screen shield is off")
             let mask = shield.layer.value(forKey: "disableUpdateMask") as? Int ?? 0
             #expect(mask != 0, "the container's layer is no longer left out of captures (disableUpdateMask \(mask))")
+        }
+
+        @Test func aMissingContainerNeverShowsTheSensitiveScreen() {
+            let h = Harness()
+            h.generated()
+            let controller = ShieldController(model: h.model, makeShield: { nil })
+            controller.loadViewIfNeeded()
+            #expect(controller.children.isEmpty, "sensitive content was attached without a shield")
+            #expect(h.model.secret.isEmpty && h.model.email.isEmpty && h.model.phrase == nil)
+            #expect(controller.view.subviews.compactMap { $0 as? UILabel }.first?.text == h.model.strings["screen_protection_unavailable"])
         }
 
         /// The app as it runs (the test host): one ShieldController, whose only subview is the shield,

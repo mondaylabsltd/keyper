@@ -26,26 +26,26 @@ Your email and a sentence only you know give the same BIP39 recovery phrase ever
 seed phrase,bip39,mnemonic,offline,cold wallet,bitcoin,crypto,backup,self custody,argon2
 ```
 
-## Description (2206/4000)
+## Description (2429/4000)
 
 ```
 Keyper turns your email and a sentence only you know into a standard BIP39 recovery phrase, on an offline phone. The same inputs always give the same phrase, so there is nothing to write down and nothing to lose in a drawer or a fire. Keyper saves nothing you type.
 
 HOW IT WORKS
-1. Turn on airplane mode and switch off Wi-Fi and Bluetooth. Keyper lets you type only while the phone is offline.
+1. Turn on airplane mode and switch off Wi-Fi and Bluetooth. Keep the phone offline while entering inputs and deriving a phrase.
 2. Type your email, then your sentence, on Keyper's own keyboard.
 3. Wait about a minute while Keyper runs Argon2id over 1 GiB of memory, 128 passes.
 4. Copy the 12 or 24 words into a wallet on the same phone, or show them as a QR code.
 
 EXPENSIVE TO GUESS
-Every guess costs an attacker the same minute of work. With assumptions that favour the attacker, finding a sentence with 50 bits of entropy would cost over US$300 million in electricity alone. Keyper estimates this while you type and warns you about weak sentences. Famous lines, lyrics and birthdays are easy to guess whatever their length: use details only you know.
+Argon2id makes each guess expensive, but an attacker’s hardware may be faster than your phone. The strength score is a rough model, not a measurement of your sentence’s entropy or a security guarantee. Quotes, lyrics, reused passwords and public personal facts can be easy to guess even when the score says Strong.
 
 PROTECTIONS
 - Its own keyboard: the system keyboard never sees what you type, so it cannot learn, sync or upload it.
-- Offline gate: going back online wipes the sentence, the phrase and the clipboard.
-- No permissions, no network access, no account, no analytics.
-- Screenshots and screen recordings show nothing, and the app switcher shows a blank screen.
-- A copied phrase is cleared after 60 seconds.
+- Offline gate: while Keyper is active, detected connectivity blocks derivation and clears sensitive screen data and Keyper’s copy. iOS cannot verify Bluetooth or Wi-Fi that is enabled but not connected; turn both off in Settings.
+- No network requests, no account and no analytics.
+- Screen content is shielded from capture where supported by iOS, and hidden in the app switcher. Capture protection can vary with system versions.
+- Copies stay on this device and are set to expire after 60 seconds. Clipboard history in other apps may retain copies.
 - Recovery drill: type both inputs again from memory and check that they give the same phrase before you use it.
 
 OPEN AND RECOVERABLE

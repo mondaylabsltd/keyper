@@ -26,10 +26,10 @@ struct L10nTests {
 
     /// What the Android app shows for the same sentences (seen on the emulator).
     @Test(arguments: [
-        ("In 2009 Grandma Li and I picked 7 green date", Language.en, "Good · 44 characters", "A thousand GPUs: about 61 thousand years and US$21 billion of electricity"),
-        ("In 2009 Grandma Li and I picked 7 green dates", Language.en, "Good · 45 characters", "A thousand GPUs: about 171 thousand years and US$60 billion of electricity"),
-        ("In 2009 Grandma Li and I picked 7 green date", Language.zh, "较强 · 44 个字符", "一千张显卡破解约 6.1万年，电费约 212亿美元"),
-        ("In 2009 Grandma Li and I picked 7 green dates", Language.zh, "较强 · 45 个字符", "一千张显卡破解约 17万年，电费约 600亿美元"),
+        ("In 2009 Grandma Li and I picked 7 green date", Language.en, "Good · 44 characters", "Model estimate: 61 thousand years and US$21 billion of electricity; not a security guarantee."),
+        ("In 2009 Grandma Li and I picked 7 green dates", Language.en, "Good · 45 characters", "Model estimate: 171 thousand years and US$60 billion of electricity; not a security guarantee."),
+        ("In 2009 Grandma Li and I picked 7 green date", Language.zh, "较强 · 44 个字符", "模型估算：6.1万年，电费约 212亿美元；不代表实际破解成本。"),
+        ("In 2009 Grandma Li and I picked 7 green dates", Language.zh, "较强 · 45 个字符", "模型估算：17万年，电费约 600亿美元；不代表实际破解成本。"),
     ])
     func strengthTextsMatchAndroid(secret: String, language: Language, summary: String, crack: String) {
         let s = L10n(language)

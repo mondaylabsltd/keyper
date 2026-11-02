@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction
+import android.view.ViewStructure
+import android.view.autofill.AutofillValue
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.view.textclassifier.TextClassifier
@@ -32,6 +34,15 @@ class KeyperField(context: Context, attrs: AttributeSet?) : EditText(context, at
     override fun onCheckIsTextEditor() = true
 
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? = null
+
+    override fun getAutofillType() = AUTOFILL_TYPE_NONE
+
+    override fun autofill(value: AutofillValue) {} // also refuse an explicit service response
+
+    override fun onProvideAutofillStructure(structure: ViewStructure, flags: Int) {
+        structure.setDataIsSensitive(true)
+        structure.setAutofillType(AUTOFILL_TYPE_NONE)
+    }
 
     /** The text menu's actions (cut, copy, paste, autofill...), whatever asks for them. */
     override fun onTextContextMenuItem(id: Int) = false

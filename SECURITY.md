@@ -7,7 +7,7 @@ issue or pull request for a vulnerability.
 
 Include what you found, how to reproduce it, the app version (Android: Settings → Apps → Keyper;
 iPhone: Settings → General → iPhone Storage → Keyper),
-the domain ID from the app's footer, and the device and system version if relevant. You should get an
+the Git revision from the app's footer (including `-dirty` if present), and the device and system version if relevant. You should get an
 acknowledgement within a week. Fixes are released as soon as they are ready, and you will be
 credited unless you prefer otherwise.
 
@@ -47,3 +47,5 @@ and the app will keep deriving v1 phrases for as long as anyone may need to reco
 - [SPEC.md §4](SPEC.md#4-security-model): threat model and the cost of guessing
 - [docs/security-audit.md](docs/security-audit.md): the pre-freeze audit, attack scenarios and
   residual risks
+- [2026-11-02 release review](docs/release-security-audit-2026-11-02.md): Android/iOS findings,
+  fixes, validation and outstanding risks (Chinese)

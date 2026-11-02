@@ -117,6 +117,79 @@ final class KeyperUITests: XCTestCase {
         XCTAssertLessThan(varied(image, in: page), 0.01, "the screen shows in a screenshot")
     }
 
+    /// The actual device screenshot service, with a visible control, across every sensitive page.
+    /// Offline/fake derivation flags only supply public fixtures; the screen shield stays enabled.
+    func testSensitiveScreensStayOutOfSystemScreenshots() throws {
+        try XCTSkipIf(isSimulator, "requires the physical device's capture service")
+        XCTAssertTrue(app.buttons["generate"].waitForExistence(timeout: 5))
+        let control = XCUIScreen.main.screenshot()
+        let controlImage = control.image.cgImage!
+        let scale = CGFloat(controlImage.width) / control.image.size.width
+        let page = CGRect(x: 0, y: 70 * scale, width: CGFloat(controlImage.width), height: CGFloat(controlImage.height) - 120 * scale)
+        XCTAssertGreaterThan(varied(controlImage, in: page), 0.01, "the unshielded control is also blank")
+        shot("control-unshielded")
+        sleep(3) // leave a stable control for the independent USB capture stream
+
+        app.terminate()
+        app.launchArguments = ["-KeyperSimulateOffline", "-KeyperFakeDerivation", "-AppleLanguages", "(en)"]
+        app.launch()
+        XCTAssertTrue(app.buttons["generate"].waitForExistence(timeout: 5))
+        func assertHidden(_ name: String, file: StaticString = #filePath, line: UInt = #line) {
+            XCTAssertFalse(XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.firstMatch.exists, "a system alert obscures the test", file: file, line: line)
+            usleep(400_000)
+            let capture = XCUIScreen.main.screenshot()
+            let image = capture.image.cgImage!
+            let attachment = XCTAttachment(screenshot: capture)
+            attachment.name = "protected-" + name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+            XCTAssertLessThan(varied(image, in: page), 0.01, "\(name) appears in the system screenshot", file: file, line: line)
+            sleep(2) // also allows the independent USB stream to sample this stable page
+        }
+        assertHidden("main")
+        typeInputs(Self.shortEmail, Self.shortSentence)
+        app.buttons["reveal"].tap()
+        XCTAssertEqual(app.textViews["secret"].value as? String, Self.shortSentence)
+        assertHidden("revealed-input-and-keyboard")
+        app.keys["Done"].tap()
+        app.buttons["generate"].tap()
+        let weak = app.descendants(matching: .any)["weak_dialog"]
+        XCTAssertTrue(weak.waitForExistence(timeout: 5))
+        assertHidden("weak-warning")
+        weak.buttons["Generate anyway"].tap()
+        let words = app.descendants(matching: .any)["words"]
+        XCTAssertTrue(words.waitForExistence(timeout: 5))
+        waitUntilStill(app.buttons["First time? Do a recovery drill  ›"])
+        assertHidden("phrase-12")
+        app.buttons["24 words"].tap()
+        assertHidden("phrase-24")
+        app.buttons["QR code"].tap()
+        let qr = app.descendants(matching: .any)["qr_screen"]
+        XCTAssertTrue(qr.waitForExistence(timeout: 5))
+        assertHidden("qr")
+        qr.tap()
+        XCTAssertTrue(qr.waitForNonExistence(timeout: 5))
+        app.buttons["Copy"].tap()
+        let warning = app.descendants(matching: .any)["copy_warning"]
+        XCTAssertTrue(warning.waitForExistence(timeout: 5))
+        assertHidden("copy-warning")
+        warning.buttons["Show QR code"].tap() // no clipboard write needed for screen verification
+        XCTAssertTrue(qr.waitForExistence(timeout: 5))
+        qr.tap()
+        XCTAssertTrue(qr.waitForNonExistence(timeout: 5))
+        openDrill()
+        waitForKeyboard()
+        type(Self.shortEmail)
+        app.keys["Next"].tap()
+        type(Self.shortSentence)
+        app.buttons["drill_reveal"].tap()
+        assertHidden("drill-input-and-keyboard")
+        app.keys["Done"].tap()
+        app.buttons["drill_check"].tap()
+        XCTAssertTrue(app.staticTexts["drill_passed"].waitForExistence(timeout: 5))
+        assertHidden("drill-passed")
+    }
+
     /// The share of pixels in `rect` that differ from its first pixel.
     private func varied(_ image: CGImage, in rect: CGRect) -> Double {
         let (pixels, _, _) = rgba(image, in: rect)

@@ -194,6 +194,8 @@ cancellation), `KeyperTest`/`KeyperTests` (the fingerprint's vectors, keying and
 
 The pre-freeze audit of the protocol and the Android app, with the attack scenarios, is in
 [docs/security-audit.md](docs/security-audit.md).
+The Android and iOS release review dated 2026-11-02, including fixes and outstanding risks, is in
+[docs/release-security-audit-2026-11-02.md](docs/release-security-audit-2026-11-02.md) (Chinese).
 To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## Using Keyper
@@ -204,10 +206,9 @@ To report a vulnerability, see [SECURITY.md](SECURITY.md).
 4. The first time you use a sentence, do the recovery drill.
 5. Show the **QR code** to the wallet, or **Copy** the phrase into a wallet app on the same phone
    (see [the clipboard](#the-clipboard)).
-6. The footer shows the build's domain ID (`A248-7EAB` for this repository). The same ID means
-   the same phrases. If it ever changes, **stop** and find out why before using the phrase. The
-   ID does not prove a build is genuine, since a tampered build can show it too. For that,
-   install only from the official store listings or build from source, and check your phrase
+6. The footer shows `Keyper v1 · <Git revision>`. A `-dirty` suffix means the build includes
+   uncommitted changes. This identifies the source revision; it does not authenticate a build.
+   Install only from the official store listings or build from source, and check your phrase
    once with the [recovery script](#recovering-without-the-app) before you use it.
 
 ## Building and maintaining
@@ -334,7 +335,9 @@ above.
   interfaces and the cellular radio, not Wi-Fi that is on but joined to no network, and not
   Bluetooth.
 - On iOS the screen shield relies on how iOS draws secure text fields, which is not public API.
-  Should a later iOS change it, the app keeps working, only without the shield.
+  If the secure container is missing, the app clears inputs and results and refuses to attach the
+  sensitive screen. Capture behavior with a container still present can change across system
+  versions and needs real-device verification.
 - Hiding content from accessibility services needs Android 14+. On older systems the offline
   phone itself must be clean.
 - Wiping memory is best-effort on Android and cannot reach strings on either platform: see

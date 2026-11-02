@@ -10,6 +10,17 @@ plugins {
 val keystore = rootProject.file("keystore.properties").takeIf { it.exists() }
     ?.let { file -> Properties().apply { file.inputStream().use(::load) } }
 
+// Providers make Git changes invalidate Gradle's configuration cache as well as the APK.
+val gitCommit = providers.exec {
+    workingDir(rootProject.projectDir)
+    commandLine("git", "rev-parse", "--short=12", "HEAD")
+}.standardOutput.asText.get().trim()
+val gitDirty = providers.exec {
+    workingDir(rootProject.projectDir)
+    commandLine("git", "status", "--porcelain", "--untracked-files=normal")
+}.standardOutput.asText.get().isNotBlank()
+val buildRevision = gitCommit + if (gitDirty) "-dirty" else ""
+
 android {
     namespace = "app.getkeyper"
     compileSdk = 36
@@ -20,8 +31,11 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
+        buildConfigField("String", "BUILD_REVISION", "\"$buildRevision\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    buildFeatures { buildConfig = true }
 
     signingConfigs {
         if (keystore != null) create("release") {

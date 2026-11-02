@@ -99,7 +99,8 @@ final class OfflineMonitor {
     nonisolated static func interfaces() -> Radios {
         var radios = Radios()
         var head: UnsafeMutablePointer<ifaddrs>?
-        guard getifaddrs(&head) == 0, let first = head else { return radios }
+        // A failed probe proves nothing about connectivity: keep sensitive actions locked.
+        guard getifaddrs(&head) == 0, let first = head else { return Radios(otherNetwork: true) }
         defer { freeifaddrs(head) }
         for entry in sequence(first: first, next: { $0.pointee.ifa_next }) {
             let flags = Int32(entry.pointee.ifa_flags)

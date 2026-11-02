@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- importantForAutofill keeps autofill services from capturing the email or the secret. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<app.getkeyper.PrivateLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
     android:layout_width="match_parent"
@@ -628,4 +628,4 @@
         android:layout_height="wrap_content"
         android:accessibilityDataSensitive="yes"
         android:visibility="gone" />
-</LinearLayout>
+</app.getkeyper.PrivateLayout>

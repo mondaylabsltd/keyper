@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "id": "1D1546D9-024D-478B-A09A-C44E96B59A55",
+      "name": "Release screen protection",
+      "options": {}
+    }
+  ],
+  "defaultOptions": {},
+  "testTargets": [
+    {
+      "target": {
+        "containerPath": "container:Keyper.xcodeproj",
+        "identifier": "ED00B8D4C23143B1F0CD8A2E",
+        "name": "KeyperUITests"
+      },
+      "selectedTests": [
+        "KeyperUITests/testScreenShieldHidesTheScreen()"
+      ]
+    }
+  ],
+  "version": 1
+}

@@ -143,6 +143,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_SECURE) // no screenshots, blank in recents
+        window.rejectObscuredTouches()
         buildUi(restore = null)
     }
 
@@ -210,7 +211,7 @@ class MainActivity : Activity() {
         strengthTip = findViewById(R.id.strength_tip)
 
         padForSystemBars(findViewById(R.id.root))
-        findViewById<TextView>(R.id.footer).text = getString(R.string.footer, Keyper.domainId(domain))
+        findViewById<TextView>(R.id.footer).text = getString(R.string.footer, BuildConfig.BUILD_REVISION)
         findViewById<View>(R.id.test_banner).shown = domain.contentEquals(TEST_DOMAIN)
 
         setUpFields()
@@ -386,7 +387,7 @@ class MainActivity : Activity() {
     }
 
     private fun onGenerate() {
-        if (!offline || drilling) return // the drill's page covers Generate; a queued click does nothing
+        if (!offline || busy || drilling) return // queued clicks cannot start another run
         val e = email.text.toString()
         val s = secret.text.toString()
         if (!Keyper.isValidEmail(Keyper.normalizeEmail(e))) {
@@ -417,7 +418,8 @@ class MainActivity : Activity() {
     private fun derive(email: String, secret: String) {
         // The radios afresh, not as last polled; "Generate anyway" may come long after the check.
         checkOffline()
-        if (!offline) return
+        if (!offline || busy || drilling) return
+        discardResult()
         val id = ++generation
         setBusy(true)
         showProgress(done = 0, total = 1, elapsedMs = 0)
@@ -434,12 +436,12 @@ class MainActivity : Activity() {
                 }
             }
             handler.post {
-                setBusy(false)
                 checkOffline() // going online meanwhile bumps the generation
                 if (id != generation || !offline) {
                     Wipe.bytes(outcome.getOrNull())
                     return@post
                 }
+                setBusy(false)
                 outcome
                     .onSuccess {
                         key = it
@@ -457,6 +459,7 @@ class MainActivity : Activity() {
         generation++
         worker?.interrupt()
         worker = null
+        setBusy(false)
     }
 
     private fun showProgress(done: Int, total: Int, elapsedMs: Long) {
@@ -790,7 +793,7 @@ class MainActivity : Activity() {
             strength.setTextColor(getColor(color))
         }
         crackTime.text = getString(R.string.crack_time, duration(estimate.crackSeconds(gpus = 1000)), money(estimate.crackDollars()))
-        strengthTip.shown = estimate.level < Strength.Level.GOOD
+        strengthTip.shown = true // a strong-looking quote can still be an attacker's first guess
     }
 
     private fun duration(seconds: Double): String {
@@ -833,6 +836,7 @@ class MainActivity : Activity() {
     /** A dialog is a window of its own: without FLAG_SECURE it could be captured over the secure screen. */
     private fun <T : Dialog> T.showSecure(): T = apply {
         window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE) // before show(), so no frame escapes
+        window?.rejectObscuredTouches()
         show()
     }
 

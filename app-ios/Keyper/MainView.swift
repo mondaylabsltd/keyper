@@ -121,7 +121,7 @@ struct MainView: View {
             if model.busy { progressCard.padding(.top, 12) }
             if model.showsResult, let phrase = model.phrase { resultCard(phrase).padding(.top, 16).id(KeyperModel.ScrollTarget.result) }
             Spacer(minLength: 24)
-            Text(s.format("footer", model.domainId))
+            Text(s.format("footer", BuildRevision.current))
                 .keyperFont(11)
                 .foregroundStyle(Color(Palette.textTertiary))
                 .frame(maxWidth: .infinity)
@@ -230,9 +230,7 @@ struct MainView: View {
                 .lineSpacing(2)
                 .padding(.top, 2)
                 .accessibilityIdentifier("crack_time")
-            if estimate.level < .good {
-                Text(s["strength_tip"]).keyperFont(12).foregroundStyle(Color(Palette.textTertiary)).lineSpacing(2).padding(.top, 6)
-            }
+            Text(s["strength_tip"]).keyperFont(12).foregroundStyle(Color(Palette.textTertiary)).lineSpacing(2).padding(.top, 6)
         }
     }
 
@@ -259,7 +257,7 @@ struct MainView: View {
             FieldLabel(text: s["result_title"])
             WordGrid(words: phrase).padding(.top, 12).accessibilityIdentifier("words")
             // The QR code first: it keeps the phrase off the clipboard altogether.
-            PrimaryButton(title: s["qr"], enabled: true) { model.showingQr = true }
+            PrimaryButton(title: s["qr"], enabled: true) { model.requestQr() }
                 .padding(.top, 14)
             HStack(spacing: 8) {
                 TonalButton(title: s["copy"]) { model.requestCopy() }

@@ -21,12 +21,13 @@
 
 "level_very_weak" = "很弱";
 "level_weak" = "弱";
+"screen_protection_unavailable" = "当前系统的屏幕保护不可用。请先更新 Keyper，再输入口令。";
 "level_good" = "较强";
 "level_strong" = "强";
 "strength_summary" = "%1$@ · %2$d 个字符";
 "secret_too_short" = "%1$d 个字符，至少需要 %2$d 个";
-"crack_time" = "一千张显卡破解约 %1$@，电费约 %2$@";
-"strength_tip" = "写长一些，多用只有你知道的细节。别用名句、歌词、生日。";
+"crack_time" = "模型估算：%1$@，电费约 %2$@；不代表实际破解成本。";
+"strength_tip" = "评分识别不了名句、歌词、复用密码或公开个人信息。即使显示“强”，也可能很容易被猜中。";
 
 "words_12" = "12 个词";
 "words_24" = "24 个词";
